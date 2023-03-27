@@ -159,9 +159,9 @@ pub type WeightToFee = IdentityFee<Balance>;
 
 /// Rialto chain.
 #[derive(RuntimeDebug)]
-pub struct Substrate;
+pub struct Substrate2;
 
-impl Chain for Substrate {
+impl Chain for Substrate2 {
 	type BlockNumber = BlockNumber;
 	type Hash = Hash;
 	type Hasher = Hasher;

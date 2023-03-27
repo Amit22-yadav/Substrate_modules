@@ -117,16 +117,21 @@ pallet-bridge-token-swap = { path = "../../../modules/token-swap", default-featu
 chain-substrate = {path ="../../../primitives_bridge/chain-substrate",default-features = false}
 our-chain = {path ="../../../primitives_bridge/our-chain",default-features = false}
 bp-messages = { path = "../../../primitives_bridge/messages", default-features = false }
+bp-runtime = { path = "../../../primitives_bridge/runtime", default-features = false }
 
 #modules
 pallet-bridge-dispatch = { path = "../../../modules/dispatch", default-features = false }
+pallet-bridge-messages = { path = "../../../modules/messages", default-features = false }
+bridge-runtime-common = { path = "../../runtime-common", default-features = false }
 
 
 
 
 
 
-
+[dev-dependencies]
+bridge-runtime-common = { path = "../../runtime-common", features = ["integrity-test"] }
+static_assertions = "1.1"
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", path = "../../../utils/wasm-builder" }
@@ -141,9 +146,12 @@ std = [
 	"pallet-asset-tx-payment/std",
 	"frame-system-benchmarking?/std",
 	#"pallet-bridge-token-swap/std ",
+	"pallet-bridge-messages/std",
+		"bridge-runtime-common/std",
 	"frame-election-provider-support/std",
 	"sp-authority-discovery/std",
 		"bp-messages/std",
+		"bp-runtime/std",
 	"pallet-assets/std",
 	"pallet-authority-discovery/std",
 	"pallet-authorship/std",
@@ -229,6 +237,7 @@ std = [
 ]
 runtime-benchmarks = [
 	"frame-benchmarking/runtime-benchmarks",
+		"bridge-runtime-common/runtime-benchmarks",
 	"frame-support/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",

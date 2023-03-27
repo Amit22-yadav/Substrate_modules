@@ -43,10 +43,10 @@ mod storage_proof;
 pub const NO_INSTANCE_ID: ChainId = [0, 0, 0, 0];
 
 /// Bridge-with-Rialto instance id.
-pub const RIALTO_CHAIN_ID: ChainId = *b"rlto";
+pub const SUBSTRATE2: ChainId = *b"rlto";
 
 /// Bridge-with-Millau instance id.
-pub const MILLAU_CHAIN_ID: ChainId = *b"mlau";
+pub const SUBSTRATE: ChainId = *b"mlau";
 
 /// Bridge-with-Polkadot instance id.
 pub const POLKADOT_CHAIN_ID: ChainId = *b"pdot";

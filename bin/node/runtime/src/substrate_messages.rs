@@ -23,7 +23,7 @@ use bp_messages::{
 	target_chain::{ProvedMessages, SourceHeaderChain},
 	InboundLaneData, LaneId, Message, MessageNonce, Parameter as MessagesParameter,
 };
-use bp_runtime::{Chain, ChainId, MILLAU_CHAIN_ID, RIALTO_CHAIN_ID};
+use bp_runtime::{Chain, ChainId, SUBSTRATE, SUBSTRATE2};
 use bridge_runtime_common::messages::{self, MessageBridge, MessageTransaction};
 use codec::{Decode, Encode};
 use frame_support::{
@@ -84,7 +84,7 @@ pub struct WithRialtoMessageBridge;
 
 impl MessageBridge for WithRialtoMessageBridge {
 	const RELAYER_FEE_PERCENT: u32 = 10;
-	const THIS_CHAIN_ID: ChainId = MILLAU_CHAIN_ID;
+	const THIS_CHAIN_ID: ChainId = SUBSTRATE2;
 	const BRIDGED_CHAIN_ID: ChainId = RIALTO_CHAIN_ID;
 	const BRIDGED_MESSAGES_PALLET_NAME: &'static str = our_chain::WITH_MILLAU_MESSAGES_PALLET_NAME;
 
@@ -186,13 +186,13 @@ impl messages::ChainWithMessages for Rialto {
 
 impl messages::BridgedChainWithMessages for Rialto {
 	fn maximal_extrinsic_size() -> u32 {
-		chain_substrate::Rialto::max_extrinsic_size()
+		chain_substrate::Substrate::max_extrinsic_size()
 	}
 
 	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
 		// we don't want to relay too large messages + keep reserve for future upgrades
 		let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
-			chain_substrate::Rialto::max_extrinsic_weight(),
+			chain_substrate::Substrate::max_extrinsic_weight(),
 		);
 
 		// we're charging for payload bytes in `WithRialtoMessageBridge::transaction_payment`

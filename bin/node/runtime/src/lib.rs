@@ -476,7 +476,7 @@ parameter_types! {
 
 pub type Substrate2GrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = chain_substrate::Substrate;
+	type BridgedChain = chain_substrate::Substrate2;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
 
