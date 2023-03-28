@@ -152,7 +152,7 @@ pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::Account
 pub type AccountSigner = MultiSigner;
 
 /// Balance of an account.
-pub type Balance = u64;
+pub type Balance = u128;
 
 /// Index of a transaction in the chain.
 pub type Index = u32;
@@ -162,9 +162,9 @@ pub type WeightToFee = IdentityFee<Balance>;
 
 /// Millau chain.
 #[derive(RuntimeDebug)]
-pub struct Millau;
+pub struct SUBSTRATE;
 
-impl Chain for Millau {
+impl Chain for SUBSTRATE {
 	type BlockNumber = BlockNumber;
 	type Hash = Hash;
 	type Hasher = Hasher;
@@ -241,7 +241,7 @@ impl sp_runtime::traits::Convert<sp_core::H256, AccountId> for AccountIdConverte
 ///
 /// Note that this should only be used for testing.
 pub fn derive_account_from_rialto_id(id: bp_runtime::SourceAccount<AccountId>) -> AccountId {
-	let encoded_id = bp_runtime::derive_account_id(bp_runtime::RIALTO_CHAIN_ID, id);
+	let encoded_id = bp_runtime::derive_account_id(bp_runtime::SUBSTRATE2, id);
 	AccountIdConverter::convert(encoded_id)
 }
 

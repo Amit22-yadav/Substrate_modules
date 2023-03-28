@@ -24,6 +24,7 @@ pallet-bridge-messages = { path = "../../modules/messages", default-features = f
 #pallet 
 
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
+frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../../modules/support" }
 frame-system = { version = "4.0.0-dev", default-features = false, path = "../../frame/system" }
 pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../../frame/balances", optional = true }
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, path = "../../frame/transaction-payment" }
@@ -51,6 +52,7 @@ std = [
 	"pallet-bridge-messages/std",
 	"pallet-transaction-payment/std",
 	"scale-info/std",
+	"frame-support2/std",
 	"sp-api/std",
 	"sp-core/std",
 	"sp-runtime/std",

@@ -27,6 +27,8 @@ use kitchensink_runtime::{
 use sp_keyring::{Ed25519Keyring, Sr25519Keyring};
 use sp_runtime::Perbill;
 
+
+
 /// Create genesis runtime configuration for tests.
 pub fn config(code: Option<&[u8]>) -> GenesisConfig {
 	config_endowed(code, Default::default())
@@ -84,10 +86,12 @@ pub fn config_endowed(code: Option<&[u8]>, extra_endowed: Vec<AccountId>) -> Gen
 		technical_committee: Default::default(),
 		technical_membership: Default::default(),
 		elections: Default::default(),
+		bridge_rialto_messages: Default::default(),
 		sudo: Default::default(),
 		treasury: Default::default(),
 		society: SocietyConfig { members: vec![alice(), bob()], pot: 0, max_members: 999 },
 		vesting: Default::default(),
+		
 		assets: AssetsConfig { assets: vec![(9, alice(), true, 1)], ..Default::default() },
 		transaction_storage: Default::default(),
 		transaction_payment: Default::default(),

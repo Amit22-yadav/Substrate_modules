@@ -61,7 +61,6 @@
 //! temporary `swap_account_at_this_chain` account. It is destroyed upon swap completion.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
 use bp_messages::{
 	source_chain::{MessagesBridge, OnDeliveryConfirmed},
 	DeliveredMessages, LaneId, MessageNonce,
@@ -70,7 +69,7 @@ use bp_runtime::{messages::DispatchFeePayment, ChainId};
 use bp_token_swap::{
 	RawBridgedTransferCall, TokenSwap, TokenSwapCreation, TokenSwapState, TokenSwapType,
 };
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	fail,
 	traits::{Currency, ExistenceRequirement},
@@ -105,7 +104,7 @@ pub use pallet::*;
 pub const PENDING_SWAPS_MAP_NAME: &str = "PendingSwaps";
 
 /// Origin for the token swap pallet.
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo)]
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo,MaxEncodedLen)]
 pub enum RawOrigin<AccountId, I> {
 	/// The call is originated by the token swap account.
 	TokenSwap {

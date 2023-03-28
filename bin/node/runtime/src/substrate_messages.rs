@@ -61,7 +61,7 @@ pub type FromRialtoMessagePayload =
 	messages::target::FromBridgedChainMessagePayload<WithRialtoMessageBridge>;
 
 /// Encoded Millau Call as it comes from Rialto.
-pub type FromRialtoEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::Call>;
+pub type FromRialtoEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::RuntimeCall>;
 
 /// Messages proof for Rialto -> Millau messages.
 pub type FromRialtoMessagesProof = messages::target::FromBridgedChainMessagesProof<chain_substrate::Hash>;
@@ -75,7 +75,7 @@ pub type FromRialtoMessageDispatch = messages::target::FromBridgedChainMessageDi
 	WithRialtoMessageBridge,
 	crate::Runtime,
 	pallet_balances::Pallet<Runtime>,
-	(),
+	(),	
 >;
 
 /// Millau <-> Rialto message bridge.
@@ -84,8 +84,8 @@ pub struct WithRialtoMessageBridge;
 
 impl MessageBridge for WithRialtoMessageBridge {
 	const RELAYER_FEE_PERCENT: u32 = 10;
-	const THIS_CHAIN_ID: ChainId = SUBSTRATE2;
-	const BRIDGED_CHAIN_ID: ChainId = RIALTO_CHAIN_ID;
+	const THIS_CHAIN_ID: ChainId = SUBSTRATE;
+	const BRIDGED_CHAIN_ID: ChainId = SUBSTRATE2;
 	const BRIDGED_MESSAGES_PALLET_NAME: &'static str = our_chain::WITH_MILLAU_MESSAGES_PALLET_NAME;
 
 	type ThisChain = Millau;
@@ -111,15 +111,16 @@ impl messages::ChainWithMessages for Millau {
 	type AccountId = our_chain::AccountId;
 	type Signer = our_chain::AccountSigner;
 	type Signature = our_chain::Signature;
-	type Weight = Weight;
+	type Weight = frame_support::weights::Weight;
 	type Balance = our_chain::Balance;
+	
 }
 
 impl messages::ThisChainWithMessages for Millau {
-	type Origin = crate::Origin;
-	type Call = crate::Call;
+	type RuntimeOrigin = crate::RuntimeOrigin;
+	type Call = crate::RuntimeCall;
 
-	fn is_message_accepted(send_origin: &Self::Origin, lane: &LaneId) -> bool {
+	fn is_message_accepted(send_origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool {
 		// lanes 0x00000000 && 0x00000001 are accepting any paid messages, while
 		// `TokenSwapMessageLane` only accepts messages from token swap pallet
 		let token_swap_dedicated_lane = crate::TokenSwapMessagesLane::get();
@@ -165,7 +166,7 @@ impl messages::ThisChainWithMessages for Millau {
 			our_chain::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
 			1,
 			multiplier,
-			|weight| weight as _,
+			|weight| weight.ref_time() as _,
 			transaction,
 		)
 	}
@@ -186,13 +187,13 @@ impl messages::ChainWithMessages for Rialto {
 
 impl messages::BridgedChainWithMessages for Rialto {
 	fn maximal_extrinsic_size() -> u32 {
-		chain_substrate::Substrate::max_extrinsic_size()
+		chain_substrate::Substrate2::max_extrinsic_size()
 	}
 
 	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
 		// we don't want to relay too large messages + keep reserve for future upgrades
 		let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
-			chain_substrate::Substrate::max_extrinsic_weight(),
+			chain_substrate::Substrate2::max_extrinsic_weight(),
 		);
 
 		// we're charging for payload bytes in `WithRialtoMessageBridge::transaction_payment`
@@ -201,7 +202,7 @@ impl messages::BridgedChainWithMessages for Rialto {
 		// this bridge may be used to deliver all kind of messages, so we're not making any
 		// assumptions about minimal dispatch weight here
 
-		0..=upper_limit
+		Weight::zero()..=upper_limit
 	}
 
 	fn estimate_delivery_transaction(
@@ -210,15 +211,15 @@ impl messages::BridgedChainWithMessages for Rialto {
 		message_dispatch_weight: Weight,
 	) -> MessageTransaction<Weight> {
 		let message_payload_len = u32::try_from(message_payload.len()).unwrap_or(u32::MAX);
-		let extra_bytes_in_payload = Weight::from(message_payload_len)
-			.saturating_sub(pallet_bridge_messages::EXPECTED_DEFAULT_MESSAGE_LENGTH.into());
+		let extra_bytes_in_payload = message_payload_len
+		.saturating_sub(pallet_bridge_messages::EXPECTED_DEFAULT_MESSAGE_LENGTH);
 
 		MessageTransaction {
-			dispatch_weight: extra_bytes_in_payload
-				.saturating_mul(chain_substrate::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT)
+			dispatch_weight: chain_substrate::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT
+			.saturating_mul(extra_bytes_in_payload as u64)
 				.saturating_add(chain_substrate::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT)
 				.saturating_sub(if include_pay_dispatch_fee_cost {
-					0
+					Weight::from_ref_time(0)
 				} else {
 					chain_substrate::PAY_INBOUND_DISPATCH_FEE_WEIGHT
 				})
@@ -229,6 +230,22 @@ impl messages::BridgedChainWithMessages for Rialto {
 		}
 	}
 
+// 	fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight> {
+// 		let inbound_data_size = InboundLaneData::<bp_millau::AccountId>::encoded_size_hint(
+// 			bp_millau::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
+// 			1,
+// 			1,
+// 		)
+// 		.unwrap_or(u32::MAX);
+
+// 	MessageTransaction {
+// 		dispatch_weight: our_chain::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
+// 		size: inbound_data_size
+// 			.saturating_add(chain_substrate::EXTRA_STORAGE_PROOF_SIZE)
+// 			.saturating_add(our_chain::TX_EXTRA_BYTES),
+// 	}
+// }
+
 	fn transaction_payment(transaction: MessageTransaction<Weight>) -> chain_substrate::Balance {
 		// we don't have a direct access to the value of multiplier at Rialto chain
 		// => it is a messages module parameter
@@ -238,7 +255,7 @@ impl messages::BridgedChainWithMessages for Rialto {
 			chain_substrate::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
 			1,
 			multiplier,
-			|weight| weight as _,
+			|weight| weight.ref_time() as _,
 			transaction,
 		)
 	}
@@ -262,7 +279,7 @@ impl TargetHeaderChain<ToRialtoMessagePayload, chain_substrate::AccountId> for R
 		messages::source::verify_messages_delivery_proof::<
 			WithRialtoMessageBridge,
 			Runtime,
-			crate::RialtoGrandpaInstance,
+			crate::Substrate2GrandpaInstance,
 		>(proof)
 	}
 }
@@ -283,7 +300,7 @@ impl SourceHeaderChain<chain_substrate::Balance> for Rialto {
 		messages::target::verify_messages_proof::<
 			WithRialtoMessageBridge,
 			Runtime,
-			crate::RialtoGrandpaInstance,
+			crate::Substrate2GrandpaInstance,
 		>(proof, messages_count)
 	}
 }

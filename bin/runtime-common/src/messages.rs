@@ -47,6 +47,7 @@ use sp_std::{
 	cmp::PartialOrd, convert::TryFrom, fmt::Debug, marker::PhantomData, ops::RangeInclusive,
 	vec::Vec,
 };
+use codec::Error;
 use sp_trie::StorageProof;
 
 /// Bidirectional message bridge.
@@ -87,9 +88,9 @@ pub trait ChainWithMessages {
 	type Signature: Encode + Decode;
 	/// Type of weight that is used on the chain. This would almost always be a regular
 	/// `frame_support::weight::Weight`. But since the meaning of weight on different chains
-	/// may be different, the `WeightOf<>` construct is used to avoid confusion between
+	/// may be different, the `WeightOf<>` construct is used to avoid confusion bet	ween
 	/// different weights.
-	type Weight: From<frame_support::weights::Weight> + PartialOrd;
+	type Weight: From<frame_support::weights::Weight> ;
 	/// Type of balances that is used on the chain.
 	type Balance: Encode
 		+ Decode
@@ -113,12 +114,12 @@ pub struct MessageTransaction<Weight> {
 /// This chain that has `pallet-bridge-messages` and `dispatch` modules.
 pub trait ThisChainWithMessages: ChainWithMessages {
 	/// Call origin on the chain.
-	type Origin;
+	type RuntimeOrigin;
 	/// Call type on the chain.
 	type Call: Encode + Decode;
 
 	/// Do we accept message sent by given origin to given lane?
-	fn is_message_accepted(origin: &Self::Origin, lane: &LaneId) -> bool;
+	fn is_message_accepted(origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool;
 
 	/// Maximal number of pending (not yet delivered) messages at This chain.
 	///
@@ -177,7 +178,7 @@ pub type WeightOf<C> = <C as ChainWithMessages>::Weight;
 /// Type of balances that is used on the chain.
 pub type BalanceOf<C> = <C as ChainWithMessages>::Balance;
 /// Type of origin that is used on the chain.
-pub type OriginOf<C> = <C as ThisChainWithMessages>::Origin;
+pub type OriginOf<C> = <C as ThisChainWithMessages>::RuntimeOrigin;
 /// Type of call that is used on this chain.
 pub type CallOf<C> = <C as ThisChainWithMessages>::Call;
 
@@ -210,6 +211,7 @@ pub fn transaction_payment<Balance: AtLeast32BitUnsigned + FixedPointOperand>(
 
 	base_fee.saturating_add(len_fee).saturating_add(adjusted_weight_fee)
 }
+
 
 /// Sub-module that is declaring types required for processing This -> Bridged chain messages.
 pub mod source {
@@ -367,24 +369,9 @@ pub mod source {
 	/// check) that would reject message (see `FromThisChainMessageVerifier`).
 	pub fn verify_chain_message<B: MessageBridge>(
 		payload: &FromThisChainMessagePayload<B>,
-	) -> Result<(), &'static str> {
-		let weight_limits = BridgedChain::<B>::message_weight_limits(&payload.call);
-		if !weight_limits.contains(&payload.weight.into()) {
-			return Err("Incorrect message weight declared")
-		}
-
-		// The maximal size of extrinsic at Substrate-based chain depends on the
-		// `frame_system::Config::MaximumBlockLength` and
-		// `frame_system::Config::AvailableBlockRatio` constants. This check is here to be sure that
-		// the lane won't stuck because message is too large to fit into delivery transaction.
-		//
-		// **IMPORTANT NOTE**: the delivery transaction contains storage proof of the message, not
-		// the message itself. The proof is always larger than the message. But unless chain state
-		// is enormously large, it should be several dozens/hundreds of bytes. The delivery
-		// transaction also contains signatures and signed extensions. Because of this, we reserve
-		// 1/3 of the the maximal extrinsic weight for this data.
+	) -> Result<(),  &'static str> {
 		if payload.call.len() > maximal_message_size::<B>() as usize {
-			return Err("The message is too large to be sent over the lane")
+			return Err("Incorrect message weight declared".into())
 		}
 
 		Ok(())

@@ -647,9 +647,14 @@ parameter_types! {
 	// phase durations. 1/4 of the last session for each.
 	pub const SignedPhase: u32 = EPOCH_DURATION_IN_BLOCKS / 4;
 	pub const UnsignedPhase: u32 = EPOCH_DURATION_IN_BLOCKS / 4;
-
-	// signed config
 	pub const SignedRewardBase: Balance = 1 * DOLLARS;
+
+
+
+
+
+
+	
 	pub const SignedDepositBase: Balance = 1 * DOLLARS;
 	pub const SignedDepositByte: Balance = 1 * CENTS;
 
@@ -1531,6 +1536,83 @@ impl pallet_assets::Config for Runtime {
 	type BenchmarkHelper = ();
 }
 
+/// Instance of the messages pallet used to relay messages to/from Rialto chain.
+pub type WithRialtoMessagesInstance = ();
+
+impl pallet_bridge_messages::Config<WithRialtoMessagesInstance> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = pallet_bridge_messages::weights::MillauWeight<Runtime>;
+	type Parameter = substrate_messages::MillauToRialtoMessagesParameter;
+	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
+	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
+	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
+
+	type OutboundPayload = crate::substrate_messages::ToRialtoMessagePayload;
+	type OutboundMessageFee = Balance;
+
+	type InboundPayload = crate::substrate_messages::FromRialtoMessagePayload;
+	type InboundMessageFee = chain_substrate::Balance;
+	type InboundRelayer = chain_substrate::AccountId;
+
+	type AccountIdConverter = our_chain::AccountIdConverter;
+
+	type TargetHeaderChain = crate::substrate_messages::Rialto;
+	type LaneMessageVerifier = crate::substrate_messages::ToRialtoMessageVerifier;
+	type MessageDeliveryAndDispatchPayment =
+		pallet_bridge_messages::instant_payments::InstantCurrencyPayments<
+			Runtime,
+			WithRialtoMessagesInstance,
+			pallet_balances::Pallet<Runtime>,
+			GetDeliveryConfirmationTransactionFee,
+		>;
+	type OnMessageAccepted = ();
+	type OnDeliveryConfirmed =
+		pallet_bridge_token_swap::Pallet<Runtime, WithRialtoTokenSwapInstance>;
+
+	type SourceHeaderChain = crate::substrate_messages::Rialto;
+	type MessageDispatch = crate::substrate_messages::FromRialtoMessageDispatch;
+	type BridgedChainId = RialtoChainId;
+}
+
+
+
+
+
+
+//pub type WithRialtoMessagesInstance = ();
+pub type WithRialtoTokenSwapInstance = ();
+impl pallet_bridge_token_swap::Config<WithRialtoTokenSwapInstance> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = ();
+
+	type BridgedChainId = RialtoChainId;
+	type OutboundMessageLaneId = TokenSwapMessagesLane;
+	#[cfg(not(feature = "runtime-benchmarks"))]
+	type MessagesBridge = pallet_bridge_messages::Pallet<Runtime, WithRialtoMessagesInstance>;
+	#[cfg(feature = "runtime-benchmarks")]
+	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
+	type ThisCurrency = pallet_balances::Pallet<Runtime>;
+	type FromSwapToThisAccountIdConverter = chain_substrate::AccountIdConverter;
+
+	type BridgedChain = chain_substrate::Substrate2;
+	type FromBridgedToThisAccountIdConverter = our_chain::AccountIdConverter;
+}
+
+parameter_types! {
+	pub const TokenSwapMessagesLane: bp_messages::LaneId = *b"swap";
+}
+parameter_types! {
+	pub const MaxMessagesToPruneAtOnce: bp_messages::MessageNonce = 8;
+	pub const MaxUnrewardedRelayerEntriesAtInboundLane: bp_messages::MessageNonce =
+		chain_substrate::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+	pub const MaxUnconfirmedMessagesAtInboundLane: bp_messages::MessageNonce =
+	chain_substrate::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+	// `IdentityFee` is used by Millau => we may use weight directly
+	pub const GetDeliveryConfirmationTransactionFee: Balance =
+		our_chain::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
+	pub const RootAccountForPayments: Option<AccountId> = None;
+	pub const RialtoChainId: bp_runtime::ChainId = bp_runtime::SUBSTRATE2;
+}
 parameter_types! {
 	pub IgnoredIssuance: Balance = Treasury::pot();
 	pub const QueueCount: u32 = 300;
@@ -1769,6 +1851,8 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		BridgeSubstrate2Grandpa: pallet_bridge_grandpa::{Pallet, Call, Storage},
 		BridgeDispatch: pallet_bridge_dispatch::{Pallet, Event<T>},
+		BridgeRialtoTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
+		BridgeRialtoMessages: pallet_bridge_messages::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 
