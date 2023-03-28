@@ -26,6 +26,7 @@ use kitchensink_runtime::{
 	SessionKeys, SocietyConfig, StakerStatus, StakingConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig,
 };
+use kitchensink_runtime::BridgeRialtoMessagesConfig;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
@@ -365,7 +366,10 @@ pub fn testnet_genesis(
 		},
 		transaction_storage: Default::default(),
 		transaction_payment: Default::default(),
-		bridge_rialto_messages:Default::default(),
+		bridge_rialto_messages: BridgeRialtoMessagesConfig {
+			owner: Some(get_account_id_from_seed::<sr25519::Public>("RialtoMessagesOwner")),
+			..Default::default()
+		},
 		alliance: Default::default(),
 		alliance_motion: Default::default(),
 		nomination_pools: NominationPoolsConfig {
