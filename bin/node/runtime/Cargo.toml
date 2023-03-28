@@ -112,6 +112,7 @@ pallet-vesting = { version = "4.0.0-dev", default-features = false, path = "../.
 pallet-whitelist = { version = "4.0.0-dev", default-features = false, path = "../../../frame/whitelist" }
 pallet-bridge-grandpa = { path = "../../../modules/grandpa", default-features = false }
 pallet-bridge-token-swap = { path = "../../../modules/token-swap", default-features = false }
+pallet-shift-session-manager = { path = "../../../modules/shift-session-manager", default-features = false }
 frame-support2 = { path = "../../../modules/support", default-features = false }
 
 #primitives 
@@ -156,6 +157,7 @@ std = [
 		"bp-runtime/std",
 	"pallet-assets/std",
 	"pallet-authority-discovery/std",
+	"pallet-shift-session-manager/std",
 	"pallet-authorship/std",
 	"sp-consensus-babe/std",
 	"pallet-babe/std",

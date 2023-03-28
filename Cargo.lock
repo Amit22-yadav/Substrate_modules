@@ -3525,6 +3525,7 @@ dependencies = [
  "pallet-scheduler",
  "pallet-session",
  "pallet-session-benchmarking",
+ "pallet-shift-session-manager",
  "pallet-society",
  "pallet-staking",
  "pallet-staking-reward-curve",
