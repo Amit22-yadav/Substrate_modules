@@ -14,19 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Substrate Node Template CLI library.
-#![warn(missing_docs)]
+use substrate_build_script_utils::{generate_cargo_keys, rerun_if_git_head_changed};
 
-mod chain_spec;
-#[macro_use]
-mod service;
-mod cli;
-mod command;
+fn main() {
+	generate_cargo_keys();
 
-/// Node run result.
-pub type Result = sc_cli::Result<()>;
-
-/// Run node.
-pub fn run() -> Result {
-	command::run()
+	rerun_if_git_head_changed();
 }

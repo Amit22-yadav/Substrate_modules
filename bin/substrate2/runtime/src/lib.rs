@@ -1537,6 +1537,43 @@ impl pallet_assets::Config for Runtime {
 	type BenchmarkHelper = ();
 }
 
+// Instance of the messages pallet used to relay messages to/from Millau chain.
+pub type WithMillauMessagesInstance = ();
+
+impl pallet_bridge_messages::Config<WithMillauMessagesInstance> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = pallet_bridge_messages::weights::MillauWeight<Runtime>;
+	type Parameter = our_chain_messages::RialtoToMillauMessagesParameter;
+	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
+	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
+	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
+
+	type OutboundPayload = crate::our_chain_messages::ToMillauMessagePayload;
+	type OutboundMessageFee = Balance;
+
+	type InboundPayload = crate::our_chain_messages::FromMillauMessagePayload;
+	type InboundMessageFee = our_chain::Balance;
+	type InboundRelayer = our_chain::AccountId;
+
+	type AccountIdConverter = chain_substrate::AccountIdConverter;
+
+	type TargetHeaderChain = crate::our_chain_messages::Millau;
+	type LaneMessageVerifier = crate::our_chain_messages::ToMillauMessageVerifier;
+	type MessageDeliveryAndDispatchPayment =
+		pallet_bridge_messages::instant_payments::InstantCurrencyPayments<
+			Runtime,
+			WithMillauMessagesInstance,
+			pallet_balances::Pallet<Runtime>,
+			GetDeliveryConfirmationTransactionFee,
+		>;
+	type OnMessageAccepted = ();
+	type OnDeliveryConfirmed = ();
+
+	type SourceHeaderChain = crate::our_chain_messages::Millau;
+	type MessageDispatch = crate::our_chain_messages::FromMillauMessageDispatch;
+	type BridgedChainId = BridgedChainId;
+}
+
 parameter_types! {
 	pub IgnoredIssuance: Balance = Treasury::pot();
 	pub const QueueCount: u32 = 300;
@@ -1775,6 +1812,7 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		BridgeDispatch: pallet_bridge_dispatch::{Pallet, Event<T>},
 		BridgeMillauGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage},
+		BridgeMillauMessages: pallet_bridge_messages::{Pallet, Call, Storage, Event<T>, Config<T>},
 	}
 );
 

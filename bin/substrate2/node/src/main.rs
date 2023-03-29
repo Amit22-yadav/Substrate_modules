@@ -14,7 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Substrate Node Template CLI library.
+//! Millau bridge node.
+
 #![warn(missing_docs)]
 
 mod chain_spec;
@@ -23,10 +24,7 @@ mod service;
 mod cli;
 mod command;
 
-/// Node run result.
-pub type Result = sc_cli::Result<()>;
-
-/// Run node.
-pub fn run() -> Result {
+/// Run the Millau Node
+fn main() -> sc_cli::Result<()> {
 	command::run()
 }
