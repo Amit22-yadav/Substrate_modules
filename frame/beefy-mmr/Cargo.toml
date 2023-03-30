@@ -20,7 +20,7 @@ frame-support = { version = "4.0.0-dev", default-features = false, path = "../su
 frame-system = { version = "4.0.0-dev", default-features = false, path = "../system" }
 pallet-beefy = { version = "4.0.0-dev", default-features = false, path = "../beefy" }
 pallet-mmr = { version = "4.0.0-dev", default-features = false, path = "../merkle-mountain-range" }
-pallet-session = { version = "4.0.0-dev", default-features = false, path = "../session" }
+pallet-session = { version = "4.0.0-dev", default-features = false, path = "../session" }	
 sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
 sp-io = { version = "7.0.0", default-features = false, path = "../../primitives/io" }
 sp-runtime = { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
