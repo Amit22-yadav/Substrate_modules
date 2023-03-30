@@ -1,0 +1,63 @@
+[package]
+name = "pallet-bridge-beefy"
+version = "0.1.0"
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2021"
+license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
+
+[dependencies]
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
+#hash256-std-hasher = { version = "0.15.2", default-features = false }
+log = { version = "0.4.14", default-features = false }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
+serde = { version = "1.0", optional = true }
+
+# Bridge Dependencies
+
+bp-beefy = { path = "../../primitives_bridge/beefy", default-features = false }
+bp-runtime = { path = "../../primitives_bridge/runtime", default-features = false }
+
+# Substrate Dependencies
+
+beefy-merkle-tree = {path = "../../frame/beefy-mmr/primitives", version="4.0.0-dev", default-features = false }
+frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
+frame-system = { version = "4.0.0-dev", path = "../../frame/system", default-features = false }
+sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
+sp-runtime = { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
+sp-std = { version = "5.0.0", default-features = false, path = "../../primitives/std" }
+
+[dev-dependencies]
+#beefy-merkle-tree = {path = "../../frame/beefy-mmr/primitives", version="4.0.0-dev" }
+beefy-primitives = { version = "4.0.0-dev", path = "../../primitives/beefy", package = "sp-beefy" }
+env_logger = "0.10.0"
+#hex = "0.4"
+#libsecp256k1 = "0.7"
+mmr-lib = { package = "ckb-merkle-mountain-range", version = "0.5.2" }
+pallet-beefy-mmr = {version = "4.0.0-dev", default-features = false, path = "../../frame/beefy-mmr" }
+pallet-mmr = { version = "4.0.0-dev", default-features = false, path = "../../frame/merkle-mountain-range" }
+rand = "0.8"
+sp-io = { version = "7.0.0", default-features = false, path = "../../primitives/io" }
+bp-test-utils = { path = "../../primitives_bridge/test-utils" }
+
+[features]
+default = ["std"]
+std = [
+	"beefy-merkle-tree/std",
+	"bp-beefy/std",
+	"bp-runtime/std",
+	"codec/std",
+	"frame-support/std",
+	"frame-system/std",
+	#"hash256-std-hasher/std",
+	"log/std",
+	"scale-info/std",
+	"serde",
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-std/std",
+]
+
+try-runtime = [
+	"frame-support/try-runtime",
+	"frame-system/try-runtime",
+]

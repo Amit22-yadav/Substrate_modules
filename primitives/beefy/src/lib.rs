@@ -50,7 +50,9 @@ use sp_std::prelude::*;
 pub const KEY_TYPE: sp_application_crypto::KeyTypeId = sp_application_crypto::KeyTypeId(*b"beef");
 
 /// Trait representing BEEFY authority id.
-pub trait BeefyAuthorityId: RuntimeAppPublic {}
+pub trait BeefyAuthorityId: RuntimeAppPublic {
+	fn verify(&self, signature: &<Self as RuntimeAppPublic>::Signature, msg: &[u8]) -> bool;
+}
 
 /// Means of verification for a BEEFY authority signature.
 ///
@@ -89,7 +91,11 @@ pub mod crypto {
 	/// Signature for a BEEFY authority using ECDSA as its crypto.
 	pub type AuthoritySignature = Signature;
 
-	impl BeefyAuthorityId for AuthorityId {}
+	impl BeefyAuthorityId for AuthorityId {
+		fn verify(&self, signature: &<Self as sp_application_crypto::RuntimeAppPublic>::Signature, msg: &[u8]) -> bool {
+			todo!();
+		}
+	}
 
 	impl<MsgHash: Hash> BeefyVerify<MsgHash> for AuthoritySignature
 	where

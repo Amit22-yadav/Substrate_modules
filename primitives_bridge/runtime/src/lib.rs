@@ -19,6 +19,15 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use codec::Encode;
+use codec::Decode;
+use sp_runtime::traits::BadOrigin;
+use core::fmt::Debug;
+use codec::MaxEncodedLen;
+use frame_support::StorageValue;
+use frame_support::pallet_prelude::DispatchResult;
+use scale_info::TypeInfo;
+use codec::FullCodec;
+use frame_support::PalletError;
 use frame_support::{RuntimeDebug, StorageHasher};
 use sp_core::{hash::H256, storage::StorageKey};
 use sp_io::hashing::blake2_256;
@@ -28,6 +37,7 @@ pub use chain::{
 	AccountIdOf, AccountPublicOf, BalanceOf, BlockNumberOf, Chain, EncodedOrDecodedCall, HashOf,
 	HasherOf, HeaderOf, IndexOf, SignatureOf, TransactionEraOf,
 };
+use frame_system::RawOrigin;
 pub use frame_support::storage::storage_prefix as storage_value_final_key;
 pub use storage_proof::{Error as StorageProofError, StorageProofChecker};
 
@@ -68,6 +78,101 @@ pub const ACCOUNT_DERIVATION_PREFIX: &[u8] = b"pallet-bridge/account-derivation/
 
 /// A unique prefix for entropy when generating a cross-chain account ID for the Root account.
 pub const ROOT_ACCOUNT_DERIVATION_PREFIX: &[u8] = b"pallet-bridge/account-derivation/root";
+
+#[derive(Encode, Decode, TypeInfo, PalletError)]
+pub enum OwnedBridgeModuleError {
+	/// All pallet operations are halted.
+	Halted,
+}
+/// Operating mode for a bridge module.
+pub trait OperatingMode: Send + Copy + Debug + FullCodec {
+	// Returns true if the bridge module is halted.
+	fn is_halted(&self) -> bool;
+}
+
+/// Basic operating modes for a bridges module (Normal/Halted).
+#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
+#[cfg_attr(feature = "std", derive(serde::Serialize, serde::Deserialize))]
+pub enum BasicOperatingMode {
+	/// Normal mode, when all operations are allowed.
+	Normal,
+	/// The pallet is halted. All operations (except operating mode change) are prohibited.
+	Halted,
+}
+
+impl Default for BasicOperatingMode {
+	fn default() -> Self {
+		Self::Normal
+	}
+}
+
+impl OperatingMode for BasicOperatingMode {
+	fn is_halted(&self) -> bool {
+		*self == BasicOperatingMode::Halted
+	}
+}
+
+/// Bridge module that has owner and operating mode
+pub trait OwnedBridgeModule<T: frame_system::Config> {
+	/// The target that will be used when publishing logs related to this module.
+	const LOG_TARGET: &'static str;
+
+	type OwnerStorage: StorageValue<T::AccountId, Query = Option<T::AccountId>>;
+	type OperatingMode: OperatingMode;
+	type OperatingModeStorage: StorageValue<Self::OperatingMode, Query = Self::OperatingMode>;
+
+	/// Check if the module is halted.
+	fn is_halted() -> bool {
+		Self::OperatingModeStorage::get().is_halted()
+	}
+
+	/// Ensure that the origin is either root, or `PalletOwner`.
+	fn ensure_owner_or_root(origin: T::RuntimeOrigin) -> Result<(), BadOrigin> {
+		match origin.into() {
+			Ok(RawOrigin::Root) => Ok(()),
+			Ok(RawOrigin::Signed(ref signer))
+				if Self::OwnerStorage::get().as_ref() == Some(signer) =>
+				Ok(()),
+			_ => Err(BadOrigin),
+		}
+	}
+
+	/// Ensure that the module is not halted.
+	fn ensure_not_halted() -> Result<(), OwnedBridgeModuleError> {
+		match Self::is_halted() {
+			true => Err(OwnedBridgeModuleError::Halted),
+			false => Ok(()),
+		}
+	}
+
+	/// Change the owner of the module.
+	fn set_owner(origin: T::RuntimeOrigin, maybe_owner: Option<T::AccountId>) -> DispatchResult {
+		Self::ensure_owner_or_root(origin)?;
+		match maybe_owner {
+			Some(owner) => {
+				Self::OwnerStorage::put(&owner);
+				//log::info!(target: Self::LOG_TARGET, "Setting pallet Owner to: {:?}", owner);
+			},
+			None => {
+				Self::OwnerStorage::kill();
+				//log::info!(target: Self::LOG_TARGET, "Removed Owner of pallet.");
+			},
+		}
+
+		Ok(())
+	}
+
+	/// Halt or resume all/some module operations.
+	fn set_operating_mode(
+		origin: T::RuntimeOrigin,
+		operating_mode: Self::OperatingMode,
+	) -> DispatchResult {
+		Self::ensure_owner_or_root(origin)?;
+		Self::OperatingModeStorage::put(operating_mode);
+		//log::info!(target: Self::LOG_TARGET, "Setting operating mode to {:?}.", operating_mode);
+		Ok(())
+	}
+}
 
 /// Generic header Id.
 #[derive(RuntimeDebug, Default, Clone, Copy, Eq, Hash, PartialEq)]

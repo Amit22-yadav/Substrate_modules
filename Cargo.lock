@@ -459,7 +459,7 @@ name = "beefy-merkle-tree"
 version = "4.0.0-dev"
 dependencies = [
  "array-bytes",
- "env_logger",
+ "env_logger 0.9.0",
  "log",
  "sp-api",
  "sp-beefy",
@@ -607,6 +607,28 @@ dependencies = [
  "fastrand",
  "futures-lite",
  "once_cell",
+]
+
+[[package]]
+name = "bp-beefy"
+version = "0.1.0"
+dependencies = [
+ "beefy-merkle-tree",
+ "bp-runtime",
+ "frame-support",
+ "pallet-beefy-mmr",
+ "pallet-mmr",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-application-crypto",
+ "sp-beefy",
+ "sp-core",
+ "sp-io",
+ "sp-mmr-primitives",
+ "sp-runtime",
+ "sp-std",
+ "static_assertions",
 ]
 
 [[package]]
@@ -1923,6 +1945,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "env_logger"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85cdab6a89accf66733ad5a1693a4dcced6aeff64602b634530dd73c1f3ee9f0"
+dependencies = [
+ "humantime",
+ "is-terminal",
+ "log",
+ "regex",
+ "termcolor",
+]
+
+[[package]]
 name = "environmental"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2031,7 +2066,7 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "21e16290574b39ee41c71aeb90ae960c504ebaf1e2a1c87bd52aa56ed6e1a02f"
 dependencies = [
- "env_logger",
+ "env_logger 0.9.0",
  "log",
 ]
 
@@ -2297,7 +2332,7 @@ dependencies = [
 name = "frame-remote-externalities"
 version = "0.10.0-dev"
 dependencies = [
- "env_logger",
+ "env_logger 0.9.0",
  "frame-support",
  "futures",
  "log",
@@ -5446,6 +5481,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-bridge-beefy"
+version = "0.1.0"
+dependencies = [
+ "beefy-merkle-tree",
+ "bp-beefy",
+ "bp-runtime",
+ "bp-test-utils",
+ "ckb-merkle-mountain-range",
+ "env_logger 0.10.0",
+ "frame-support",
+ "frame-system",
+ "log",
+ "pallet-beefy-mmr",
+ "pallet-mmr",
+ "parity-scale-codec",
+ "rand 0.8.5",
+ "scale-info",
+ "serde",
+ "sp-beefy",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "pallet-bridge-dispatch"
 version = "0.1.0"
 dependencies = [
@@ -5579,7 +5640,7 @@ dependencies = [
  "array-bytes",
  "assert_matches",
  "bitflags",
- "env_logger",
+ "env_logger 0.9.0",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
@@ -5929,7 +5990,7 @@ name = "pallet-mmr"
 version = "4.0.0-dev"
 dependencies = [
  "array-bytes",
- "env_logger",
+ "env_logger 0.9.0",
  "frame-benchmarking",
  "frame-support",
  "frame-system",
@@ -8332,7 +8393,7 @@ version = "0.10.0-dev"
 dependencies = [
  "array-bytes",
  "criterion",
- "env_logger",
+ "env_logger 0.9.0",
  "lru",
  "num_cpus",
  "parity-scale-codec",
@@ -8808,7 +8869,7 @@ name = "sc-rpc"
 version = "4.0.0-dev"
 dependencies = [
  "assert_matches",
- "env_logger",
+ "env_logger 0.9.0",
  "futures",
  "hash-db 0.15.2",
  "jsonrpsee",
