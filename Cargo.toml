@@ -3,8 +3,9 @@ resolver = "2"
 
 members = [
 	"bin/node-template/node",
-	"bin/substrate2/node",
-	"bin/substrate2/node/primitives",
+	#"bin/substrate2/node",
+	#"bin/substrate2/node/primitives",
+	"bin/substrate2/node/*",
 	"bin/substrate2/runtime",
 	"modules/dispatch",
 	"modules/messages",
