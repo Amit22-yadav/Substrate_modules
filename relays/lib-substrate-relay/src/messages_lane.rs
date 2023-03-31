@@ -469,7 +469,8 @@ pub fn select_delivery_transaction_limits<W: pallet_bridge_messages::WeightInfoE
 		W::receive_messages_proof_outbound_lane_state_overhead();
 	let delivery_tx_weight_rest = weight_for_delivery_tx - delivery_tx_base_weight;
 	let max_number_of_messages = std::cmp::min(
-		delivery_tx_weight_rest .div( W::receive_messages_proof_messages_overhead(1)),
+		delivery_tx_weight_rest / W::receive_messages_proof_messages_overhead(1),
+		
 		max_unconfirmed_messages_at_inbound_lane,
 	);
 
