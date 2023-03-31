@@ -21,7 +21,7 @@ use crate::{DeliveredMessages, InboundLaneData, LaneId, MessageNonce, OutboundLa
 use crate::UnrewardedRelayer;
 use bp_runtime::Size;
 use frame_support::sp_runtime::traits::Zero;
-use frame_support2::{ Parameter, RuntimeDebug};
+use frame_support::{ Parameter, RuntimeDebug};
 use frame_support::{weights::Weight};
 use sp_std::{
 	collections::{btree_map::BTreeMap, vec_deque::VecDeque},

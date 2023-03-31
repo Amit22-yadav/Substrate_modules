@@ -8,6 +8,7 @@ members = [
 	"bin/substrate2/node/*",
 	"bin/substrate2/runtime",
 	"modules/beefy",
+	"relays/*",
 	"modules/dispatch",
 	"modules/messages",
 	"modules/support",

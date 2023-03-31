@@ -1,0 +1,45 @@
+[package]
+name = "substrate-relay-helper"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0"
+thiserror = "1.0.26"
+async-std = "1.9.0"
+async-trait = "0.1.42"
+codec = { package = "parity-scale-codec", version = "3.0.0" }
+futures = "0.3.12"
+num-traits = "0.2"
+log = "0.4.14"
+
+
+bp-header-chain = { path = "../../primitives_bridge/header-chain" }
+bridge-runtime-common = { path = "../../bin/runtime-common" }
+
+finality-grandpa = { version = "0.16.2" }
+finality-relay = { path = "../finality" }
+relay-utils = { path = "../utils" }
+messages-relay = { path = "../messages" }
+relay-substrate-client = { path = "../substrate-client" }
+
+pallet-bridge-grandpa = { path = "../../modules/grandpa" }
+pallet-bridge-messages = { path = "../../modules/messages" }
+
+bp-runtime = { path = "../../primitives_bridge/runtime" }
+bp-messages = { path = "../../primitives_bridge/messages" }
+
+frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
+frame-system = { version = "4.0.0-dev", default-features = false, path = "../../frame/system" }
+pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../../frame/balances" }
+sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
+sp-runtime = {version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
+sp-finality-grandpa = {version = "4.0.0-dev", default-features = false, path = "../../primitives/finality-grandpa" }
+
+[dev-dependencies]
+our-chain= { path = "../../primitives_bridge/our-chain" }
+chain-substrate= { path = "../../primitives_bridge/chain-substrate" }
+pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, path = "../../frame/transaction-payment" }
+runtime = { path = "../../bin/substrate2/runtime" }

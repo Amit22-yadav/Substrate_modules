@@ -24,7 +24,7 @@ bp-runtime = { path = "../../primitives_bridge/runtime", default-features = fals
 
 frame-benchmarking = { version = "4.0.0-dev", default-features = false, path = "../../frame/benchmarking", optional = true }
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
-frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../support" }
+#frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../support" }
 frame-system = { version = "4.0.0-dev", path = "../../frame/system", default-features = false }
 sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
 sp-runtime = { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
@@ -42,7 +42,7 @@ std = [
 	"bp-runtime/std",
 	"codec/std",
 	"frame-support/std",
-	"frame-support2/std",
+	#"frame-support2/std",
 	"frame-system/std",
 	"log/std",
 	"num-traits/std",

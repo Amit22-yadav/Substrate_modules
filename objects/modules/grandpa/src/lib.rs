@@ -57,7 +57,7 @@ pub mod benchmarking;
 // Re-export in crate namespace for `construct_runtime!`
 pub use pallet::*;
 pub use weights::WeightInfo;
-pub use frame_support2::{
+pub use frame_support::{
 	traits::{Get}
 
 };

@@ -17,7 +17,7 @@
 //! Helpers for implementing various message-related runtime API mthods.
 
 use crate::messages::{source::FromThisChainMessagePayload, MessageBridge};
-
+use frame_support::pallet_prelude::Weight;
 use bp_messages::{LaneId, MessageDetails, MessageNonce};
 use codec::Decode;
 use sp_std::vec::Vec;
@@ -41,7 +41,7 @@ where
 				FromThisChainMessagePayload::<BridgeConfig>::decode(&mut &message_data.payload[..]).ok()?;
 			Some(MessageDetails {
 				nonce,
-				dispatch_weight: 0,
+				dispatch_weight: Weight::zero(),
 				size: message_data.payload.len() as _,
 				delivery_and_dispatch_fee: message_data.fee,
 				dispatch_fee_payment: decoded_payload.dispatch_fee_payment,

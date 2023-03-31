@@ -53,7 +53,7 @@ use frame_system::{
 	EnsureRoot, EnsureRootWithSuccess, EnsureSigned, EnsureWithSuccess,
 };
 pub use node_primitives::{AccountId, Signature};
-use node_primitives::{AccountIndex, Balance, BlockNumber, Hash, Index, Moment};
+pub use node_primitives::{AccountIndex, Balance, BlockNumber, Hash, Index, Moment};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
@@ -170,7 +170,7 @@ impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 		}
 	}
 }
-
+pub type Hashing = our_chain::Hasher;
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -1315,6 +1315,7 @@ where
 			frame_system::CheckNonce::<Runtime>::from(nonce),
 			frame_system::CheckWeight::<Runtime>::new(),
 			pallet_asset_tx_payment::ChargeAssetTxPayment::<Runtime>::from(tip, None),
+			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
 		);
 		let raw_payload = SignedPayload::new(call, extra)
 			.map_err(|e| {
@@ -1880,6 +1881,7 @@ pub type SignedExtra = (
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
 	pallet_asset_tx_payment::ChargeAssetTxPayment<Runtime>,
+	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 
 /// Unchecked extrinsic type as expected by this runtime.

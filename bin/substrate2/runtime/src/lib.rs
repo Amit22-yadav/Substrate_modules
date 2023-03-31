@@ -51,7 +51,7 @@ use frame_system::{
 };
 use sp_runtime::MultiSigner;
 pub use node_primitives::{AccountId, Signature};
-use node_primitives::{AccountIndex, Balance, BlockNumber, Hash, Index, Moment};
+pub use node_primitives::{AccountIndex, Balance, Hashing,BlockNumber, Hash, Index, Moment};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,

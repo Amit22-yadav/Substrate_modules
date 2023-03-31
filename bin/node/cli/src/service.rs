@@ -97,6 +97,7 @@ pub fn create_extrinsic(
 		pallet_asset_tx_payment::ChargeAssetTxPayment::<kitchensink_runtime::Runtime>::from(
 			tip, None,
 		),
+		pallet_transaction_payment::ChargeTransactionPayment::<kitchensink_runtime::Runtime>::from(tip),
 	);
 
 	let raw_payload = kitchensink_runtime::SignedPayload::from_raw(
@@ -108,6 +109,7 @@ pub fn create_extrinsic(
 			kitchensink_runtime::VERSION.transaction_version,
 			genesis_hash,
 			best_hash,
+			(),
 			(),
 			(),
 			(),

@@ -32,7 +32,7 @@ pub mod storage_keys;
 pub mod target_chain;
 
 // Weight is reexported to avoid additional frame-support dependencies in related crates.
-pub use frame_support2::weights::Weight;
+pub use frame_support::weights::Weight;
 
 /// Messages pallet operating mode.
 #[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo)]

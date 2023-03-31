@@ -23,7 +23,7 @@ bp-header-chain = { path = "../../primitives_bridge/header-chain", default-featu
 # Substrate Dependencies
 
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
-frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../support" }
+#frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../support" }
 frame-system = { version = "4.0.0-dev", path = "../../frame/system", default-features = false }
 sp-finality-grandpa ={ version = "4.0.0-dev",default-features = false, path = "../../primitives/finality-grandpa" }
 sp-runtime = { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
@@ -47,7 +47,7 @@ std = [
 	"codec/std",
 	"finality-grandpa/std",
 	"frame-support/std",
-	"frame-support2/std",
+	#"frame-support2/std",
 	"frame-system/std",
 	"log/std",
 	"num-traits/std",

@@ -25,7 +25,7 @@ pallet-bridge-messages = { path = "../messages", default-features = false }
 
 frame-benchmarking = { version = "4.0.0-dev", default-features = false, path = "../../frame/benchmarking", optional = true }
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
-frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../support" }
+#frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../support" }
 frame-support3 = { version = "4.0.0-dev", default-features = false, path = "../support2" }
 frame-system = {version = "4.0.0-dev", default-features = false, path = "../../frame/system" }
 sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
@@ -46,7 +46,7 @@ std = [
 	"bp-token-swap/std",
 	"frame-support/std",
 	"frame-support3/std",
-	"frame-support2/std",
+	#"frame-support2/std",
 	"frame-system/std",
 	"log/std",
 	"pallet-bridge-dispatch/std",

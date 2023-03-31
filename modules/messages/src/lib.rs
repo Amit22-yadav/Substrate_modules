@@ -68,7 +68,7 @@ use frame_support::{
 	weights::{Pays, PostDispatchInfo},
 };
 
-use frame_support2::{
+use frame_support::{
 weights::{RuntimeDbWeight}
 };
 use frame_system::RawOrigin;
