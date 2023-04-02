@@ -30,7 +30,7 @@ use scale_info::TypeInfo;
 use sp_std::prelude::*;
 
 /// Message dispatch weight.
-//pub type Weight = u64;
+
 
 /// Spec version type.
 pub type SpecVersion = u32;

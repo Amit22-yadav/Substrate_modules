@@ -131,7 +131,7 @@ pub mod time_units {
 }
 
 /// Block number type used in Millau.
-pub type BlockNumber = u64;
+pub type BlockNumber = u32;
 
 /// Hash type used in Millau.
 pub type Hash = sp_core::H256;
@@ -162,9 +162,9 @@ pub type WeightToFee = IdentityFee<Balance>;
 
 /// Millau chain.
 #[derive(RuntimeDebug)]
-pub struct SUBSTRATE;
+pub struct Millau;
 
-impl Chain for SUBSTRATE {
+impl Chain for Millau {
 	type BlockNumber = BlockNumber;
 	type Hash = Hash;
 	type Hasher = Hasher;
@@ -241,7 +241,7 @@ impl sp_runtime::traits::Convert<sp_core::H256, AccountId> for AccountIdConverte
 ///
 /// Note that this should only be used for testing.
 pub fn derive_account_from_rialto_id(id: bp_runtime::SourceAccount<AccountId>) -> AccountId {
-	let encoded_id = bp_runtime::derive_account_id(bp_runtime::SUBSTRATE2, id);
+	let encoded_id = bp_runtime::derive_account_id(bp_runtime::RIALTO_CHAIN_ID, id);
 	AccountIdConverter::convert(encoded_id)
 }
 

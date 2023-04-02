@@ -76,6 +76,8 @@ use sp_runtime::{
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, FixedPointNumber, FixedU128, Perbill, Percent, Permill, Perquintill,
 };
+pub use pallet_bridge_grandpa::Call as BridgeGrandpaMillauCall;
+pub use pallet_bridge_messages::Call as MessagesCall;
 use sp_runtime::MultiSignature;
 use sp_std::prelude::*;
 #[cfg(any(feature = "std", test))]
@@ -107,7 +109,7 @@ use sp_runtime::generic::Era;
 
 /// Generated voter bag information.
 mod voter_bags;
-mod our_chain_messages;
+pub mod our_chain_messages;
 
 // Make the WASM binary available.
 #[cfg(feature = "std")]
@@ -348,6 +350,7 @@ impl pallet_proxy::Config for Runtime {
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
 		RuntimeBlockWeights::get().max_block;
+		pub const SS58Prefix: u8 = 48;
 }
 
 impl pallet_scheduler::Config for Runtime {
@@ -532,7 +535,7 @@ parameter_types! {
 	pub const GetDeliveryConfirmationTransactionFee: Balance =
 		chain_substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
 	pub const RootAccountForPayments: Option<AccountId> = None;
-  pub const BridgedChainId: bp_runtime::ChainId = bp_runtime::SUBSTRATE;
+  pub const BridgedChainId: bp_runtime::ChainId = bp_runtime::MILLAU_CHAIN_ID;
 }
 
 parameter_types! {
@@ -552,7 +555,7 @@ parameter_types! {
 
 pub type MillauGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = our_chain::SUBSTRATE;
+	type BridgedChain = our_chain::Millau;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
 	type WeightInfo = pallet_bridge_grandpa::weights::MillauWeight<Runtime>;
@@ -1866,6 +1869,25 @@ type Migrations = (
 	pallet_alliance::migration::Migration<Runtime>,
 	pallet_contracts::Migration<Runtime>,
 );
+
+pub fn rialto_to_millau_account_ownership_digest<Call, AccountId, SpecVersion>(
+	millau_call: &Call,
+	rialto_account_id: AccountId,
+	millau_spec_version: SpecVersion,
+) -> sp_std::vec::Vec<u8>
+where
+	Call: codec::Encode,
+	AccountId: codec::Encode,
+	SpecVersion: codec::Encode,
+{
+	pallet_bridge_dispatch::account_ownership_digest(
+		millau_call,
+		rialto_account_id,
+		millau_spec_version,
+		bp_runtime::RIALTO_CHAIN_ID,
+		bp_runtime::MILLAU_CHAIN_ID,
+	)
+}
 
 /// MMR helper types.
 mod mmr {

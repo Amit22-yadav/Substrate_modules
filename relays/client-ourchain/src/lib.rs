@@ -33,9 +33,9 @@ pub type HeaderId = relay_utils::HeaderId<kitchensink_runtime::Hash, kitchensink
 
 /// Millau chain definition.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Substrate;
+pub struct Millau;
 
-impl ChainBase for Substrate {
+impl ChainBase for Millau {
 	type BlockNumber = kitchensink_runtime::BlockNumber;
 	type Hash = kitchensink_runtime::Hash;
 	type Hasher = kitchensink_runtime::Hashing;
@@ -47,19 +47,19 @@ impl ChainBase for Substrate {
 	type Signature = kitchensink_runtime::Signature;
 
 	fn max_extrinsic_size() -> u32 {
-		our_chain::SUBSTRATE::max_extrinsic_size()
+		our_chain::Millau::max_extrinsic_size()
 	}
 
 	fn max_extrinsic_weight() -> Weight {
-		our_chain::SUBSTRATE::max_extrinsic_weight()
+		our_chain::Millau::max_extrinsic_weight()
 	}
 }
 
-impl ChainWithGrandpa for Substrate {
+impl ChainWithGrandpa for Millau {
 	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = our_chain::WITH_MILLAU_GRANDPA_PALLET_NAME;
 }
 
-impl ChainWithMessages for Substrate {
+impl ChainWithMessages for Millau {
 	const WITH_CHAIN_MESSAGES_PALLET_NAME: &'static str =
 		our_chain::WITH_MILLAU_MESSAGES_PALLET_NAME;
 	const TO_CHAIN_MESSAGE_DETAILS_METHOD: &'static str =
@@ -73,7 +73,7 @@ impl ChainWithMessages for Substrate {
 	type WeightInfo = ();
 }
 
-impl Chain for Substrate {
+impl Chain for Millau {
 	const NAME: &'static str = "Millau";
 	// Rialto token has no value, but we associate it with KSM token
 	const TOKEN_ID: Option<&'static str> = Some("kusama");
@@ -85,10 +85,10 @@ impl Chain for Substrate {
 
 	type SignedBlock = kitchensink_runtime::SignedBlock;
 	type Call = kitchensink_runtime::RuntimeCall;
-	//type WeightToFee = our_chain::WeightToFee;
+	type WeightToFee = our_chain::WeightToFee;
 }
 
-impl ChainWithBalances for Substrate {
+impl ChainWithBalances for Millau {
 	fn account_info_storage_key(account_id: &Self::AccountId) -> StorageKey {
 		use frame_support::storage::generator::StorageMap;
 		StorageKey(frame_system::Account::<kitchensink_runtime::Runtime>::storage_map_final_key(
@@ -97,8 +97,8 @@ impl ChainWithBalances for Substrate {
 	}
 }
 
-impl TransactionSignScheme for Substrate {
-	type Chain = Substrate;
+impl TransactionSignScheme for Millau {
+	type Chain = Millau;
 	type AccountKeyPair = sp_core::sr25519::Pair;
 	type SignedTransaction = kitchensink_runtime::UncheckedExtrinsic;
 

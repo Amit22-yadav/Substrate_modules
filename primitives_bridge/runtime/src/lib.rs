@@ -30,6 +30,7 @@ use codec::FullCodec;
 use frame_support::PalletError;
 use frame_support::{RuntimeDebug, StorageHasher};
 use sp_core::{hash::H256, storage::StorageKey};
+use frame_support::pallet_prelude::Weight;
 use sp_io::hashing::blake2_256;
 use sp_std::{convert::TryFrom, vec, vec::Vec};
 
@@ -53,10 +54,10 @@ mod storage_proof;
 pub const NO_INSTANCE_ID: ChainId = [0, 0, 0, 0];
 
 /// Bridge-with-Rialto instance id.
-pub const SUBSTRATE2: ChainId = *b"rlto";
+pub const RIALTO_CHAIN_ID: ChainId = *b"rlto";
 
 /// Bridge-with-Millau instance id.
-pub const SUBSTRATE: ChainId = *b"mlau";
+pub const MILLAU_CHAIN_ID: ChainId = *b"mlau";
 
 /// Bridge-with-Polkadot instance id.
 pub const POLKADOT_CHAIN_ID: ChainId = *b"pdot";
@@ -171,6 +172,23 @@ pub trait OwnedBridgeModule<T: frame_system::Config> {
 		Self::OperatingModeStorage::put(operating_mode);
 		//log::info!(target: Self::LOG_TARGET, "Setting operating mode to {:?}.", operating_mode);
 		Ok(())
+	}
+}
+
+pub trait WeightExtraOps {
+	/// Checked division of individual components of two weights.
+	///
+	/// Divides components and returns minimal division result. Returns `None` if one
+	/// of `other` weight components is zero.
+	fn min_components_checked_div(&self, other: Weight) -> Option<u64>;
+}
+
+impl WeightExtraOps for Weight {
+	fn min_components_checked_div(&self, other: Weight) -> Option<u64> {
+		Some(sp_std::cmp::min(
+			self.ref_time().checked_div(other.ref_time())?,
+			self.proof_size().checked_div(other.proof_size())?,
+		))
 	}
 }
 

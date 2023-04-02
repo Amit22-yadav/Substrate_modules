@@ -26,7 +26,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
-mod  substrate_messages;
+pub mod  substrate_messages;
 use sp_runtime::MultiSignature;
 use sp_runtime::MultiSigner;
 use frame_support::{
@@ -67,6 +67,8 @@ use sp_api::impl_runtime_apis;
 use sp_authority_discovery::AuthorityId as AuthorityDiscoveryId;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_inherents::{CheckInherentsResult, InherentData};
+pub use pallet_bridge_grandpa::Call as BridgeGrandpaCall;
+pub use pallet_bridge_messages::Call as MessagesCall;
 use sp_runtime::{
 	create_runtime_str,
 	curve::PiecewiseLinear,
@@ -415,6 +417,7 @@ impl pallet_babe::Config for Runtime {
 
 parameter_types! {
 	pub const IndexDeposit: Balance = 1 * DOLLARS;
+	pub const SS58Prefix: u8 = 48;
 }
 
 impl pallet_indices::Config for Runtime {
@@ -474,9 +477,9 @@ parameter_types! {
 }
 
 
-pub type Substrate2GrandpaInstance = ();
+pub type RialtoGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = chain_substrate::Substrate2;
+	type BridgedChain = chain_substrate::Rialto;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
 
@@ -1595,7 +1598,7 @@ impl pallet_bridge_token_swap::Config<WithRialtoTokenSwapInstance> for Runtime {
 	type ThisCurrency = pallet_balances::Pallet<Runtime>;
 	type FromSwapToThisAccountIdConverter = chain_substrate::AccountIdConverter;
 
-	type BridgedChain = chain_substrate::Substrate2;
+	type BridgedChain = chain_substrate::Rialto;
 	type FromBridgedToThisAccountIdConverter = our_chain::AccountIdConverter;
 }
 
@@ -1612,7 +1615,7 @@ parameter_types! {
 	pub const GetDeliveryConfirmationTransactionFee: Balance =
 		our_chain::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
 	pub const RootAccountForPayments: Option<AccountId> = None;
-	pub const RialtoChainId: bp_runtime::ChainId = bp_runtime::SUBSTRATE2;
+	pub const RialtoChainId: bp_runtime::ChainId = bp_runtime::RIALTO_CHAIN_ID;
 }
 parameter_types! {
 	pub IgnoredIssuance: Balance = Treasury::pot();
@@ -1908,6 +1911,25 @@ type Migrations = (
 	pallet_alliance::migration::Migration<Runtime>,
 	pallet_contracts::Migration<Runtime>,
 );
+
+pub fn substrate_to_substrate2_account_ownership_digest<Call, AccountId, SpecVersion>(
+	rialto_call: &Call,
+	millau_account_id: AccountId,
+	rialto_spec_version: SpecVersion,
+) -> sp_std::vec::Vec<u8>
+where
+	Call: codec::Encode,
+	AccountId: codec::Encode,
+	SpecVersion: codec::Encode,
+{
+	pallet_bridge_dispatch::account_ownership_digest(
+		rialto_call,
+		millau_account_id,
+		rialto_spec_version,
+		bp_runtime::MILLAU_CHAIN_ID,
+		bp_runtime::RIALTO_CHAIN_ID,
+	)
+}
 
 /// MMR helper types.
 mod mmr {

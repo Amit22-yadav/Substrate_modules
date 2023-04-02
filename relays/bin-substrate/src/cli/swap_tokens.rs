@@ -20,6 +20,7 @@
 // to show token swap progress
 #![allow(dead_code)]
 
+
 use codec::Encode;
 use num_traits::One;
 use rand::random;
@@ -108,19 +109,19 @@ macro_rules! select_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
 			SwapTokensBridge::MillauToRialto => {
-				type Source = relay_millau_client::Millau;
-				type Target = client_substrate::Substrate2;
+				type Source = client_ourchain::Millau;
+				type Target = client_substrate::Rialto;
 				const SOURCE_SPEC_VERSION: u32 = kitchensink_runtime::VERSION.spec_version;
 				const TARGET_SPEC_VERSION: u32 = runtime::VERSION.spec_version;
 
 				type FromSwapToThisAccountIdConverter = chain_substrate::AccountIdConverter;
 
-				use bp_millau::{
+				use our_chain::{
 					derive_account_from_rialto_id as derive_source_account_from_target_account,
 					TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_TARGET_TO_SOURCE_MESSAGE_FEE_METHOD,
 					WITH_RIALTO_TOKEN_SWAP_PALLET_NAME as TOKEN_SWAP_PALLET_NAME,
 				};
-				use bp_rialto::{
+				use chain_substrate::{
 					derive_account_from_millau_id as derive_target_account_from_source_account,
 					TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_SOURCE_TO_TARGET_MESSAGE_FEE_METHOD,
 				};
@@ -499,8 +500,8 @@ impl SwapTokens {
 	where
 		AccountIdOf<Source>: From<<Source::KeyPair as Pair>::Public>,
 		AccountIdOf<Target>: From<<Target::KeyPair as Pair>::Public>,
-		BalanceOf<Source>: From<u64>,
-		BalanceOf<Target>: From<u64>,
+		BalanceOf<Source>: From<u128>,
+		BalanceOf<Target>: From<u128>,
 	{
 		// accounts that are directly controlled by participants
 		let source_account_at_this_chain: AccountIdOf<Source> = source_sign.public().into();
@@ -629,12 +630,12 @@ pub(crate) async fn wait_until_transaction_is_finalized<C: Chain>(
 					C::NAME,
 					transaction_status,
 				)),
-			Some(TransactionStatusOf::<C>::Finalized(block_hash)) => {
+			Some(TransactionStatusOf::<C>::Finalized((block_hash,_))) => {
 				log::trace!(
 					target: "bridge",
-					"{} transaction has been finalized at block {}",
-					C::NAME,
-					block_hash,
+					"{:?} transaction has been finalized at block ",
+					C::NAME
+					//block_hash,
 				);
 				return Ok(block_hash)
 			},

@@ -28,7 +28,7 @@ use bp_message_dispatch::{CallOrigin, MessagePayload};
 use bp_runtime::EncodedOrDecodedCall;
 use codec::Decode;
 use frame_support::weights::{DispatchInfo, GetDispatchInfo};
-use relay_millau_client::Millau;
+use client_ourchain::Millau;
 use sp_version::RuntimeVersion;
 
 impl CliEncodeCall for Millau {
@@ -42,7 +42,7 @@ impl CliEncodeCall for Millau {
 				.into(),
 			Call::Transfer { recipient, amount } =>
 				kitchensink_runtime::RuntimeCall::Balances(kitchensink_runtime::BalancesCall::transfer {
-					dest: recipient.raw_id(),
+					dest: sp_runtime::MultiAddress::Id(recipient.raw_id()),
 					value: amount.cast(),
 				})
 				.into(),
@@ -77,9 +77,9 @@ impl CliChain for Millau {
 
 	type KeyPair = sp_core::sr25519::Pair;
 	type MessagePayload = MessagePayload<
-		bp_millau::AccountId,
-		bp_rialto::AccountSigner,
-		bp_rialto::Signature,
+		our_chain::AccountId,
+		chain_substrate::AccountSigner,
+		chain_substrate::Signature,
 		Vec<u8>,
 	>;
 
@@ -96,7 +96,7 @@ impl CliChain for Millau {
 				.map_err(|e| anyhow!("Failed to decode Millau's MessagePayload: {:?}", e)),
 			encode_message::MessagePayload::Call { mut call, mut sender, dispatch_weight } => {
 				type Source = Millau;
-				type Target = relay_rialto_client::Rialto;
+				type Target = client_substrate::Rialto;
 
 				sender.enforce_chain::<Source>();
 				let spec_version = Target::RUNTIME_VERSION.spec_version;

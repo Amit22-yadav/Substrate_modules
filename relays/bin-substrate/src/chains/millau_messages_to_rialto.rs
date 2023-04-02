@@ -17,8 +17,8 @@
 //! Millau-to-Rialto messages sync entrypoint.
 
 use messages_relay::relay_strategy::MixStrategy;
-use client_ourchain::Substrate;
-use client_substrate::Substrate2;
+use client_ourchain::Millau;
+use client_substrate::Rialto;
 use substrate_relay_helper::messages_lane::{
 	DirectReceiveMessagesDeliveryProofCallBuilder, DirectReceiveMessagesProofCallBuilder,
 	SubstrateMessageLane,
@@ -32,35 +32,35 @@ substrate_relay_helper::generate_direct_update_conversion_rate_call_builder!(
 	MillauMessagesToRialtoUpdateConversionRateCallBuilder,
 	kitchensink_runtime::Runtime,
 	kitchensink_runtime::WithRialtoMessagesInstance,
-	kitchensink_runtime::rialto_messages::MillauToRialtoMessagesParameter::RialtoToMillauConversionRate
+	kitchensink_runtime::substrate_messages::MillauToRialtoMessagesParameter::RialtoToMillauConversionRate
 );
 
 impl SubstrateMessageLane for MillauMessagesToRialto {
 	const SOURCE_TO_TARGET_CONVERSION_RATE_PARAMETER_NAME: Option<&'static str> =
-		Some(bp_rialto::MILLAU_TO_RIALTO_CONVERSION_RATE_PARAMETER_NAME);
+		Some(chain_substrate::MILLAU_TO_RIALTO_CONVERSION_RATE_PARAMETER_NAME);
 	const TARGET_TO_SOURCE_CONVERSION_RATE_PARAMETER_NAME: Option<&'static str> =
-		Some(bp_millau::RIALTO_TO_MILLAU_CONVERSION_RATE_PARAMETER_NAME);
+		Some(our_chain::RIALTO_TO_MILLAU_CONVERSION_RATE_PARAMETER_NAME);
 
 	const SOURCE_FEE_MULTIPLIER_PARAMETER_NAME: Option<&'static str> = None;
 	const TARGET_FEE_MULTIPLIER_PARAMETER_NAME: Option<&'static str> = None;
 	const AT_SOURCE_TRANSACTION_PAYMENT_PALLET_NAME: Option<&'static str> = None;
 	const AT_TARGET_TRANSACTION_PAYMENT_PALLET_NAME: Option<&'static str> = None;
 
-	type SourceChain = Substrate;
-	type TargetChain = Substrate2;
+	type SourceChain = Millau;
+	type TargetChain = Rialto;
 
-	type SourceTransactionSignScheme = Substrate;
-	type TargetTransactionSignScheme = Substrate2;
+	type SourceTransactionSignScheme = Millau;
+	type TargetTransactionSignScheme = Rialto;
 
 	type ReceiveMessagesProofCallBuilder = DirectReceiveMessagesProofCallBuilder<
 		Self,
-		rialto_runtime::Runtime,
-		rialto_runtime::WithMillauMessagesInstance,
+		runtime::Runtime,
+		runtime::WithMillauMessagesInstance,
 	>;
 	type ReceiveMessagesDeliveryProofCallBuilder = DirectReceiveMessagesDeliveryProofCallBuilder<
 		Self,
-		millau_runtime::Runtime,
-		millau_runtime::WithRialtoMessagesInstance,
+		kitchensink_runtime::Runtime,
+		kitchensink_runtime::WithRialtoMessagesInstance,
 	>;
 
 	type TargetToSourceChainConversionRateUpdateBuilder =

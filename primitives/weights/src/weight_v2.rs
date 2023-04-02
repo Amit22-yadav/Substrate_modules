@@ -19,6 +19,7 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use core::ops::{Add, AddAssign, Div, Mul, Sub, SubAssign};
 use sp_arithmetic::traits::{Bounded, CheckedAdd, CheckedSub, Zero};
 use sp_debug_derive::RuntimeDebug;
+use scale_info::prelude::string::String;
 
 use super::*;
 
@@ -41,6 +42,14 @@ pub struct Weight {
 impl From<OldWeight> for Weight {
 	fn from(old: OldWeight) -> Self {
 		Weight::from_ref_time(old.0)
+	}
+}
+
+impl sp_std::str::FromStr for Weight {
+	type Err = String;
+
+	fn from_str(_s: &str) -> Result<Self, Self::Err> {
+		todo!()
 	}
 }
 

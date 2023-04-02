@@ -23,11 +23,11 @@ use substrate_relay_helper::finality::{
 
 /// Description of Millau -> Rialto finalized headers bridge.
 #[derive(Clone, Debug)]
-pub struct SubstrateFinalityToSubstrate2;
+pub struct MillauFinalityToRialto;
 
 impl SubstrateFinalitySyncPipeline for MillauFinalityToRialto {
-	type SourceChain = client_ourchain::Substrate;
-	type TargetChain = client_substrate::Substrate2;
+	type SourceChain = client_ourchain::Millau;
+	type TargetChain = client_substrate::Rialto;
 
 	type FinalityEngine = GrandpaFinalityEngine<Self::SourceChain>;
 	type SubmitFinalityProofCallBuilder = DirectSubmitGrandpaFinalityProofCallBuilder<
@@ -35,5 +35,5 @@ impl SubstrateFinalitySyncPipeline for MillauFinalityToRialto {
 		runtime::Runtime,
 		runtime::MillauGrandpaInstance,
 	>;
-	type TransactionSignScheme = client_substrate::Substrate2;
+	type TransactionSignScheme = client_substrate::Rialto;
 }

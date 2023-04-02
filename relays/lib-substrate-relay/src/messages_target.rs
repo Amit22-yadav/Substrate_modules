@@ -44,8 +44,10 @@ use num_traits::{Bounded, Zero};
 use relay_substrate_client::{
 	AccountIdOf, AccountKeyPairOf, BalanceOf, Chain, ChainWithMessages, Client,
 	Error as SubstrateError, HashOf, HeaderIdOf, IndexOf, SignParam, TransactionEra,
-	TransactionSignScheme, UnsignedTransaction, WeightToFeeOf,
+	TransactionSignScheme, UnsignedTransaction, 
 };
+use frame_support::weights::WeightToFee;
+use relay_substrate_client::WeightToFeeOf;
 use relay_utils::{relay_loop::Client as RelayClient, HeaderId};
 use sp_core::{Bytes, Pair};
 use sp_runtime::{traits::Saturating, FixedPointNumber, FixedU128};
@@ -223,7 +225,7 @@ where
 			.target_client
 			.prove_storage(vec![inbound_data_key], id.1)
 			.await?
-			.iter_nodes()
+			.into_iter_nodes()
 			.collect();
 		let proof = FromBridgedChainMessagesDeliveryProof {
 			bridged_header_hash: id.1,
@@ -493,8 +495,8 @@ fn compute_fee_multiplier<C: Chain>(
 ) -> FixedU128 {
 	let adjusted_weight_fee_difference =
 		larger_adjusted_weight_fee.saturating_sub(smaller_adjusted_weight_fee);
-	let smaller_tx_unadjusted_weight_fee = WeightToFeeOf::<C>::calc(&smaller_tx_weight);
-	let larger_tx_unadjusted_weight_fee = WeightToFeeOf::<C>::calc(&larger_tx_weight);
+	let smaller_tx_unadjusted_weight_fee = WeightToFeeOf::<C>::weight_to_fee(&smaller_tx_weight);
+	let larger_tx_unadjusted_weight_fee = WeightToFeeOf::<C>::weight_to_fee(&larger_tx_weight);
 	FixedU128::saturating_from_rational(
 		adjusted_weight_fee_difference,
 		larger_tx_unadjusted_weight_fee.saturating_sub(smaller_tx_unadjusted_weight_fee),
@@ -507,7 +509,7 @@ fn compute_prepaid_messages_refund<C: ChainWithMessages>(
 	total_prepaid_nonces: MessageNonce,
 	fee_multiplier: FixedU128,
 ) -> BalanceOf<C> {
-	fee_multiplier.saturating_mul_int(WeightToFeeOf::<C>::calc(
+	fee_multiplier.saturating_mul_int(WeightToFeeOf::<C>::weight_to_fee(
 		&C::PAY_INBOUND_DISPATCH_FEE_WEIGHT_AT_CHAIN.saturating_mul(total_prepaid_nonces),
 	))
 }

@@ -34,7 +34,6 @@ pub(crate) mod send_message;
 
 mod derive_account;
 mod init_bridge;
-mod register_parachain;
 mod reinit_bridge;
 mod relay_headers;
 mod relay_headers_and_messages;
@@ -102,8 +101,7 @@ pub enum Command {
 	ResubmitTransactions(resubmit_transactions::ResubmitTransactions),
 	/// Swap tokens using token-swap bridge.
 	SwapTokens(swap_tokens::SwapTokens),
-	/// Register parachain.
-	RegisterParachain(register_parachain::RegisterParachain),
+	
 }
 
 impl Command {
@@ -140,7 +138,7 @@ impl Command {
 			Self::DeriveAccount(arg) => arg.run().await?,
 			Self::ResubmitTransactions(arg) => arg.run().await?,
 			Self::SwapTokens(arg) => arg.run().await?,
-			Self::RegisterParachain(arg) => arg.run().await?,
+			//Self::RegisterParachain(arg) => arg.run().await?,
 		}
 		Ok(())
 	}
@@ -179,7 +177,7 @@ impl std::str::FromStr for Balance {
 
 impl Balance {
 	/// Cast balance to `u64` type, panicking if it's too large.
-	pub fn cast(&self) -> u64 {
+	pub fn cast(&self) -> u128 {
 		self.0.try_into().expect("Balance is too high for this chain.")
 	}
 }
@@ -349,7 +347,7 @@ impl From<PrometheusParams> for relay_utils::metrics::MetricsParams {
 }
 
 /// Either explicit or maximal allowed value.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug,Clone, PartialEq, Eq)]
 pub enum ExplicitOrMaximal<V> {
 	/// User has explicitly specified argument value.
 	Explicit(V),

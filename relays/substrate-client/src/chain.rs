@@ -27,6 +27,7 @@ use sp_runtime::{
 	traits::{Block as BlockT, Dispatchable, Member},
 	EncodedJustification,
 };
+use frame_support::weights::WeightToFee;
 use std::{fmt::Debug, time::Duration};
 
 /// Substrate-based chain from minimal relay-client point of view.
@@ -61,7 +62,7 @@ pub trait Chain: ChainBase + Clone {
 	type Call: Clone + Codec + Dispatchable + Debug + Send;
 
 	// Type that is used by the chain, to convert from weight to fee.
-	// type WeightToFee: WeightToFeePolynomial<Balance = Self::Balance>;
+	type WeightToFee: WeightToFee<Balance = Self::Balance>;
 }
 
 /// Substrate-based chain that is using direct GRANDPA finality from minimal relay-client point of
@@ -79,7 +80,7 @@ pub trait ChainWithGrandpa: Chain {
 }
 
 /// Substrate-based chain with messaging support from minimal relay-client point of view.
-pub trait ChainWithMessages: Chain {
+pub trait ChainWithMessages: Chain  {
 	/// Name of the bridge messages pallet (used in `construct_runtime` macro call) that is deployed
 	/// at some other chain to bridge with this `ChainWithMessages`.
 	///
@@ -109,7 +110,7 @@ pub trait ChainWithMessages: Chain {
 /// Call type used by the chain.
 pub type CallOf<C> = <C as Chain>::Call;
 /// Weight-to-Fee type used by the chain.
-//pub type WeightToFeeOf<C> = <C as Chain>::WeightToFee;
+pub type WeightToFeeOf<C> = <C as Chain>::WeightToFee;
 /// Transaction status of the chain.
 pub type TransactionStatusOf<C> = TransactionStatus<HashOf<C>, HashOf<C>>;
 

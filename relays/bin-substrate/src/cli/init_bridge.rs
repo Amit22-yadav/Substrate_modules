@@ -44,27 +44,27 @@ pub struct InitBridge {
 pub enum InitBridgeName {
 	MillauToRialto,
 	RialtoToMillau,
-	WestendToMillau,
-	RococoToWococo,
-	WococoToRococo,
-	KusamaToPolkadot,
-	PolkadotToKusama,
+	// WestendToMillau,
+	// RococoToWococo,
+	// WococoToRococo,
+	// KusamaToPolkadot,
+	// PolkadotToKusama,
 }
 
 macro_rules! select_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
 			InitBridgeName::MillauToRialto => {
-				type Source = relay_millau_client::Millau;
-				type Target = relay_rialto_client::Rialto;
+				type Source = client_ourchain::Millau;
+				type Target = client_substrate::Rialto;
 				type Engine = GrandpaFinalityEngine<Source>;
 
 				fn encode_init_bridge(
 					init_data: InitializationData<<Source as ChainBase>::Header>,
 				) -> <Target as Chain>::Call {
-					rialto_runtime::SudoCall::sudo {
+					runtime::SudoCall::sudo {
 						call: Box::new(
-							rialto_runtime::BridgeGrandpaMillauCall::initialize { init_data }
+							runtime::BridgeGrandpaMillauCall::initialize { init_data }
 								.into(),
 						),
 					}
@@ -74,115 +74,115 @@ macro_rules! select_bridge {
 				$generic
 			},
 			InitBridgeName::RialtoToMillau => {
-				type Source = relay_rialto_client::Rialto;
-				type Target = relay_millau_client::Millau;
+				type Source = client_substrate::Rialto;
+				type Target = client_ourchain::Millau;
 				type Engine = GrandpaFinalityEngine<Source>;
 
 				fn encode_init_bridge(
 					init_data: InitializationData<<Source as ChainBase>::Header>,
 				) -> <Target as Chain>::Call {
-					let initialize_call = millau_runtime::BridgeGrandpaCall::<
-						millau_runtime::Runtime,
-						millau_runtime::RialtoGrandpaInstance,
+					let initialize_call = kitchensink_runtime::BridgeGrandpaCall::<
+					kitchensink_runtime::Runtime,
+					kitchensink_runtime::RialtoGrandpaInstance,
 					>::initialize {
 						init_data,
 					};
-					millau_runtime::SudoCall::sudo { call: Box::new(initialize_call.into()) }.into()
+					kitchensink_runtime::SudoCall::sudo { call: Box::new(initialize_call.into()) }.into()
 				}
 
 				$generic
 			},
-			InitBridgeName::WestendToMillau => {
-				type Source = relay_westend_client::Westend;
-				type Target = relay_millau_client::Millau;
-				type Engine = GrandpaFinalityEngine<Source>;
+			// InitBridgeName::WestendToMillau => {
+			// 	type Source = relay_westend_client::Westend;
+			// 	type Target = relay_millau_client::Millau;
+			// 	type Engine = GrandpaFinalityEngine<Source>;
 
-				fn encode_init_bridge(
-					init_data: InitializationData<<Source as ChainBase>::Header>,
-				) -> <Target as Chain>::Call {
-					// at Westend -> Millau initialization we're not using sudo, because otherwise
-					// our deployments may fail, because we need to initialize both Rialto -> Millau
-					// and Westend -> Millau bridge. => since there's single possible sudo account,
-					// one of transaction may fail with duplicate nonce error
-					millau_runtime::BridgeGrandpaCall::<
-						millau_runtime::Runtime,
-						millau_runtime::WestendGrandpaInstance,
-					>::initialize {
-						init_data,
-					}
-					.into()
-				}
+			// 	fn encode_init_bridge(
+			// 		init_data: InitializationData<<Source as ChainBase>::Header>,
+			// 	) -> <Target as Chain>::Call {
+			// 		// at Westend -> Millau initialization we're not using sudo, because otherwise
+			// 		// our deployments may fail, because we need to initialize both Rialto -> Millau
+			// 		// and Westend -> Millau bridge. => since there's single possible sudo account,
+			// 		// one of transaction may fail with duplicate nonce error
+			// 		millau_runtime::BridgeGrandpaCall::<
+			// 			millau_runtime::Runtime,
+			// 			millau_runtime::WestendGrandpaInstance,
+			// 		>::initialize {
+			// 			init_data,
+			// 		}
+			// 		.into()
+			// 	}
 
-				$generic
-			},
-			InitBridgeName::RococoToWococo => {
-				type Source = relay_rococo_client::Rococo;
-				type Target = relay_wococo_client::Wococo;
-				type Engine = GrandpaFinalityEngine<Source>;
+			// 	$generic
+			// },
+			// InitBridgeName::RococoToWococo => {
+			// 	type Source = relay_rococo_client::Rococo;
+			// 	type Target = relay_wococo_client::Wococo;
+			// 	type Engine = GrandpaFinalityEngine<Source>;
 
-				fn encode_init_bridge(
-					init_data: InitializationData<<Source as ChainBase>::Header>,
-				) -> <Target as Chain>::Call {
-					relay_wococo_client::runtime::Call::BridgeGrandpaRococo(
-						relay_wococo_client::runtime::BridgeGrandpaRococoCall::initialize(
-							init_data,
-						),
-					)
-				}
+			// 	fn encode_init_bridge(
+			// 		init_data: InitializationData<<Source as ChainBase>::Header>,
+			// 	) -> <Target as Chain>::Call {
+			// 		relay_wococo_client::runtime::Call::BridgeGrandpaRococo(
+			// 			relay_wococo_client::runtime::BridgeGrandpaRococoCall::initialize(
+			// 				init_data,
+			// 			),
+			// 		)
+			// 	}
 
-				$generic
-			},
-			InitBridgeName::WococoToRococo => {
-				type Source = relay_wococo_client::Wococo;
-				type Target = relay_rococo_client::Rococo;
-				type Engine = GrandpaFinalityEngine<Source>;
+			// 	$generic
+			// },
+			// InitBridgeName::WococoToRococo => {
+			// 	type Source = relay_wococo_client::Wococo;
+			// 	type Target = relay_rococo_client::Rococo;
+			// 	type Engine = GrandpaFinalityEngine<Source>;
 
-				fn encode_init_bridge(
-					init_data: InitializationData<<Source as ChainBase>::Header>,
-				) -> <Target as Chain>::Call {
-					relay_rococo_client::runtime::Call::BridgeGrandpaWococo(
-						relay_rococo_client::runtime::BridgeGrandpaWococoCall::initialize(
-							init_data,
-						),
-					)
-				}
+			// 	fn encode_init_bridge(
+			// 		init_data: InitializationData<<Source as ChainBase>::Header>,
+			// 	) -> <Target as Chain>::Call {
+			// 		relay_rococo_client::runtime::Call::BridgeGrandpaWococo(
+			// 			relay_rococo_client::runtime::BridgeGrandpaWococoCall::initialize(
+			// 				init_data,
+			// 			),
+			// 		)
+			// 	}
 
-				$generic
-			},
-			InitBridgeName::KusamaToPolkadot => {
-				type Source = relay_kusama_client::Kusama;
-				type Target = relay_polkadot_client::Polkadot;
-				type Engine = GrandpaFinalityEngine<Source>;
+			// 	$generic
+			// },
+			// InitBridgeName::KusamaToPolkadot => {
+			// 	type Source = relay_kusama_client::Kusama;
+			// 	type Target = relay_polkadot_client::Polkadot;
+			// 	type Engine = GrandpaFinalityEngine<Source>;
 
-				fn encode_init_bridge(
-					init_data: InitializationData<<Source as ChainBase>::Header>,
-				) -> <Target as Chain>::Call {
-					relay_polkadot_client::runtime::Call::BridgeKusamaGrandpa(
-						relay_polkadot_client::runtime::BridgeKusamaGrandpaCall::initialize(
-							init_data,
-						),
-					)
-				}
+			// 	fn encode_init_bridge(
+			// 		init_data: InitializationData<<Source as ChainBase>::Header>,
+			// 	) -> <Target as Chain>::Call {
+			// 		relay_polkadot_client::runtime::Call::BridgeKusamaGrandpa(
+			// 			relay_polkadot_client::runtime::BridgeKusamaGrandpaCall::initialize(
+			// 				init_data,
+			// 			),
+			// 		)
+			// 	}
 
-				$generic
-			},
-			InitBridgeName::PolkadotToKusama => {
-				type Source = relay_polkadot_client::Polkadot;
-				type Target = relay_kusama_client::Kusama;
-				type Engine = GrandpaFinalityEngine<Source>;
+			// 	$generic
+			// },
+			// InitBridgeName::PolkadotToKusama => {
+			// 	type Source = relay_polkadot_client::Polkadot;
+			// 	type Target = relay_kusama_client::Kusama;
+			// 	type Engine = GrandpaFinalityEngine<Source>;
 
-				fn encode_init_bridge(
-					init_data: InitializationData<<Source as ChainBase>::Header>,
-				) -> <Target as Chain>::Call {
-					relay_kusama_client::runtime::Call::BridgePolkadotGrandpa(
-						relay_kusama_client::runtime::BridgePolkadotGrandpaCall::initialize(
-							init_data,
-						),
-					)
-				}
+			// 	fn encode_init_bridge(
+			// 		init_data: InitializationData<<Source as ChainBase>::Header>,
+			// 	) -> <Target as Chain>::Call {
+			// 		relay_kusama_client::runtime::Call::BridgePolkadotGrandpa(
+			// 			relay_kusama_client::runtime::BridgePolkadotGrandpaCall::initialize(
+			// 				init_data,
+			// 			),
+			// 		)
+			// 	}
 
-				$generic
-			},
+			// 	$generic
+			// },
 		}
 	};
 }

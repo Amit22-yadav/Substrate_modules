@@ -80,10 +80,10 @@ pub struct SendMessage {
 		default_value = "at-source-chain",
 	)]
 	dispatch_fee_payment: DispatchFeePayment,
-	/// Dispatch weight of the message. If not passed, determined automatically.
+	//// Dispatch weight of the message. If not passed, determined automatically.
 	#[structopt(long)]
 	dispatch_weight: Option<ExplicitOrMaximal<Weight>>,
-	/// Delivery and dispatch fee in source chain base currency units. If not passed, determined
+	
 	/// automatically.
 	#[structopt(long)]
 	fee: Option<Balance>,
@@ -261,7 +261,7 @@ impl SendMessage {
 }
 
 fn prepare_call_dispatch_weight(
-	user_specified_dispatch_weight: &Option<ExplicitOrMaximal<Weight>>,
+	user_specified_dispatch_weight: & Option<ExplicitOrMaximal<Weight>>,
 	weight_from_pre_dispatch_call: impl Fn() -> anyhow::Result<ExplicitOrMaximal<Weight>>,
 	maximal_allowed_weight: Weight,
 ) -> anyhow::Result<Weight> {

@@ -16,8 +16,8 @@
 
 use crate::{
 	chains::{
-		kusama_headers_to_polkadot::KusamaFinalityToPolkadot,
-		polkadot_headers_to_kusama::PolkadotFinalityToKusama,
+		//kusama_headers_to_polkadot::KusamaFinalityToPolkadot,
+		//polkadot_headers_to_kusama::PolkadotFinalityToKusama,
 	},
 	cli::{
 		swap_tokens::wait_until_transaction_is_finalized, SourceConnectionParams,
@@ -62,77 +62,77 @@ pub struct ReinitBridge {
 	target_sign: TargetSigningParams,
 }
 
-#[derive(Debug, EnumString, EnumVariantNames, PartialEq)]
-#[strum(serialize_all = "kebab_case")]
-/// Bridge to initialize.
-pub enum ReinitBridgeName {
-	KusamaToPolkadot,
-	PolkadotToKusama,
-}
+ #[derive(Debug, EnumString, EnumVariantNames, PartialEq)]
+ #[strum(serialize_all = "kebab_case")]
+// /// Bridge to initialize.
+ pub enum ReinitBridgeName {
+// 	KusamaToPolkadot,
+// 	PolkadotToKusama,
+ }
 
-macro_rules! select_bridge {
-	($bridge: expr, $generic: tt) => {
+ macro_rules! select_bridge {
+ 	($bridge: expr, $generic: tt) => {
 		match $bridge {
-			ReinitBridgeName::KusamaToPolkadot => {
-				use relay_polkadot_client::runtime;
+// 			ReinitBridgeName::KusamaToPolkadot => {
+// 				use relay_polkadot_client::runtime;
 
-				type Finality = KusamaFinalityToPolkadot;
-				type Call = runtime::Call;
+// 				type Finality = KusamaFinalityToPolkadot;
+// 				type Call = runtime::Call;
 
-				fn submit_finality_proof_call(
-					header_and_proof: HeaderAndProof<Finality>,
-				) -> runtime::Call {
-					runtime::Call::BridgeKusamaGrandpa(
-						runtime::BridgeKusamaGrandpaCall::submit_finality_proof(
-							Box::new(header_and_proof.0.into_inner()),
-							header_and_proof.1,
-						),
-					)
-				}
+// 				fn submit_finality_proof_call(
+// 					header_and_proof: HeaderAndProof<Finality>,
+// 				) -> runtime::Call {
+// 					runtime::Call::BridgeKusamaGrandpa(
+// 						runtime::BridgeKusamaGrandpaCall::submit_finality_proof(
+// 							Box::new(header_and_proof.0.into_inner()),
+// 							header_and_proof.1,
+// 						),
+// 					)
+// 				}
 
-				fn set_pallet_operation_mode_call(operational: bool) -> runtime::Call {
-					runtime::Call::BridgeKusamaGrandpa(
-						runtime::BridgeKusamaGrandpaCall::set_operational(operational),
-					)
-				}
+// 				fn set_pallet_operation_mode_call(operational: bool) -> runtime::Call {
+// 					runtime::Call::BridgeKusamaGrandpa(
+// 						runtime::BridgeKusamaGrandpaCall::set_operational(operational),
+// 					)
+// 				}
 
-				fn batch_all_call(calls: Vec<Call>) -> runtime::Call {
-					runtime::Call::Utility(runtime::UtilityCall::batch_all(calls))
-				}
+// 				fn batch_all_call(calls: Vec<Call>) -> runtime::Call {
+// 					runtime::Call::Utility(runtime::UtilityCall::batch_all(calls))
+// 				}
 
-				$generic
-			},
-			ReinitBridgeName::PolkadotToKusama => {
-				use relay_kusama_client::runtime;
+// 				$generic
+// 			},
+// 			ReinitBridgeName::PolkadotToKusama => {
+// 				use relay_kusama_client::runtime;
 
-				type Finality = PolkadotFinalityToKusama;
-				type Call = runtime::Call;
+// 				type Finality = PolkadotFinalityToKusama;
+// 				type Call = runtime::Call;
 
-				fn submit_finality_proof_call(
-					header_and_proof: HeaderAndProof<Finality>,
-				) -> runtime::Call {
-					runtime::Call::BridgePolkadotGrandpa(
-						runtime::BridgePolkadotGrandpaCall::submit_finality_proof(
-							Box::new(header_and_proof.0.into_inner()),
-							header_and_proof.1,
-						),
-					)
-				}
+// 				fn submit_finality_proof_call(
+// 					header_and_proof: HeaderAndProof<Finality>,
+// 				) -> runtime::Call {
+// 					runtime::Call::BridgePolkadotGrandpa(
+// 						runtime::BridgePolkadotGrandpaCall::submit_finality_proof(
+// 							Box::new(header_and_proof.0.into_inner()),
+// 							header_and_proof.1,
+// 						),
+// 					)
+// 				}
 
-				fn set_pallet_operation_mode_call(operational: bool) -> runtime::Call {
-					runtime::Call::BridgePolkadotGrandpa(
-						runtime::BridgePolkadotGrandpaCall::set_operational(operational),
-					)
-				}
+// 				fn set_pallet_operation_mode_call(operational: bool) -> runtime::Call {
+// 					runtime::Call::BridgePolkadotGrandpa(
+// 						runtime::BridgePolkadotGrandpaCall::set_operational(operational),
+// 					)
+// 				}
 
-				fn batch_all_call(calls: Vec<Call>) -> runtime::Call {
-					runtime::Call::Utility(runtime::UtilityCall::batch_all(calls))
-				}
+// 				fn batch_all_call(calls: Vec<Call>) -> runtime::Call {
+// 					runtime::Call::Utility(runtime::UtilityCall::batch_all(calls))
+// 				}
 
-				$generic
-			},
-		}
-	};
+// 				$generic
+// 			},
+ 		}
+ 	};
 }
 
 impl ReinitBridge {
@@ -383,7 +383,7 @@ fn make_mandatory_headers_batches<
 	let maximal_tx_size = P::TargetChain::max_extrinsic_size() * 2 / 3;
 	let maximal_tx_weight = P::TargetChain::max_extrinsic_weight() * 2 / 3;
 	let mut current_batch_size: u32 = 0;
-	let mut current_batch_weight: Weight = 0;
+	let mut current_batch_weight: Weight = Weight::zero();
 	let mut batches = Vec::new();
 	let mut i = 0;
 	while i < headers_to_submit.len() {
@@ -396,7 +396,7 @@ fn make_mandatory_headers_batches<
 		let new_batch_weight = current_batch_weight.saturating_add(header_and_proof_weight);
 
 		let is_exceeding_tx_size = new_batch_size > maximal_tx_size;
-		let is_exceeding_tx_weight = new_batch_weight > maximal_tx_weight;
+		let is_exceeding_tx_weight = new_batch_weight .any_gt( maximal_tx_weight);
 		let is_new_batch_required = is_exceeding_tx_size || is_exceeding_tx_weight;
 
 		if is_new_batch_required {
@@ -409,7 +409,7 @@ fn make_mandatory_headers_batches<
 
 			// we'll reiterate the same header again => so set `current_*` to zero
 			current_batch_size = 0;
-			current_batch_weight = 0;
+			current_batch_weight = Weight::zero();
 			headers_to_submit = remaining_headers_to_submit;
 			i = 0;
 		} else {

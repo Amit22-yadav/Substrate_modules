@@ -28,7 +28,7 @@ use bp_message_dispatch::{CallOrigin, MessagePayload};
 use bp_runtime::EncodedOrDecodedCall;
 use codec::Decode;
 use frame_support::weights::{DispatchInfo, GetDispatchInfo};
-use relay_rialto_client::Rialto;
+use client_substrate::Rialto;
 use sp_version::RuntimeVersion;
 
 impl CliEncodeCall for Rialto {
@@ -36,12 +36,12 @@ impl CliEncodeCall for Rialto {
 		Ok(match call {
 			Call::Raw { data } => Self::Call::decode(&mut &*data.0)?.into(),
 			Call::Remark { remark_payload, .. } =>
-				rialto_runtime::Call::System(rialto_runtime::SystemCall::remark {
+				runtime::RuntimeCall::System(runtime::SystemCall::remark {
 					remark: remark_payload.as_ref().map(|x| x.0.clone()).unwrap_or_default(),
 				})
 				.into(),
 			Call::Transfer { recipient, amount } =>
-				rialto_runtime::Call::Balances(rialto_runtime::BalancesCall::transfer {
+				runtime::RuntimeCall::Balances(runtime::BalancesCall::transfer {
 					dest: recipient.raw_id().into(),
 					value: amount.0,
 				})
@@ -50,8 +50,8 @@ impl CliEncodeCall for Rialto {
 				match *bridge_instance_index {
 					bridge::RIALTO_TO_MILLAU_INDEX => {
 						let payload = Decode::decode(&mut &*payload.0)?;
-						rialto_runtime::Call::BridgeMillauMessages(
-							rialto_runtime::MessagesCall::send_message {
+						runtime::RuntimeCall::BridgeMillauMessages(
+							runtime::MessagesCall::send_message {
 								lane_id: lane.0,
 								payload,
 								delivery_and_dispatch_fee: fee.0,
@@ -73,18 +73,18 @@ impl CliEncodeCall for Rialto {
 }
 
 impl CliChain for Rialto {
-	const RUNTIME_VERSION: RuntimeVersion = rialto_runtime::VERSION;
+	const RUNTIME_VERSION: RuntimeVersion = runtime::VERSION;
 
 	type KeyPair = sp_core::sr25519::Pair;
 	type MessagePayload = MessagePayload<
-		bp_rialto::AccountId,
-		bp_millau::AccountSigner,
-		bp_millau::Signature,
+		chain_substrate::AccountId,
+		our_chain::AccountSigner,
+		our_chain::Signature,
 		Vec<u8>,
 	>;
 
 	fn ss58_format() -> u16 {
-		rialto_runtime::SS58Prefix::get() as u16
+		runtime::SS58Prefix::get() as u16
 	}
 
 	fn encode_message(
@@ -95,7 +95,7 @@ impl CliChain for Rialto {
 				.map_err(|e| anyhow!("Failed to decode Rialto's MessagePayload: {:?}", e)),
 			encode_message::MessagePayload::Call { mut call, mut sender, dispatch_weight } => {
 				type Source = Rialto;
-				type Target = relay_millau_client::Millau;
+				type Target = client_ourchain::Millau;
 
 				sender.enforce_chain::<Source>();
 				let spec_version = Target::RUNTIME_VERSION.spec_version;
@@ -103,7 +103,7 @@ impl CliChain for Rialto {
 				encode_call::preprocess_call::<Source, Target>(
 					&mut call,
 					bridge::RIALTO_TO_MILLAU_INDEX,
-				);
+				);	
 				let call = Target::encode_call(&call)?;
 				let dispatch_weight = dispatch_weight.map(Ok).unwrap_or_else(|| {
 					call.to_decoded().map(|call| call.get_dispatch_info().weight)

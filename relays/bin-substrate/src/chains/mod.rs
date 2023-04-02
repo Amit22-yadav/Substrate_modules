@@ -36,8 +36,8 @@ mod tests {
 	use bp_runtime::Chain as _;
 	use codec::Encode;
 	use frame_support::dispatch::GetDispatchInfo;
-	use relay_millau_client::Millau;
-	use relay_rialto_client::Rialto;
+	use client_ourchain::Millau;
+	use client_substrate::Rialto;
 	use relay_substrate_client::{SignParam, TransactionSignScheme, UnsignedTransaction};
 	use sp_core::Pair;
 	use sp_runtime::traits::{IdentifyAccount, Verify};
@@ -47,7 +47,7 @@ mod tests {
 		let millau_sign = relay_millau_client::SigningParams::from_string("//Dave", None).unwrap();
 
 		let call =
-			rialto_runtime::Call::System(rialto_runtime::SystemCall::remark { remark: vec![] });
+			runtime::RuntimeCall::System(runtime::SystemCall::remark { remark: vec![] });
 
 		let millau_public: bp_millau::AccountSigner = millau_sign.public().into();
 		let millau_account_id: bp_millau::AccountId = millau_public.into_account();
@@ -55,7 +55,7 @@ mod tests {
 		let digest = millau_runtime::millau_to_rialto_account_ownership_digest(
 			&call,
 			millau_account_id,
-			rialto_runtime::VERSION.spec_version,
+			runtime::VERSION.spec_version,
 		);
 
 		let rialto_signer =
@@ -75,7 +75,7 @@ mod tests {
 		let rialto_public: bp_rialto::AccountSigner = rialto_sign.public().into();
 		let rialto_account_id: bp_rialto::AccountId = rialto_public.into_account();
 
-		let digest = rialto_runtime::rialto_to_millau_account_ownership_digest(
+		let digest = runtime::rialto_to_millau_account_ownership_digest(
 			&call,
 			rialto_account_id,
 			millau_runtime::VERSION.spec_version,
@@ -90,7 +90,7 @@ mod tests {
 
 	#[test]
 	fn maximal_rialto_to_millau_message_arguments_size_is_computed_correctly() {
-		use rialto_runtime::millau_messages::Millau;
+		use runtime::millau_messages::Millau;
 
 		let maximal_remark_size = encode_call::compute_maximal_message_arguments_size(
 			bp_rialto::Rialto::max_extrinsic_size(),
@@ -134,13 +134,13 @@ mod tests {
 
 	#[test]
 	fn maximal_rialto_to_millau_message_dispatch_weight_is_computed_correctly() {
-		use rialto_runtime::millau_messages::Millau;
+		use runtime::millau_messages::Millau;
 
 		let maximal_dispatch_weight = send_message::compute_maximal_message_dispatch_weight(
 			bp_millau::Millau::max_extrinsic_weight(),
 		);
 		let call: millau_runtime::Call =
-			rialto_runtime::SystemCall::remark { remark: vec![] }.into();
+			runtime::SystemCall::remark { remark: vec![] }.into();
 
 		let payload = send_message::message_payload(
 			Default::default(),
@@ -168,7 +168,7 @@ mod tests {
 		let maximal_dispatch_weight = send_message::compute_maximal_message_dispatch_weight(
 			bp_rialto::Rialto::max_extrinsic_weight(),
 		);
-		let call: rialto_runtime::Call =
+		let call: runtime::Call =
 			millau_runtime::SystemCall::remark { remark: vec![] }.into();
 
 		let payload = send_message::message_payload(
@@ -193,7 +193,7 @@ mod tests {
 	#[test]
 	fn rialto_tx_extra_bytes_constant_is_correct() {
 		let rialto_call =
-			rialto_runtime::Call::System(rialto_runtime::SystemCall::remark { remark: vec![] });
+			runtime::Call::System(runtime::SystemCall::remark { remark: vec![] });
 		let rialto_tx = Rialto::sign_transaction(SignParam {
 			spec_version: 1,
 			transaction_version: 1,

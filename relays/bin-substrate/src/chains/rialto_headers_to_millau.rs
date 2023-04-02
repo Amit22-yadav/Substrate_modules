@@ -26,8 +26,8 @@ use substrate_relay_helper::finality::{
 pub struct RialtoFinalityToMillau;
 
 impl SubstrateFinalitySyncPipeline for RialtoFinalityToMillau {
-	type SourceChain = relay_rialto_client::Rialto;
-	type TargetChain = relay_millau_client::Millau;
+	type SourceChain = client_substrate::Rialto;
+	type TargetChain = client_ourchain::Millau;
 
 	type FinalityEngine = GrandpaFinalityEngine<Self::SourceChain>;
 	type SubmitFinalityProofCallBuilder = DirectSubmitGrandpaFinalityProofCallBuilder<
@@ -35,5 +35,5 @@ impl SubstrateFinalitySyncPipeline for RialtoFinalityToMillau {
 		kitchensink_runtime::Runtime,
 		kitchensink_runtime::RialtoGrandpaInstance,
 	>;
-	type TransactionSignScheme = relay_millau_client::Millau;
+	type TransactionSignScheme = client_ourchain::Millau;
 }

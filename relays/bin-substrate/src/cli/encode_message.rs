@@ -13,7 +13,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
-
+//use std::str::FromStr;
 use crate::{
 	cli::{bridge::FullBridge, AccountId, CliChain, HexBytes},
 	select_full_bridge,
@@ -43,7 +43,7 @@ pub enum MessagePayload {
 		/// It must be specified if the chain runtime is not bundled with the relay, or if
 		/// you want to override bundled weight.
 		#[structopt(long)]
-		dispatch_weight: Option<Weight>,
+		dispatch_weight: Option<Weight> ,
 	},
 }
 

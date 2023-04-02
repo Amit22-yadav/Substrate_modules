@@ -32,9 +32,9 @@ pub type HeaderId = relay_utils::HeaderId<runtime::Hash, runtime::BlockNumber>;
 
 /// Rialto chain definition
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Substrate2;
+pub struct Rialto;
 
-impl ChainBase for Substrate2 {
+impl ChainBase for Rialto {
 	type BlockNumber = runtime::BlockNumber;
 	type Hash = runtime::Hash;
 	type Hasher = runtime::Hashing;
@@ -46,16 +46,16 @@ impl ChainBase for Substrate2 {
 	type Signature = runtime::Signature;
 
 	fn max_extrinsic_size() -> u32 {
-		chain_substrate::Substrate2::max_extrinsic_size()
+		chain_substrate::Rialto::max_extrinsic_size()
 	}
 
 	fn max_extrinsic_weight() -> Weight {
-		chain_substrate::Substrate2::max_extrinsic_weight()
+		chain_substrate::Rialto::max_extrinsic_weight()
 	}
 }
 
-impl Chain for Substrate2 {
-	const NAME: &'static str = "Substrate2";
+impl Chain for Rialto {
+	const NAME: &'static str = "Rialto";
 	// Rialto token has no value, but we associate it with DOT token
 	const TOKEN_ID: Option<&'static str> = Some("polkadot");
 	const BEST_FINALIZED_HEADER_ID_METHOD: &'static str =
@@ -66,14 +66,14 @@ impl Chain for Substrate2 {
 
 	type SignedBlock = runtime::SignedBlock;
 	type Call = runtime::RuntimeCall;
-	//type WeightToFee = chain_substrate::WeightToFee;
+	type WeightToFee = chain_substrate::WeightToFee;
 }
 
-impl ChainWithGrandpa for Substrate2 {
-	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = chain_substrate::WITH_SUBSTRATE2_GRANDPA_PALLET_NAME;
+impl ChainWithGrandpa for Rialto {
+	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = chain_substrate::WITH_RIALTO_GRANDPA_PALLET_NAME;
 }
 
-impl ChainWithMessages for Substrate2 {
+impl ChainWithMessages for Rialto {
 	const WITH_CHAIN_MESSAGES_PALLET_NAME: &'static str =
 		chain_substrate::WITH_RIALTO_MESSAGES_PALLET_NAME;
 	const TO_CHAIN_MESSAGE_DETAILS_METHOD: &'static str =
@@ -87,7 +87,7 @@ impl ChainWithMessages for Substrate2 {
 	type WeightInfo = ();
 }
 
-impl ChainWithBalances for Substrate2 {
+impl ChainWithBalances for Rialto {
 	fn account_info_storage_key(account_id: &Self::AccountId) -> StorageKey {
 		use frame_support::storage::generator::StorageMap;
 		StorageKey(frame_system::Account::<runtime::Runtime>::storage_map_final_key(
@@ -96,8 +96,8 @@ impl ChainWithBalances for Substrate2 {
 	}
 }
 
-impl TransactionSignScheme for Substrate2 {
-	type Chain = Substrate2;
+impl TransactionSignScheme for Rialto {
+	type Chain = Rialto;
 	type AccountKeyPair = sp_core::sr25519::Pair;
 	type SignedTransaction = runtime::UncheckedExtrinsic;
 

@@ -22,10 +22,10 @@ use strum::{EnumString, EnumVariantNames};
 pub enum FullBridge {
 	MillauToRialto,
 	RialtoToMillau,
-	RococoToWococo,
-	WococoToRococo,
-	KusamaToPolkadot,
-	PolkadotToKusama,
+	// RococoToWococo,
+	// WococoToRococo,
+	// KusamaToPolkadot,
+	// PolkadotToKusama,
 }
 
 impl FullBridge {
@@ -34,20 +34,20 @@ impl FullBridge {
 		match self {
 			Self::MillauToRialto => MILLAU_TO_RIALTO_INDEX,
 			Self::RialtoToMillau => RIALTO_TO_MILLAU_INDEX,
-			Self::RococoToWococo => ROCOCO_TO_WOCOCO_INDEX,
-			Self::WococoToRococo => WOCOCO_TO_ROCOCO_INDEX,
-			Self::KusamaToPolkadot => KUSAMA_TO_POLKADOT_INDEX,
-			Self::PolkadotToKusama => POLKADOT_TO_KUSAMA_INDEX,
+			// Self::RococoToWococo => ROCOCO_TO_WOCOCO_INDEX,
+			// Self::WococoToRococo => WOCOCO_TO_ROCOCO_INDEX,
+			// Self::KusamaToPolkadot => KUSAMA_TO_POLKADOT_INDEX,
+			// Self::PolkadotToKusama => POLKADOT_TO_KUSAMA_INDEX,
 		}
 	}
 }
 
-pub const RIALTO_TO_MILLAU_INDEX: u8 = 0;
 pub const MILLAU_TO_RIALTO_INDEX: u8 = 0;
-pub const ROCOCO_TO_WOCOCO_INDEX: u8 = 0;
-pub const WOCOCO_TO_ROCOCO_INDEX: u8 = 0;
-pub const KUSAMA_TO_POLKADOT_INDEX: u8 = 0;
-pub const POLKADOT_TO_KUSAMA_INDEX: u8 = 0;
+pub const RIALTO_TO_MILLAU_INDEX: u8 = 0;
+// pub const ROCOCO_TO_WOCOCO_INDEX: u8 = 0;
+// pub const WOCOCO_TO_ROCOCO_INDEX: u8 = 0;
+// pub const KUSAMA_TO_POLKADOT_INDEX: u8 = 0;
+// pub const POLKADOT_TO_KUSAMA_INDEX: u8 = 0;
 
 /// The macro allows executing bridge-specific code without going fully generic.
 ///
@@ -58,13 +58,13 @@ macro_rules! select_full_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
 			FullBridge::MillauToRialto => {
-				type Source = relay_millau_client::Millau;
+				type Source = client_ourchain::Millau;
 				#[allow(dead_code)]
-				type Target = relay_rialto_client::Rialto;
+				type Target = client_substrate::Rialto;
 
 				// Derive-account
 				#[allow(unused_imports)]
-				use bp_rialto::derive_account_from_millau_id as derive_account;
+				use chain_substrate::derive_account_from_millau_id as derive_account;
 
 				// Relay-messages
 				#[allow(unused_imports)]
@@ -72,21 +72,21 @@ macro_rules! select_full_bridge {
 
 				// Send-message / Estimate-fee
 				#[allow(unused_imports)]
-				use bp_rialto::TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+				use chain_substrate::TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 				// Send-message
 				#[allow(unused_imports)]
-				use kitchensink_runtime::millau_to_rialto_account_ownership_digest as account_ownership_digest;
+				use kitchensink_runtime::substrate_to_substrate2_account_ownership_digest as account_ownership_digest;
 
 				$generic
 			}
 			FullBridge::RialtoToMillau => {
-				type Source = relay_rialto_client::Rialto;
+				type Source = client_substrate::Rialto;
 				#[allow(dead_code)]
-				type Target = relay_millau_client::Millau;
+				type Target = client_ourchain::Millau;
 
 				// Derive-account
 				#[allow(unused_imports)]
-				use bp_millau::derive_account_from_rialto_id as derive_account;
+				use our_chain::derive_account_from_rialto_id as derive_account;
 
 				// Relay-messages
 				#[allow(unused_imports)]
@@ -94,102 +94,102 @@ macro_rules! select_full_bridge {
 
 				// Send-message / Estimate-fee
 				#[allow(unused_imports)]
-				use bp_millau::TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+				use our_chain::TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 
 				// Send-message
 				#[allow(unused_imports)]
-				use rialto_runtime::rialto_to_millau_account_ownership_digest as account_ownership_digest;
+				use runtime::rialto_to_millau_account_ownership_digest as account_ownership_digest;
 
 				$generic
 			}
-			FullBridge::RococoToWococo => {
-				type Source = relay_rococo_client::Rococo;
-				#[allow(dead_code)]
-				type Target = relay_wococo_client::Wococo;
+			// FullBridge::RococoToWococo => {
+			// 	type Source = relay_rococo_client::Rococo;
+			// 	#[allow(dead_code)]
+			// 	type Target = relay_wococo_client::Wococo;
 
-				// Derive-account
-				#[allow(unused_imports)]
-				use bp_wococo::derive_account_from_rococo_id as derive_account;
+			// 	// Derive-account
+			// 	#[allow(unused_imports)]
+			// 	use bp_wococo::derive_account_from_rococo_id as derive_account;
 
-				// Relay-messages
-				#[allow(unused_imports)]
-				use crate::chains::rococo_messages_to_wococo::RococoMessagesToWococo as MessagesLane;
+			// 	// Relay-messages
+			// 	#[allow(unused_imports)]
+			// 	use crate::chains::rococo_messages_to_wococo::RococoMessagesToWococo as MessagesLane;
 
-				// Send-message / Estimate-fee
-				#[allow(unused_imports)]
-				use bp_wococo::TO_WOCOCO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
-				// Send-message
-				#[allow(unused_imports)]
-				use relay_rococo_client::runtime::rococo_to_wococo_account_ownership_digest as account_ownership_digest;
+			// 	// Send-message / Estimate-fee
+			// 	#[allow(unused_imports)]
+			// 	use bp_wococo::TO_WOCOCO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+			// 	// Send-message
+			// 	#[allow(unused_imports)]
+			// 	use relay_rococo_client::runtime::rococo_to_wococo_account_ownership_digest as account_ownership_digest;
 
-				$generic
-			}
-			FullBridge::WococoToRococo => {
-				type Source = relay_wococo_client::Wococo;
-				#[allow(dead_code)]
-				type Target = relay_rococo_client::Rococo;
+			// 	$generic
+			// }
+			// FullBridge::WococoToRococo => {
+			// 	type Source = relay_wococo_client::Wococo;
+			// 	#[allow(dead_code)]
+			// 	type Target = relay_rococo_client::Rococo;
 
-				// Derive-account
-				#[allow(unused_imports)]
-				use bp_rococo::derive_account_from_wococo_id as derive_account;
+			// 	// Derive-account
+			// 	#[allow(unused_imports)]
+			// 	use bp_rococo::derive_account_from_wococo_id as derive_account;
 
-				// Relay-messages
-				#[allow(unused_imports)]
-				use crate::chains::wococo_messages_to_rococo::WococoMessagesToRococo as MessagesLane;
+			// 	// Relay-messages
+			// 	#[allow(unused_imports)]
+			// 	use crate::chains::wococo_messages_to_rococo::WococoMessagesToRococo as MessagesLane;
 
-				// Send-message / Estimate-fee
-				#[allow(unused_imports)]
-				use bp_rococo::TO_ROCOCO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
-				// Send-message
-				#[allow(unused_imports)]
-				use relay_wococo_client::runtime::wococo_to_rococo_account_ownership_digest as account_ownership_digest;
+			// 	// Send-message / Estimate-fee
+			// 	#[allow(unused_imports)]
+			// 	use bp_rococo::TO_ROCOCO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+			// 	// Send-message
+			// 	#[allow(unused_imports)]
+			// 	use relay_wococo_client::runtime::wococo_to_rococo_account_ownership_digest as account_ownership_digest;
 
-				$generic
-			}
-			FullBridge::KusamaToPolkadot => {
-				type Source = relay_kusama_client::Kusama;
-				#[allow(dead_code)]
-				type Target = relay_polkadot_client::Polkadot;
+			// 	$generic
+			// }
+			// FullBridg::KusamaToPolkadot => {
+			// 	type Source = relay_kusama_client::Kusama;
+			// 	#[allow(dead_code)]
+			// 	type Target = relay_polkadot_client::Polkadot;
 
-				// Derive-account
-				#[allow(unused_imports)]
-				use bp_polkadot::derive_account_from_kusama_id as derive_account;
+			// 	// Derive-account
+			// 	#[allow(unused_imports)]
+			// 	use bp_polkadot::derive_account_from_kusama_id as derive_account;
 
-				// Relay-messages
-				#[allow(unused_imports)]
-				use crate::chains::kusama_messages_to_polkadot::KusamaMessagesToPolkadot as MessagesLane;
+			// 	// Relay-messages
+			// 	#[allow(unused_imports)]
+			// 	use crate::chains::kusama_messages_to_polkadot::KusamaMessagesToPolkadot as MessagesLane;
 
-				// Send-message / Estimate-fee
-				#[allow(unused_imports)]
-				use bp_polkadot::TO_POLKADOT_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
-				// Send-message
-				#[allow(unused_imports)]
-				use relay_kusama_client::runtime::kusama_to_polkadot_account_ownership_digest as account_ownership_digest;
+			// 	// Send-message / Estimate-fee
+			// 	#[allow(unused_imports)]
+			// 	use bp_polkadot::TO_POLKADOT_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+			// 	// Send-message
+			// 	#[allow(unused_imports)]
+			// 	use relay_kusama_client::runtime::kusama_to_polkadot_account_ownership_digest as account_ownership_digest;
 
-				$generic
-			}
-			FullBridge::PolkadotToKusama => {
-				type Source = relay_polkadot_client::Polkadot;
-				#[allow(dead_code)]
-				type Target = relay_kusama_client::Kusama;
+			// 	$generic
+			// }
+			// FullBridge::PolkadotToKusama => {
+			// 	type Source = relay_polkadot_client::Polkadot;
+			// 	#[allow(dead_code)]
+			// 	type Target = relay_kusama_client::Kusama;
 
-				// Derive-account
-				#[allow(unused_imports)]
-				use bp_kusama::derive_account_from_polkadot_id as derive_account;
+			// 	// Derive-account
+			// 	#[allow(unused_imports)]
+			// 	use bp_kusama::derive_account_from_polkadot_id as derive_account;
 
-				// Relay-messages
-				#[allow(unused_imports)]
-				use crate::chains::polkadot_messages_to_kusama::PolkadotMessagesToKusama as MessagesLane;
+			// 	// Relay-messages
+			// 	#[allow(unused_imports)]
+			// 	use crate::chains::polkadot_messages_to_kusama::PolkadotMessagesToKusama as MessagesLane;
 
-				// Send-message / Estimate-fee
-				#[allow(unused_imports)]
-				use bp_kusama::TO_KUSAMA_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
-				// Send-message
-				#[allow(unused_imports)]
-				use relay_polkadot_client::runtime::polkadot_to_kusama_account_ownership_digest as account_ownership_digest;
+			// 	// Send-message / Estimate-fee
+			// 	#[allow(unused_imports)]
+			// 	use bp_kusama::TO_KUSAMA_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+			// 	// Send-message
+			// 	#[allow(unused_imports)]
+			// 	use relay_polkadot_client::runtime::polkadot_to_kusama_account_ownership_digest as account_ownership_digest;
 
-				$generic
-			}
+			// 	$generic
+			// }
 		}
 	};
 }

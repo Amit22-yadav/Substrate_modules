@@ -34,7 +34,7 @@ pub use crate::{
 		AccountKeyPairOf, BlockWithJustification, CallOf, Chain, ChainWithBalances,
 		ChainWithGrandpa, ChainWithMessages, SignParam, TransactionSignScheme, TransactionStatusOf,
 		UnsignedTransaction, 
-		//WeightToFeeOf,
+		WeightToFeeOf,
 	},
 	client::{ChainRuntimeVersion, Client, OpaqueGrandpaAuthoritiesSet, Subscription},
 	error::{Error, Result},

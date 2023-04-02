@@ -277,21 +277,21 @@ pub mod pallet {
 			Ok(())
 		}
 
-		// // Send message over lane.
-		// #[pallet::weight(T::WeightInfo::send_message_weight(payload, T::DbWeight::get()))]
-		// pub fn send_message(
-		// 	origin: OriginFor<T>,
-		// 	lane_id: LaneId,
-		// 	payload: T::OutboundPayload,
-		// 	delivery_and_dispatch_fee: T::OutboundMessageFee,
-		// ) -> DispatchResultWithPostInfo {
-		// 	crate::send_message::<T, I>(origin, lane_id, payload, delivery_and_dispatch_fee).map(
-		// 		|sent_message| PostDispatchInfo {
-		// 			actual_weight: Some(sent_message,weight),
-		// 			pays_fee: Pays::Yes,
-		// 		},
-		// 	)
-		// }
+		// Send message over lane.
+		#[pallet::weight(T::WeightInfo::send_message_weight(payload, T::DbWeight::get()))]
+		pub fn send_message(
+			origin: OriginFor<T>,
+			lane_id: LaneId,
+			payload: T::OutboundPayload,
+			delivery_and_dispatch_fee: T::OutboundMessageFee,
+		) -> DispatchResultWithPostInfo {
+			crate::send_message::<T, I>(origin, lane_id, payload, delivery_and_dispatch_fee).map(
+				|sent_message| PostDispatchInfo {
+					actual_weight: Some(sent_message.weight),
+					pays_fee: Pays::Yes,
+				},
+			)
+		}
 
 		/// Pay additional fee for the message.
 		#[pallet::weight(T::WeightInfo::maximal_increase_message_fee())]

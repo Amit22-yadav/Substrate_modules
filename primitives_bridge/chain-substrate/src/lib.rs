@@ -159,9 +159,9 @@ pub type WeightToFee = IdentityFee<Balance>;
 
 /// Rialto chain.
 #[derive(RuntimeDebug)]
-pub struct Substrate2;
+pub struct Rialto;
 
-impl Chain for Substrate2 {
+impl Chain for Rialto {
 	type BlockNumber = BlockNumber;
 	type Hash = Hash;
 	type Hasher = Hasher;
@@ -202,7 +202,7 @@ impl Convert<sp_core::H256, AccountId> for AccountIdConverter {
 //
 // Note that this should only be used for testing.
 pub fn derive_account_from_millau_id(id: bp_runtime::SourceAccount<AccountId>) -> AccountId {
-	let encoded_id = bp_runtime::derive_account_id(bp_runtime::SUBSTRATE, id);
+	let encoded_id = bp_runtime::derive_account_id(bp_runtime::MILLAU_CHAIN_ID, id);
 	AccountIdConverter::convert(encoded_id)
 }
 
@@ -227,7 +227,7 @@ frame_support::parameter_types! {
 }
 
 /// Name of the With-Rialto GRANDPA pallet instance that is deployed at bridged chains.
-pub const WITH_SUBSTRATE2_GRANDPA_PALLET_NAME: &str = "BridgeRialtoGrandpa";
+pub const WITH_RIALTO_GRANDPA_PALLET_NAME: &str = "BridgeRialtoGrandpa";
 /// Name of the With-Rialto messages pallet instance that is deployed at bridged chains.
 pub const WITH_RIALTO_MESSAGES_PALLET_NAME: &str = "BridgeRialtoMessages";
 

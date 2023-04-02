@@ -56,8 +56,8 @@ pub(crate) const CONVERSION_RATE_ALLOWED_DIFFERENCE_RATIO: f64 = 0.05;
 #[derive(StructOpt)]
 pub enum RelayHeadersAndMessages {
 	MillauRialto(MillauRialtoHeadersAndMessages),
-	RococoWococo(RococoWococoHeadersAndMessages),
-	KusamaPolkadot(KusamaPolkadotHeadersAndMessages),
+	//RococoWococo(RococoWococoHeadersAndMessages),
+	//KusamaPolkadot(KusamaPolkadotHeadersAndMessages),
 }
 
 /// Parameters that have the same names across all bridges.
@@ -122,16 +122,16 @@ macro_rules! select_bridge {
 			RelayHeadersAndMessages::MillauRialto(_) => {
 				type Params = MillauRialtoHeadersAndMessages;
 
-				type Left = relay_millau_client::Millau;
-				type Right = relay_rialto_client::Rialto;
+				type Left = client_ourchain::Millau;
+				type Right = client_substrate::Rialto;
 
 				type LeftToRightFinality =
 					crate::chains::millau_headers_to_rialto::MillauFinalityToRialto;
 				type RightToLeftFinality =
 					crate::chains::rialto_headers_to_millau::RialtoFinalityToMillau;
 
-				type LeftAccountIdConverter = bp_millau::AccountIdConverter;
-				type RightAccountIdConverter = bp_rialto::AccountIdConverter;
+				type LeftAccountIdConverter = our_chain::AccountIdConverter;
+				type RightAccountIdConverter = chain_substrate::AccountIdConverter;
 
 				use crate::chains::{
 					millau_messages_to_rialto::MillauMessagesToRialto as LeftToRightMessageLane,
@@ -156,120 +156,120 @@ macro_rules! select_bridge {
 
 				$generic
 			},
-			RelayHeadersAndMessages::RococoWococo(_) => {
-				type Params = RococoWococoHeadersAndMessages;
+			// RelayHeadersAndMessages::RococoWococo(_) => {
+			// 	type Params = RococoWococoHeadersAndMessages;
 
-				type Left = relay_rococo_client::Rococo;
-				type Right = relay_wococo_client::Wococo;
+			// 	type Left = relay_rococo_client::Rococo;
+			// 	type Right = relay_wococo_client::Wococo;
 
-				type LeftToRightFinality =
-					crate::chains::rococo_headers_to_wococo::RococoFinalityToWococo;
-				type RightToLeftFinality =
-					crate::chains::wococo_headers_to_rococo::WococoFinalityToRococo;
+			// 	type LeftToRightFinality =
+			// 		crate::chains::rococo_headers_to_wococo::RococoFinalityToWococo;
+			// 	type RightToLeftFinality =
+			// 		crate::chains::wococo_headers_to_rococo::WococoFinalityToRococo;
 
-				type LeftAccountIdConverter = bp_rococo::AccountIdConverter;
-				type RightAccountIdConverter = bp_wococo::AccountIdConverter;
+			// 	type LeftAccountIdConverter = bp_rococo::AccountIdConverter;
+			// 	type RightAccountIdConverter = bp_wococo::AccountIdConverter;
 
-				use crate::chains::{
-					rococo_messages_to_wococo::RococoMessagesToWococo as LeftToRightMessageLane,
-					wococo_messages_to_rococo::WococoMessagesToRococo as RightToLeftMessageLane,
-				};
+			// 	use crate::chains::{
+			// 		rococo_messages_to_wococo::RococoMessagesToWococo as LeftToRightMessageLane,
+			// 		wococo_messages_to_rococo::WococoMessagesToRococo as RightToLeftMessageLane,
+			// 	};
 
-				async fn left_create_account(
-					left_client: Client<Left>,
-					left_sign: <Left as TransactionSignScheme>::AccountKeyPair,
-					account_id: AccountIdOf<Left>,
-				) -> anyhow::Result<()> {
-					submit_signed_extrinsic(
-						left_client,
-						left_sign,
-						relay_rococo_client::runtime::Call::Balances(
-							relay_rococo_client::runtime::BalancesCall::transfer(
-								bp_rococo::AccountAddress::Id(account_id),
-								bp_rococo::EXISTENTIAL_DEPOSIT.into(),
-							),
-						),
-					)
-					.await
-				}
+			// 	async fn left_create_account(
+			// 		left_client: Client<Left>,
+			// 		left_sign: <Left as TransactionSignScheme>::AccountKeyPair,
+			// 		account_id: AccountIdOf<Left>,
+			// 	) -> anyhow::Result<()> {
+			// 		submit_signed_extrinsic(
+			// 			left_client,
+			// 			left_sign,
+			// 			relay_rococo_client::runtime::Call::Balances(
+			// 				relay_rococo_client::runtime::BalancesCall::transfer(
+			// 					bp_rococo::AccountAddress::Id(account_id),
+			// 					bp_rococo::EXISTENTIAL_DEPOSIT.into(),
+			// 				),
+			// 			),
+			// 		)
+			// 		.await
+			// 	}
 
-				async fn right_create_account(
-					right_client: Client<Right>,
-					right_sign: <Right as TransactionSignScheme>::AccountKeyPair,
-					account_id: AccountIdOf<Right>,
-				) -> anyhow::Result<()> {
-					submit_signed_extrinsic(
-						right_client,
-						right_sign,
-						relay_wococo_client::runtime::Call::Balances(
-							relay_wococo_client::runtime::BalancesCall::transfer(
-								bp_wococo::AccountAddress::Id(account_id),
-								bp_wococo::EXISTENTIAL_DEPOSIT.into(),
-							),
-						),
-					)
-					.await
-				}
+			// 	async fn right_create_account(
+			// 		right_client: Client<Right>,
+			// 		right_sign: <Right as TransactionSignScheme>::AccountKeyPair,
+			// 		account_id: AccountIdOf<Right>,
+			// 	) -> anyhow::Result<()> {
+			// 		submit_signed_extrinsic(
+			// 			right_client,
+			// 			right_sign,
+			// 			relay_wococo_client::runtime::Call::Balances(
+			// 				relay_wococo_client::runtime::BalancesCall::transfer(
+			// 					bp_wococo::AccountAddress::Id(account_id),
+			// 					bp_wococo::EXISTENTIAL_DEPOSIT.into(),
+			// 				),
+			// 			),
+			// 		)
+			// 		.await
+			// 	}
 
-				$generic
-			},
-			RelayHeadersAndMessages::KusamaPolkadot(_) => {
-				type Params = KusamaPolkadotHeadersAndMessages;
+			// 	$generic
+			// },
+			// RelayHeadersAndMessages::KusamaPolkadot(_) => {
+			// 	type Params = KusamaPolkadotHeadersAndMessages;
 
-				//type Left = relay_kusama_client::Kusama;
-				//type Right = relay_polkadot_client::Polkadot;
+			// 	//type Left = relay_kusama_client::Kusama;
+			// 	//type Right = relay_polkadot_client::Polkadot;
 
-				// type LeftToRightFinality =
-				// 	crate::chains::kusama_headers_to_polkadot::KusamaFinalityToPolkadot;
-				// type RightToLeftFinality =
-				// 	crate::chains::polkadot_headers_to_kusama::PolkadotFinalityToKusama;
+			// 	// type LeftToRightFinality =
+			// 	// 	crate::chains::kusama_headers_to_polkadot::KusamaFinalityToPolkadot;
+			// 	// type RightToLeftFinality =
+			// 	// 	crate::chains::polkadot_headers_to_kusama::PolkadotFinalityToKusama;
 
-				// type LeftAccountIdConverter = bp_kusama::AccountIdConverter;
-				// type RightAccountIdConverter = bp_polkadot::AccountIdConverter;
+			// 	// type LeftAccountIdConverter = bp_kusama::AccountIdConverter;
+			// 	// type RightAccountIdConverter = bp_polkadot::AccountIdConverter;
 
-				use crate::chains::{
-					kusama_messages_to_polkadot::KusamaMessagesToPolkadot as LeftToRightMessageLane,
-					polkadot_messages_to_kusama::PolkadotMessagesToKusama as RightToLeftMessageLane,
-				};
+			// 	use crate::chains::{
+			// 		kusama_messages_to_polkadot::KusamaMessagesToPolkadot as LeftToRightMessageLane,
+			// 		polkadot_messages_to_kusama::PolkadotMessagesToKusama as RightToLeftMessageLane,
+			// 	};
 
-				async fn left_create_account(
-					left_client: Client<Left>,
-					left_sign: <Left as TransactionSignScheme>::AccountKeyPair,
-					account_id: AccountIdOf<Left>,
-				) -> anyhow::Result<()> {
-					submit_signed_extrinsic(
-						left_client,
-						left_sign,
-						relay_kusama_client::runtime::Call::Balances(
-							relay_kusama_client::runtime::BalancesCall::transfer(
-								bp_kusama::AccountAddress::Id(account_id),
-								bp_kusama::EXISTENTIAL_DEPOSIT.into(),
-							),
-						),
-					)
-					.await
-				}
+			// 	async fn left_create_account(
+			// 		left_client: Client<Left>,
+			// 		left_sign: <Left as TransactionSignScheme>::AccountKeyPair,
+			// 		account_id: AccountIdOf<Left>,
+			// 	) -> anyhow::Result<()> {
+			// 		submit_signed_extrinsic(
+			// 			left_client,
+			// 			left_sign,
+			// 			relay_kusama_client::runtime::Call::Balances(
+			// 				relay_kusama_client::runtime::BalancesCall::transfer(
+			// 					bp_kusama::AccountAddress::Id(account_id),
+			// 					bp_kusama::EXISTENTIAL_DEPOSIT.into(),
+			// 				),
+			// 			),
+			// 		)
+			// 		.await
+			// 	}
 
-				async fn right_create_account(
-					right_client: Client<Right>,
-					right_sign: <Right as TransactionSignScheme>::AccountKeyPair,
-					account_id: AccountIdOf<Right>,
-				) -> anyhow::Result<()> {
-					submit_signed_extrinsic(
-						right_client,
-						right_sign,
-						relay_polkadot_client::runtime::Call::Balances(
-							relay_polkadot_client::runtime::BalancesCall::transfer(
-								bp_polkadot::AccountAddress::Id(account_id),
-								bp_polkadot::EXISTENTIAL_DEPOSIT.into(),
-							),
-						),
-					)
-					.await
-				}
+			// 	async fn right_create_account(
+			// 		right_client: Client<Right>,
+			// 		right_sign: <Right as TransactionSignScheme>::AccountKeyPair,
+			// 		account_id: AccountIdOf<Right>,
+			// 	) -> anyhow::Result<()> {
+			// 		submit_signed_extrinsic(
+			// 			right_client,
+			// 			right_sign,
+			// 			relay_polkadot_client::runtime::Call::Balances(
+			// 				relay_polkadot_client::runtime::BalancesCall::transfer(
+			// 					bp_polkadot::AccountAddress::Id(account_id),
+			// 					bp_polkadot::EXISTENTIAL_DEPOSIT.into(),
+			// 				),
+			// 			),
+			// 		)
+			// 		.await
+			// 	}
 
-				$generic
-			},
+			// 	$generic
+			// },
 		}
 	};
 }
@@ -277,14 +277,14 @@ macro_rules! select_bridge {
 // All supported chains.
 declare_chain_options!(Millau, millau);
 declare_chain_options!(Rialto, rialto);
-declare_chain_options!(Rococo, rococo);
-declare_chain_options!(Wococo, wococo);
-declare_chain_options!(Kusama, kusama);
-declare_chain_options!(Polkadot, polkadot);
+//declare_chain_options!(Rococo, rococo);
+//declare_chain_options!(Wococo, wococo);
+//declare_chain_options!(Kusama, kusama);
+//declare_chain_options!(Polkadot, polkadot);
 // All supported bridges.
 declare_bridge_options!(Millau, Rialto);
-declare_bridge_options!(Rococo, Wococo);
-declare_bridge_options!(Kusama, Polkadot);
+//declare_bridge_options!(Rococo, Wococo);
+//declare_bridge_options!(Kusama, Polkadot);
 
 impl RelayHeadersAndMessages {
 	/// Run the command.
