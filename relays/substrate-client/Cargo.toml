@@ -1,0 +1,50 @@
+[package]
+name = "relay-substrate-client"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-std = { version = "1.6.5", features = ["attributes"] }
+async-trait = "0.1.40"
+codec = { package = "parity-scale-codec", version = "3.0.0" }
+jsonrpsee = { version = "0.8", features = ["macros", "ws-client"] }
+log = "0.4.11"
+num-traits = "0.2"
+rand = "0.7"
+serde = { version = "1.0" }
+tokio = { version = "1.8", features = ["rt-multi-thread"] }
+thiserror = "1.0.26"
+
+
+# Bridge dependencies
+
+bp-header-chain = { path = "../../primitives_bridge/header-chain" }
+bp-messages = { path = "../../primitives_bridge/messages" }
+bp-runtime = { path = "../../primitives_bridge/runtime" }
+pallet-bridge-messages = { path = "../../modules/messages" }
+finality-relay = { path = "../finality" }
+relay-utils = { path = "../utils" }
+
+# Substrate Dependencies
+
+frame-support = { version = "4.0.0-dev",  path = "../../frame/support" }
+frame-system = { version = "4.0.0-dev",  path = "../../frame/system" }
+pallet-balances =  { version = "4.0.0-dev",  path = "../../frame/balances" }
+pallet-transaction-payment =  { version = "4.0.0-dev",  path = "../../frame/transaction-payment" }
+pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev",path = "../../frame/transaction-payment/rpc/runtime-api" }
+sc-chain-spec = { version = "4.0.0-dev",  path = "../../client/chain-spec" }
+sc-rpc-api = { version = "0.10.0-dev",  path = "../../client/rpc-api" }
+sc-transaction-pool-api = { version = "4.0.0-dev",  path = "../../client/transaction-pool/api" }
+sp-core ={ version = "7.0.0", path = "../../primitives/core" }
+sp-finality-grandpa = { version = "4.0.0-dev", path = "../../primitives/finality-grandpa" }
+sp-rpc ={ version = "6.0.0", path = "../../primitives/rpc" }
+sp-runtime ={ version = "7.0.0", path = "../../primitives/runtime" }
+sp-storage = { version = "7.0.0", path = "../../primitives/storage" }
+sp-trie = { version = "7.0.0", path = "../../primitives/trie" }
+sp-version ={ version = "5.0.0",  path = "../../primitives/version" }
+
+#[dev-dependencies]
+futures = "0.3.7"
+

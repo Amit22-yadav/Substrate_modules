@@ -1,0 +1,23 @@
+[package]
+name = "messages-relay"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-std = { version = "1.6.5", features = ["attributes"] }
+async-trait = "0.1.40"
+futures = "0.3.5"
+hex = "0.4"
+log = "0.4.11"
+num-traits = "0.2"
+parking_lot = "0.11.0"
+
+
+bp-messages = { path = "../../primitives_bridge/messages" }
+bp-runtime = { path = "../../primitives_bridge/runtime" }
+finality-relay = { path = "../finality" }
+relay-utils = { path = "../utils" }
+
+sp-arithmetic ={version = "6.0.0", default-features = false, path = "../../primitives/arithmetic" }
