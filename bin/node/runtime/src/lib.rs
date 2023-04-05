@@ -26,6 +26,8 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
+use crate::substrate_messages::ToRialtoMessagePayload;
+use crate::substrate_messages::WithRialtoMessageBridge;
 pub mod  substrate_messages;
 use sp_runtime::MultiSignature;
 use sp_runtime::MultiSigner;
@@ -48,10 +50,12 @@ use frame_support::{
 	},
 	PalletId, RuntimeDebug,
 };
+use bridge_runtime_common::messages::MessageBridge;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot, EnsureRootWithSuccess, EnsureSigned, EnsureWithSuccess,
 };
+use bridge_runtime_common::messages::source::estimate_message_dispatch_and_delivery_fee;
 pub use node_primitives::{AccountId, Signature};
 pub use node_primitives::{AccountIndex, Balance, BlockNumber, Hash, Index, Moment};
 use pallet_election_provider_multi_phase::SolutionAccuracyOf;
@@ -1853,7 +1857,7 @@ construct_runtime!(
 		RankedCollective: pallet_ranked_collective,
 		FastUnstake: pallet_fast_unstake,
 		MessageQueue: pallet_message_queue,
-		BridgeSubstrate2Grandpa: pallet_bridge_grandpa::{Pallet, Call, Storage},
+		BridgeRialtoGrandpa : pallet_bridge_grandpa::{Pallet, Call, Storage},
 		BridgeDispatch: pallet_bridge_dispatch::{Pallet, Event<T>},
 		BridgeRialtoTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
 		BridgeRialtoMessages: pallet_bridge_messages::{Pallet, Call, Storage, Event<T>, Config<T>},
@@ -2153,6 +2157,40 @@ impl_runtime_apis! {
 	impl frame_system_rpc_runtime_api::AccountNonceApi<Block, AccountId, Index> for Runtime {
 		fn account_nonce(account: AccountId) -> Index {
 			System::account_nonce(account)
+		}
+	}
+
+
+	impl chain_substrate::RialtoFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (chain_substrate::BlockNumber, chain_substrate::Hash) {
+			let header = BridgeRialtoGrandpa::best_finalized();
+			(header.number, header.hash())
+		}
+	}
+
+		impl chain_substrate::ToRialtoOutboundLaneApi<Block, Balance, ToRialtoMessagePayload> for Runtime {
+		fn estimate_message_delivery_and_dispatch_fee(
+			_lane_id: bp_messages::LaneId,
+			payload: ToRialtoMessagePayload,
+			rialto_to_this_conversion_rate: Option<FixedU128>,
+		) -> Option<Balance> {
+			estimate_message_dispatch_and_delivery_fee::<WithRialtoMessageBridge>(
+				&payload,
+				WithRialtoMessageBridge::RELAYER_FEE_PERCENT,
+				rialto_to_this_conversion_rate,
+			).ok()
+		}
+
+		fn message_details(
+			lane: bp_messages::LaneId,
+			begin: bp_messages::MessageNonce,
+			end: bp_messages::MessageNonce,
+		) -> Vec<bp_messages::MessageDetails<Balance>> {
+			bridge_runtime_common::messages_api::outbound_message_details::<
+				Runtime,
+				WithRialtoMessagesInstance,
+				WithRialtoMessageBridge,
+			>(lane, begin, end)
 		}
 	}
 

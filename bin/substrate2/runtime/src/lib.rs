@@ -23,9 +23,13 @@
 #![recursion_limit = "512"]
 
 use codec::{Decode, Encode, MaxEncodedLen};
+use bridge_runtime_common::messages::MessageBridge;
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
+use crate::our_chain_messages::ToMillauMessagePayload;
+use crate::our_chain_messages::WithMillauMessageBridge;
+use bridge_runtime_common::messages::source::estimate_message_dispatch_and_delivery_fee;
 use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
@@ -2008,6 +2012,41 @@ impl_runtime_apis! {
 	impl sp_offchain::OffchainWorkerApi<Block> for Runtime {
 		fn offchain_worker(header: &<Block as BlockT>::Header) {
 			Executive::offchain_worker(header)
+		}
+	}
+
+	
+
+	impl our_chain::MillauFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (our_chain::BlockNumber, our_chain::Hash) {
+			let header = BridgeMillauGrandpa::best_finalized();
+			(header.number, header.hash())
+		}
+	}
+
+	impl our_chain::ToMillauOutboundLaneApi<Block, Balance, ToMillauMessagePayload> for Runtime {
+		fn estimate_message_delivery_and_dispatch_fee(
+			_lane_id: bp_messages::LaneId,
+			payload: ToMillauMessagePayload,
+			millau_to_this_conversion_rate: Option<FixedU128>,
+		) -> Option<Balance> {
+			estimate_message_dispatch_and_delivery_fee::<WithMillauMessageBridge>(
+				&payload,
+				WithMillauMessageBridge::RELAYER_FEE_PERCENT,
+				millau_to_this_conversion_rate,
+			).ok()
+		}
+
+		fn message_details(
+			lane: bp_messages::LaneId,
+			begin: bp_messages::MessageNonce,
+			end: bp_messages::MessageNonce,
+		) -> Vec<bp_messages::MessageDetails<Balance>> {
+			bridge_runtime_common::messages_api::outbound_message_details::<
+				Runtime,
+				WithMillauMessagesInstance,
+				WithMillauMessageBridge,
+			>(lane, begin, end)
 		}
 	}
 

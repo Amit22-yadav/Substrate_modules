@@ -92,6 +92,7 @@ where
 	<P::Block as BlockT>::Hash: Unpin,
 {
 	async fn submit_extrinsic(&self, ext: Bytes) -> RpcResult<TxHash<P>> {
+		// log here
 		let xt = match Decode::decode(&mut &ext[..]) {
 			Ok(xt) => xt,
 			Err(err) => return Err(Error::Client(Box::new(err)).into()),
