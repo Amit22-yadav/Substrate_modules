@@ -83,6 +83,10 @@ impl SubstrateCli for Cli {
 pub fn run() -> Result<()> {
 	let cli = Cli::from_args();
 
+	sp_core::crypto::set_default_ss58_version(sp_core::crypto::Ss58AddressFormat::custom(
+		runtime::SS58Prefix::get() as u16,
+	));
+
 	match &cli.subcommand {
 		None => {
 			let runner = cli.create_runner(&cli.run)?;

@@ -93,7 +93,6 @@ macro_rules! select_full_bridge {
 				use crate::chains::rialto_messages_to_millau::RialtoMessagesToMillau as MessagesLane;
 
 				// Send-message / Estimate-fee
-				#[allow(unused_imports)]
 				use our_chain::TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 
 				// Send-message

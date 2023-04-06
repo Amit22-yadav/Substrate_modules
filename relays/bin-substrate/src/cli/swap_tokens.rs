@@ -378,6 +378,7 @@ impl SwapTokens {
 					dispatch_fee_payment: bp_runtime::messages::DispatchFeePayment::AtSourceChain,
 					call: claim_swap_call.encode(),
 				};
+				frame_support::log::info!("************aaya ");
 				let claim_swap_delivery_and_dispatch_fee =
 					crate::cli::estimate_fee::estimate_message_delivery_and_dispatch_fee::<
 						Target,

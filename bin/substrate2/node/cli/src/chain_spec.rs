@@ -26,6 +26,7 @@ use runtime::{
 	SessionKeys, SocietyConfig, StakerStatus, StakingConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig,
 };
+use chain_substrate::derive_account_from_millau_id;
 use runtime::BridgeMillauMessagesConfig;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
@@ -258,6 +259,30 @@ pub fn testnet_genesis(
 			get_account_id_from_seed::<sr25519::Public>("Dave//stash"),
 			get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 			get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
+			get_account_id_from_seed::<sr25519::Public>("MillauMessagesOwner"),
+		get_account_id_from_seed::<sr25519::Public>("WithMillauTokenSwap"),
+		pallet_bridge_messages::relayer_fund_account_id::<
+			chain_substrate::AccountId,
+			chain_substrate::AccountIdConverter,
+		>(),
+		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+			get_account_id_from_seed::<sr25519::Public>("Alice"),
+		)),
+		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+			get_account_id_from_seed::<sr25519::Public>("Bob"),
+		)),
+		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+			get_account_id_from_seed::<sr25519::Public>("Charlie"),
+		)),
+		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+			get_account_id_from_seed::<sr25519::Public>("Dave"),
+		)),
+		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+			get_account_id_from_seed::<sr25519::Public>("Eve"),
+		)),
+		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+			get_account_id_from_seed::<sr25519::Public>("Ferdie"),
+		)),
 		]
 	});
 	// endow all authorities and nominators.
@@ -377,6 +402,7 @@ pub fn testnet_genesis(
 			min_join_bond: 1 * DOLLARS,
 			..Default::default()
 		},
+		bridge_millau_grandpa: Default::default()
 	}
 }
 

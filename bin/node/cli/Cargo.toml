@@ -96,6 +96,10 @@ node-rpc = { version = "3.0.0-dev", path = "../rpc" }
 node-primitives = { version = "2.0.0", path = "../primitives" }
 node-executor = { version = "3.0.0-dev", path = "../executor" }
 
+pallet-bridge-messages = { version = "0.1.0", path = "../../../modules/messages" }
+our-chain = { version = "0.1.0", path = "../../../primitives_bridge/our-chain" }
+bp-runtime = { version = "0.1.0", path = "../../../primitives_bridge/runtime" }
+
 # CLI-specific dependencies
 sc-cli = { version = "0.10.0-dev", optional = true, path = "../../../client/cli" }
 frame-benchmarking-cli = { version = "4.0.0-dev", optional = true, path = "../../../utils/frame/benchmarking-cli" }
@@ -128,6 +132,7 @@ wait-timeout = "0.2"
 substrate-rpc-client = { path = "../../../utils/frame/rpc/client" }
 pallet-timestamp = { version = "4.0.0-dev", path = "../../../frame/timestamp" }
 
+
 [build-dependencies]
 clap = { version = "4.0.9", optional = true }
 clap_complete = { version = "4.0.2", optional = true }
@@ -138,6 +143,8 @@ substrate-frame-cli = { version = "4.0.0-dev", optional = true, path = "../../..
 try-runtime-cli = { version = "0.10.0-dev", optional = true, path = "../../../utils/frame/try-runtime/cli" }
 sc-cli = { version = "0.10.0-dev", path = "../../../client/cli", optional = true }
 pallet-balances = { version = "4.0.0-dev", path = "../../../frame/balances" }
+
+
 
 [features]
 default = ["cli"]
@@ -150,6 +157,7 @@ cli = [
 	"clap",
 	"clap_complete",
 	"substrate-build-script-utils",
+	#"pallet-bridge-messages",
 	"try-runtime-cli",
 ]
 runtime-benchmarks = [

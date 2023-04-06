@@ -1817,9 +1817,9 @@ construct_runtime!(
 		RankedCollective: pallet_ranked_collective,
 		FastUnstake: pallet_fast_unstake,
 		MessageQueue: pallet_message_queue,
-		BridgeDispatch: pallet_bridge_dispatch::{Pallet, Event<T>},
-		BridgeMillauGrandpa: pallet_bridge_grandpa::{Pallet, Call, Storage},
-		BridgeMillauMessages: pallet_bridge_messages::{Pallet, Call, Storage, Event<T>, Config<T>},
+		BridgeDispatch: pallet_bridge_dispatch,
+		BridgeMillauGrandpa: pallet_bridge_grandpa,
+		BridgeMillauMessages: pallet_bridge_messages
 	}
 );
 
@@ -2024,31 +2024,6 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl our_chain::ToMillauOutboundLaneApi<Block, Balance, ToMillauMessagePayload> for Runtime {
-		fn estimate_message_delivery_and_dispatch_fee(
-			_lane_id: bp_messages::LaneId,
-			payload: ToMillauMessagePayload,
-			millau_to_this_conversion_rate: Option<FixedU128>,
-		) -> Option<Balance> {
-			estimate_message_dispatch_and_delivery_fee::<WithMillauMessageBridge>(
-				&payload,
-				WithMillauMessageBridge::RELAYER_FEE_PERCENT,
-				millau_to_this_conversion_rate,
-			).ok()
-		}
-
-		fn message_details(
-			lane: bp_messages::LaneId,
-			begin: bp_messages::MessageNonce,
-			end: bp_messages::MessageNonce,
-		) -> Vec<bp_messages::MessageDetails<Balance>> {
-			bridge_runtime_common::messages_api::outbound_message_details::<
-				Runtime,
-				WithMillauMessagesInstance,
-				WithMillauMessageBridge,
-			>(lane, begin, end)
-		}
-	}
 
 	impl fg_primitives::GrandpaApi<Block> for Runtime {
 		fn grandpa_authorities() -> GrandpaAuthorityList {
@@ -2394,6 +2369,32 @@ impl_runtime_apis! {
 			let params = (&config, &whitelist);
 			add_benchmarks!(params, batches);
 			Ok(batches)
+		}
+	}
+
+	impl our_chain::ToMillauOutboundLaneApi<Block, Balance, ToMillauMessagePayload> for Runtime {
+		fn estimate_message_delivery_and_dispatch_fee(
+			_lane_id: bp_messages::LaneId,
+			payload: ToMillauMessagePayload,
+			millau_to_this_conversion_rate: Option<FixedU128>,
+		) -> Option<Balance> {
+			estimate_message_dispatch_and_delivery_fee::<WithMillauMessageBridge>(
+				&payload,
+				WithMillauMessageBridge::RELAYER_FEE_PERCENT,
+				millau_to_this_conversion_rate,
+			).ok()
+		}
+
+		fn message_details(
+			lane: bp_messages::LaneId,
+			begin: bp_messages::MessageNonce,
+			end: bp_messages::MessageNonce,
+		) -> Vec<bp_messages::MessageDetails<Balance>> {
+			bridge_runtime_common::messages_api::outbound_message_details::<
+				Runtime,
+				WithMillauMessagesInstance,
+				WithMillauMessageBridge,
+			>(lane, begin, end)
 		}
 	}
 }

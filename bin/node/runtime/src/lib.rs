@@ -1857,10 +1857,10 @@ construct_runtime!(
 		RankedCollective: pallet_ranked_collective,
 		FastUnstake: pallet_fast_unstake,
 		MessageQueue: pallet_message_queue,
-		BridgeRialtoGrandpa : pallet_bridge_grandpa::{Pallet, Call, Storage},
-		BridgeDispatch: pallet_bridge_dispatch::{Pallet, Event<T>},
-		BridgeRialtoTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
-		BridgeRialtoMessages: pallet_bridge_messages::{Pallet, Call, Storage, Event<T>, Config<T>},
+		BridgeRialtoGrandpa : pallet_bridge_grandpa,
+		BridgeDispatch: pallet_bridge_dispatch,
+		BridgeRialtoTokenSwap: pallet_bridge_token_swap,
+		BridgeRialtoMessages: pallet_bridge_messages,
 	}
 );
 
