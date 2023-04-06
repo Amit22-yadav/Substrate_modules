@@ -37,9 +37,10 @@ use frame_support::{
 	 dispatch::Dispatchable,
 	ensure,
 	traits::{Contains, Get},
-	weights::{extract_actual_weight, GetDispatchInfo},
+	weights::{extract_actual_weight},
 };
-
+use frame_support::dispatch::GetDispatchInfo;
+use frame_support::dispatch;
 use frame_system::RawOrigin;
 use sp_runtime::traits::{BadOrigin, Convert, IdentifyAccount, MaybeDisplay, Verify};
 use sp_std::{fmt::Debug, prelude::*};
@@ -289,12 +290,12 @@ impl<T: Config<I>, I: 'static> MessageDispatch<T::AccountId, T::BridgeMessageId>
 				expected_weight,
 				message.weight,
 			);
-			// Self::deposit_event(Event::MessageWeightMismatch(
-			// 	source_chain,
-			// 	id,
-			// 	expected_weight,
-			// 	message.weight,
-			// ));
+			Self::deposit_event(Event::MessageWeightMismatch(
+				source_chain,
+				id,
+				expected_weight,
+				message.weight,
+			));
 			return dispatch_result
 		}
 
@@ -311,12 +312,12 @@ impl<T: Config<I>, I: 'static> MessageDispatch<T::AccountId, T::BridgeMessageId>
 				id,
 				message.weight,
 			);
-			// Self::deposit_event(Event::MessageDispatchPaymentFailed(
-			// 	source_chain,
-			// 	id,
-			// 	origin_account,
-			// 	message.weight,
-			// ));
+			Self::deposit_event(Event::MessageDispatchPaymentFailed(
+				source_chain,
+				id,
+				origin_account,
+				message.weight,
+			));
 			return dispatch_result
 		}
 		dispatch_result.dispatch_fee_paid_during_dispatch = pay_dispatch_fee_at_target_chain;
@@ -479,7 +480,7 @@ mod tests {
 
 	use crate as call_dispatch;
 
-	frame_support::construct_runtime! {
+construct_runtime! {
 		pub enum TestRuntime where
 			Block = Block,
 			NodeBlock = Block,

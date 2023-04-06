@@ -99,13 +99,13 @@ pub fn ensure_weights_are_correct<W: WeightInfoExt>(
 		},
 		db_weight,
 	);
-	// assert!(
-	// 	actual_messages_delivery_confirmation_tx_weight <=
-	// 		expected_messages_delivery_confirmation_tx_weight,
-	// 	"Messages delivery confirmation transaction weight {} is larger than expected weight {}",
-	// 	actual_messages_delivery_confirmation_tx_weight,
-	// 	expected_messages_delivery_confirmation_tx_weight,
-	// );
+	assert!(
+		actual_messages_delivery_confirmation_tx_weight.any_gt(
+			_expected_messages_delivery_confirmation_tx_weight),
+		"Messages delivery confirmation transaction weight {} is larger than expected weight {}",
+		actual_messages_delivery_confirmation_tx_weight,
+		_expected_messages_delivery_confirmation_tx_weight,
+	);
 
 	// verify pay-dispatch-fee overhead for inbound messages
 	let actual_pay_inbound_dispatch_fee_weight = W::pay_inbound_dispatch_fee_overhead();
@@ -264,17 +264,21 @@ pub trait WeightInfoExt: WeightInfo {
 			actual_proof_size.saturating_sub(expected_proof_size),
 		);
 
-		// and cost of calling `OnDeliveryConfirmed::on_messages_delivered()` for every confirmed
-		// // message
+		//and cost of calling `OnDeliveryConfirmed::on_messages_delivered()` for every confirmed
+		// message
 		// let callback_overhead = relayers_state
 		// 	.total_messages
-		// 	.saturating_mul(Self::single_message_callback_overhead(db_weight));
+		// 	.saturating_mul(Self::single_message_callback_overhead as u64);
+
+		let callback_overhead = Self::single_message_callback_overhead(db_weight)
+		.saturating_mul(relayers_state.total_messages);
+
 
 		transaction_overhead
 			.saturating_add(messages_overhead)
 			.saturating_add(relayers_overhead)
 			.saturating_add(proof_size_overhead)
-		//	.saturating_add(callback_overhead)
+			.saturating_add( callback_overhead  )
 	}
 
 	// Functions that are used by extrinsics weights formulas.

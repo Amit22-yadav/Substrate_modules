@@ -6043,6 +6043,7 @@ dependencies = [
  "bp-runtime",
  "frame-benchmarking",
  "frame-support",
+ "frame-support2",
  "frame-system",
  "log",
  "num-traits",

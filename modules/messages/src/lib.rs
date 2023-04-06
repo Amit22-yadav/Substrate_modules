@@ -591,38 +591,41 @@ pub mod pallet {
 			};
 
 			if let Some(confirmed_messages) = confirmed_messages {
-				// handle messages delivery confirmation
-				// let preliminary_callback_overhead =
-				// 	relayers_state.total_messages.saturating_mul(single_message_callback_overhead);
-				// let actual_callback_weight =
-				// 	T::OnDeliveryConfirmed::on_messages_delivered(&lane_id, &confirmed_messages);
-				// match preliminary_callback_overhead.checked_sub(actual_callback_weight) {
-				// 	Some(difference) if difference == Weight::zero() => (),
-				// 	Some(difference) => {
-				// 		log::trace!(
-				// 			target: "runtime::bridge-messages",
-				// 			"T::OnDeliveryConfirmed callback has spent less weight than expected. Refunding: \
-				// 			{} - {} = {}",
-				// 			preliminary_callback_overhead,
-				// 			actual_callback_weight,
-				// 			difference,
-				// 		);
-				// 		actual_weight = actual_weight.saturating_sub(difference);
-				// 	},
-				// 	None => {
-				// 		debug_assert!(
-				// 			false,
-				// 			"T::OnDeliveryConfirmed callback consumed too much weight."
-				// 		);
-				// 		log::error!(
-				// 			target: "runtime::bridge-messages",
-				// 			"T::OnDeliveryConfirmed callback has spent more weight that it is allowed to: \
-				// 			{} vs {}",
-				// 			preliminary_callback_overhead,
-				// 			actual_callback_weight,
-				// 		);
-				// 	},
-				// }
+			//	handle messages delivery confirmation
+			let preliminary_callback_overhead =
+			single_message_callback_overhead.saturating_mul(relayers_state.total_messages);
+				let actual_callback_weight =
+					T::OnDeliveryConfirmed::on_messages_delivered(&lane_id, &confirmed_messages);
+				match preliminary_callback_overhead.checked_sub(&actual_callback_weight) {
+					Some(difference) if difference.is_zero() => (),
+					Some(difference) => {
+						log::trace!(
+							target: "runtime::bridge-messages",
+							"T::OnDeliveryConfirmed callback has spent less weight than expected. Refunding: \
+							{} - {} = {}",
+							preliminary_callback_overhead,
+							actual_callback_weight,
+							difference,
+						);
+						// actual_weight = actual_weight.set_proof_size(
+						// 	actual_weight.proof_size().saturating_sub(difference),
+						// );
+						actual_weight = actual_weight.saturating_sub(difference)
+					},
+					None => {
+						debug_assert!(
+							false,
+							"T::OnDeliveryConfirmed callback consumed too much weight."
+						);
+						log::error!(
+							target: "runtime::bridge-messages",
+							"T::OnDeliveryConfirmed callback has spent more weight that it is allowed to: \
+							{} vs {}",
+							preliminary_callback_overhead,
+							actual_callback_weight,
+						);
+					},
+				}
 
 				// emit 'delivered' event
 				let received_range = confirmed_messages.begin..=confirmed_messages.end;
@@ -875,42 +878,42 @@ fn send_message<T: Config<I>, I: 'static>(
 	// We assume that the maximum weight call back used is `single_message_callback_overhead`, so do
 	// not perform complex db operation in callback. If you want to, put these magic logic in
 	// outside pallet and control the weight there.
-	// let single_message_callback_overhead =
-	// 	T::WeightInfo::single_message_callback_overhead(T::DbWeight::get());
-	// let actual_callback_weight = T::OnMessageAccepted::on_messages_accepted(&lane_id, &nonce);
-	// match single_message_callback_overhead.checked_sub(actual_callback_weight) {
-	// 	Some(difference) if difference == Weight::zero() => (),
-	// 	Some(difference) => {
-	// 		log::trace!(
-	// 			target: "runtime::bridge-messages",
-	// 			"T::OnMessageAccepted callback has spent less weight than expected. Refunding: \
-	// 			{} - {} = {}",
-	// 			single_message_callback_overhead,
-	// 			actual_callback_weight,
-	// 			difference,
-	// 		);
-	// 		actual_weight = actual_weight.saturating_sub(difference);
-	// 	},
-	// 	None => {
-	// 		debug_assert!(false, "T::OnMessageAccepted callback consumed too much weight.");
-	// 		log::error!(
-	// 			target: "runtime::bridge-messages",
-	// 			"T::OnMessageAccepted callback has spent more weight that it is allowed to: \
-	// 			{} vs {}",
-	// 			single_message_callback_overhead,
-	// 			actual_callback_weight,
-	// 		);
-	// 	},
-	// }
+	let single_message_callback_overhead =
+		T::WeightInfo::single_message_callback_overhead(T::DbWeight::get());
+	let actual_callback_weight = T::OnMessageAccepted::on_messages_accepted(&lane_id, &nonce);
+	match single_message_callback_overhead.checked_sub(&actual_callback_weight) {
+		Some(difference) if difference == Weight::zero() => (),
+		Some(difference) => {
+			log::trace!(
+				target: "runtime::bridge-messages",
+				"T::OnMessageAccepted callback has spent less weight than expected. Refunding: \
+				{} - {} = {}",
+				single_message_callback_overhead,
+				actual_callback_weight,
+				difference,
+			);
+			actual_weight = actual_weight.saturating_sub(difference);
+		},
+		None => {
+			debug_assert!(false, "T::OnMessageAccepted callback consumed too much weight.");
+			log::error!(
+				target: "runtime::bridge-messages",
+				"T::OnMessageAccepted callback has spent more weight that it is allowed to: \
+				{} vs {}",
+				single_message_callback_overhead,
+				actual_callback_weight,
+			);
+		},
+	}
 
-	// // message sender pays for pruning at most `MaxMessagesToPruneAtOnce` messages
-	// // the cost of pruning every message is roughly single db write
-	// // => lets refund sender if less than `MaxMessagesToPruneAtOnce` messages pruned
-	// let max_messages_to_prune = T::MaxMessagesToPruneAtOnce::get();
-	// let pruned_messages = lane.prune_messages(max_messages_to_prune);
-	// if let Some(extra_messages) = max_messages_to_prune.checked_sub(pruned_messages) {
-	// 	actual_weight = actual_weight.saturating_sub(T::DbWeight::get().writes(extra_messages));
-	// }
+	// message sender pays for pruning at most `MaxMessagesToPruneAtOnce` messages
+	// the cost of pruning every message is roughly single db write
+	// => lets refund sender if less than `MaxMessagesToPruneAtOnce` messages pruned
+	let max_messages_to_prune = T::MaxMessagesToPruneAtOnce::get();
+	let pruned_messages = lane.prune_messages(max_messages_to_prune);
+	if let Some(extra_messages) = max_messages_to_prune.checked_sub(pruned_messages) {
+		actual_weight = actual_weight.saturating_sub(T::DbWeight::get().writes(extra_messages));
+	}
 
 	log::trace!(
 		target: "runtime::bridge-messages",

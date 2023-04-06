@@ -2393,7 +2393,10 @@ impl_runtime_apis! {
 			use pallet_nomination_pools_benchmarking::Pallet as NominationPoolsBench;
 
 			let mut list = Vec::<BenchmarkList>::new();
-			list_benchmarks!(list, extra);
+		
+			list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeRialtoTokenSwap);
+			list_benchmark!(list, extra, pallet_bridge_messages, MessagesBench::<Runtime, WithRialtoMessagesInstance>);
+			list_benchmark!(list, extra, pallet_bridge_grandpa, BridgeRialtoGrandpa);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -2433,11 +2436,108 @@ impl_runtime_apis! {
 
 			let mut batches = Vec::<BenchmarkBatch>::new();
 			let params = (&config, &whitelist);
-			add_benchmarks!(params, batches);
+			//add_benchmarks!(params, batches);
+			//Ok(batches)
+		
+
+	use bridge_runtime_common::messages_benchmarking::{prepare_message_delivery_proof, prepare_message_proof, prepare_outbound_message};
+			use bridge_runtime_common::messages;
+			use pallet_bridge_messages::benchmarking::{
+				Pallet as MessagesBench,
+				Config as MessagesConfig,
+				MessageDeliveryProofParams,
+				MessageParams,
+				MessageProofParams,
+			};
+			use rialto_messages::WithRialtoMessageBridge;
+
+			impl MessagesConfig<WithRialtoMessagesInstance> for Runtime {
+				fn maximal_message_size() -> u32 {
+					messages::source::maximal_message_size::<WithRialtoMessageBridge>()
+				}
+
+				fn bridged_relayer_id() -> Self::InboundRelayer {
+					[0u8; 32].into()
+				}
+
+				fn account_balance(account: &Self::AccountId) -> Self::OutboundMessageFee {
+					pallet_balances::Pallet::<Runtime>::free_balance(account)
+				}
+
+				fn endow_account(account: &Self::AccountId) {
+					pallet_balances::Pallet::<Runtime>::make_free_balance_be(
+						account,
+						Balance::MAX / 100,
+					);
+				}
+
+				fn prepare_outbound_message(
+					params: MessageParams<Self::AccountId>,
+				) -> (substrate_messages::ToRialtoMessagePayload, Balance) {
+					(prepare_outbound_message::<WithRialtoMessageBridge>(params), Self::message_fee())
+				}
+
+				fn prepare_message_proof(
+					params: MessageProofParams,
+				) -> (substrate_messages::FromRialtoMessagesProof, Weight) {
+					prepare_message_proof::<Runtime, (), (), WithRialtoMessageBridge, chain_substrate::Header, chain_substrate::Hasher>(
+						params,
+						&VERSION,
+						Balance::MAX / 100,
+					)
+				}
+
+				fn prepare_message_delivery_proof(
+					params: MessageDeliveryProofParams<Self::AccountId>,
+				) -> rialto_messages::ToRialtoMessagesDeliveryProof {
+					prepare_message_delivery_proof::<Runtime, (), WithRialtoMessageBridge, chain_substrate::Header, chain_substrate::Hasher>(
+						params,
+					)
+				}
+
+				fn is_message_dispatched(nonce: bp_messages::MessageNonce) -> bool {
+					frame_system::Pallet::<Runtime>::events()
+						.into_iter()
+						.map(|event_record| event_record.event)
+						.any(|event| matches!(
+							event,
+							RuntimeEvent::BridgeDispatch(pallet_bridge_dispatch::Event::<Runtime, _>::MessageDispatched(
+								_, ([0, 0, 0, 0], nonce_from_event), _,
+							)) if nonce_from_event == nonce
+						))
+				}
+			}
+
+			use pallet_bridge_token_swap::benchmarking::Config as TokenSwapConfig;
+
+			impl TokenSwapConfig<WithRialtoTokenSwapInstance> for Runtime {
+				fn initialize_environment() {
+					let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
+						our_chain::AccountId,
+						our_chain::AccountIdConverter,
+					>();
+					pallet_balances::Pallet::<Runtime>::make_free_balance_be(
+						&relayers_fund_account,
+						Balance::MAX / 100,
+					);
+				}
+			}
+
+			add_benchmark!(
+				params,
+				batches,
+				pallet_bridge_messages,
+				MessagesBench::<Runtime, WithRialtoMessagesInstance>
+			);
+			add_benchmark!(params, batches, pallet_bridge_grandpa, BridgeRialtoGrandpa);
+			add_benchmark!(params, batches, pallet_bridge_token_swap, BridgeRialtoTokenSwap);
+
 			Ok(batches)
 		}
 	}
 }
+	
+
 
 #[cfg(test)]
 mod tests {
