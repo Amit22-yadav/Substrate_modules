@@ -97,7 +97,8 @@ pub fn create_extrinsic(
 		pallet_asset_tx_payment::ChargeAssetTxPayment::<kitchensink_runtime::Runtime>::from(
 			tip, None,
 		),
-		pallet_transaction_payment::ChargeTransactionPayment::<kitchensink_runtime::Runtime>::from(tip),
+	//	pallet_transaction_payment::ChargeTransactionPayment<kitchensink_runtime::Runtime>::new()
+		//pallet_transaction_payment::ChargeTransactionPayment::<kitchensink_runtime::Runtime>::from(tip),
 	);
 
 	let raw_payload = kitchensink_runtime::SignedPayload::from_raw(
@@ -112,7 +113,7 @@ pub fn create_extrinsic(
 			(),
 			(),
 			(),
-			(),
+			//(),
 		),
 	);
 	let signature = raw_payload.using_encoded(|e| sender.sign(e));

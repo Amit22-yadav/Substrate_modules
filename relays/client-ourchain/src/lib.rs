@@ -114,7 +114,7 @@ impl TransactionSignScheme for Millau {
 				frame_system::CheckNonce::<kitchensink_runtime::Runtime>::from(param.unsigned.nonce),
 				frame_system::CheckWeight::<kitchensink_runtime::Runtime>::new(),
 				pallet_asset_tx_payment::ChargeAssetTxPayment::<kitchensink_runtime::Runtime>::from(param.unsigned.tip, None),
-				pallet_transaction_payment::ChargeTransactionPayment::<kitchensink_runtime::Runtime>::from(param.unsigned.tip),
+			//	pallet_transaction_payment::ChargeTransactionPayment::<kitchensink_runtime::Runtime>::from(param.unsigned.tip),
 			),
 			(
 				(),
@@ -125,7 +125,7 @@ impl TransactionSignScheme for Millau {
 				(),
 				(),
 				(),
-				(),
+				
 			),
 		);
 		let signature = raw_payload.using_encoded(|payload| param.signer.sign(payload));
@@ -134,7 +134,7 @@ impl TransactionSignScheme for Millau {
 
 		Ok(kitchensink_runtime::UncheckedExtrinsic::new_signed(
 			call.into_decoded()?,
-			sp_runtime::MultiAddress::Id(signer.into_account()),
+			signer.into_account().into(),
 			signature.into(),
 			extra,
 		))

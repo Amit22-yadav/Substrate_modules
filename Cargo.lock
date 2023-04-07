@@ -6067,7 +6067,6 @@ dependencies = [
  "bp-token-swap",
  "frame-benchmarking",
  "frame-support",
- "frame-support3",
  "frame-system",
  "log",
  "pallet-balances",

@@ -23,6 +23,7 @@ use crate::{
 	sync_loop_metrics::SyncLoopMetrics, FinalityProof, FinalitySyncPipeline, SourceHeader,
 };
 
+
 use async_trait::async_trait;
 use backoff::backoff::Backoff;
 use futures::{select, Future, FutureExt, Stream, StreamExt};

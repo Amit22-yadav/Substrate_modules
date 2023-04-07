@@ -124,6 +124,13 @@ impl messages::ThisChainWithMessages for Millau {
 		// lanes 0x00000000 && 0x00000001 are accepting any paid messages, while
 		// `TokenSwapMessageLane` only accepts messages from token swap pallet
 		let token_swap_dedicated_lane = crate::TokenSwapMessagesLane::get();
+
+		log::trace!(
+			target: "is-message-accpted",
+			"susbtrate_messages {:?}",
+			token_swap_dedicated_lane,
+		
+		);
 		match *lane {
 			[0, 0, 0, 0] | [0, 0, 0, 1] => send_origin.linked_account().is_some(),
 			_ if *lane == token_swap_dedicated_lane => matches!(

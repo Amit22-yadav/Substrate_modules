@@ -61,6 +61,7 @@
 //! temporary `swap_account_at_this_chain` account. It is destroyed upon swap completion.
 
 #![cfg_attr(not(feature = "std"), no_std)]
+
 use bp_messages::{
 	source_chain::{MessagesBridge, OnDeliveryConfirmed},
 	DeliveredMessages, LaneId, MessageNonce,
@@ -76,17 +77,14 @@ use frame_support::{
 	weights::PostDispatchInfo,
 	RuntimeDebug,
 };
-
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
 use sp_runtime::traits::{Convert, Saturating};
 use sp_std::{boxed::Box, marker::PhantomData};
 use weights::WeightInfo;
-pub use frame_support3::storage::with_transaction;
 
 pub use weights_ext::WeightInfoExt;
-//pub use crate::pallet::storage::with_transaction;
 
 #[cfg(test)]
 mod mock;
@@ -97,14 +95,13 @@ pub mod benchmarking;
 pub mod weights;
 pub mod weights_ext;
 
-
 pub use pallet::*;
 
 /// Name of the `PendingSwaps` storage map.
 pub const PENDING_SWAPS_MAP_NAME: &str = "PendingSwaps";
 
 /// Origin for the token swap pallet.
-#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode, TypeInfo,MaxEncodedLen)]
+#[derive(PartialEq, Eq, Clone, RuntimeDebug, Encode, Decode,MaxEncodedLen, TypeInfo)]
 pub enum RawOrigin<AccountId, I> {
 	/// The call is originated by the token swap account.
 	TokenSwap {
@@ -119,13 +116,12 @@ pub enum RawOrigin<AccountId, I> {
 }
 
 // comes from #[pallet::event]
-//#[allow(clippy::unused_unit)]
+#[allow(clippy::unused_unit)]
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	//use frame_support::storage::with_transaction;
 
 	#[pallet::config]
 	pub trait Config<I: 'static = ()>: frame_system::Config {
@@ -301,11 +297,12 @@ pub mod pallet {
 				TokenSwapType::LockClaimUntilBlock(block_number, _) => ensure!(
 					block_number >= frame_system::Pallet::<T>::block_number(),
 					Error::<T, I>::SwapPeriodIsFinished,
-				)
+				),
 			}
 
 			let swap_account = swap_account_id::<T, I>(&swap);
-			let actual_send_message_weight = with_transaction(|| {
+			let actual_send_message_weight = frame_support::storage::with_transaction(
+				|| -> sp_runtime::TransactionOutcome<Result<_, sp_runtime::DispatchError>> {
 				// funds are transferred from This account to the temporary Swap account
 				let transfer_result = T::ThisCurrency::transfer(
 					&swap.source_account_at_this_chain,
@@ -328,7 +325,7 @@ pub mod pallet {
 					);
 
 					return sp_runtime::TransactionOutcome::Rollback(Err(
-						Error::<T, I>::FailedToTransferToSwapAccount,
+						Error::<T, I>::FailedToTransferToSwapAccount.into(),
 					))
 				}
 
@@ -366,7 +363,7 @@ pub mod pallet {
 						);
 
 						return sp_runtime::TransactionOutcome::Rollback(Err(
-							Error::<T, I>::FailedToSendTransferMessage,
+							Error::<T, I>::FailedToSendTransferMessage.into(),
 						))
 					},
 				};
@@ -390,7 +387,7 @@ pub mod pallet {
 					);
 
 					return sp_runtime::TransactionOutcome::Rollback(Err(
-						Error::<T, I>::SwapAlreadyStarted,
+						Error::<T, I>::SwapAlreadyStarted.into(),
 					))
 				}
 
@@ -558,10 +555,10 @@ pub mod pallet {
 		StorageMap<_, Identity, MessageNonce, H256>;
 
 	impl<T: Config<I>, I: 'static> OnDeliveryConfirmed for Pallet<T, I> {
-		fn on_messages_delivered(lane: &LaneId, delivered_messages: &DeliveredMessages) -> 	Weight {
-			// we're only interested in our lane messages +
+		fn on_messages_delivered(lane: &LaneId, delivered_messages: &DeliveredMessages) -> Weight {
+			// we're only interested in our lane messages
 			if *lane != T::OutboundMessageLaneId::get() {
-				return Weight::zero() 
+				return Weight::zero()
 			}
 
 			// so now we're dealing with our lane messages. Ideally we'll have dedicated lane

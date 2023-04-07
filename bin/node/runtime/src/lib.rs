@@ -1321,8 +1321,9 @@ where
 			frame_system::CheckEra::<Runtime>::from(era),
 			frame_system::CheckNonce::<Runtime>::from(nonce),
 			frame_system::CheckWeight::<Runtime>::new(),
+			//pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::new(),
 			pallet_asset_tx_payment::ChargeAssetTxPayment::<Runtime>::from(tip, None),
-			pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
+			//pallet_transaction_payment::ChargeTransactionPayment::<Runtime>::from(tip),
 		);
 		let raw_payload = SignedPayload::new(call, extra)
 			.map_err(|e| {
@@ -1859,7 +1860,7 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		BridgeRialtoGrandpa : pallet_bridge_grandpa,
 		BridgeDispatch: pallet_bridge_dispatch,
-		BridgeRialtoTokenSwap: pallet_bridge_token_swap,
+		BridgeRialtoTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
 		BridgeRialtoMessages: pallet_bridge_messages,
 	}
 );
@@ -1888,7 +1889,7 @@ pub type SignedExtra = (
 	frame_system::CheckNonce<Runtime>,
 	frame_system::CheckWeight<Runtime>,
 	pallet_asset_tx_payment::ChargeAssetTxPayment<Runtime>,
-	pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
+	//pallet_transaction_payment::ChargeTransactionPayment<Runtime>,
 );
 
 /// Unchecked extrinsic type as expected by this runtime.

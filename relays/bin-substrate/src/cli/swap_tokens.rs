@@ -151,6 +151,8 @@ impl SwapTokens {
 			let source_to_target_conversion_rate_override =
 				self.source_to_target_conversion_rate_override;
 
+
+
 			// names of variables in this function are matching names used by the
 			// `pallet-bridge-token-swap`
 
@@ -158,6 +160,9 @@ impl SwapTokens {
 			let token_swap = self
 				.prepare_token_swap::<Source, Target>(&source_client, &source_sign, &target_sign)
 				.await?;
+			
+			//	log::trace!("{} {}", target = "here it is followed {}",token_swap);
+			
 
 			// group all accounts that will be used later
 			let accounts = TokenSwapAccounts {
