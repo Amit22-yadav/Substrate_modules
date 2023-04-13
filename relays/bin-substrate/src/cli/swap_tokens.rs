@@ -114,14 +114,14 @@ macro_rules! select_bridge {
 				const SOURCE_SPEC_VERSION: u32 = kitchensink_runtime::VERSION.spec_version;
 				const TARGET_SPEC_VERSION: u32 = runtime::VERSION.spec_version;
 
-				type FromSwapToThisAccountIdConverter = chain_substrate::AccountIdConverter;
+				type FromSwapToThisAccountIdConverter = bp_rialto::AccountIdConverter;
 
-				use our_chain::{
+				use bp_millau::{
 					derive_account_from_rialto_id as derive_source_account_from_target_account,
 					TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_TARGET_TO_SOURCE_MESSAGE_FEE_METHOD,
 					WITH_RIALTO_TOKEN_SWAP_PALLET_NAME as TOKEN_SWAP_PALLET_NAME,
 				};
-				use chain_substrate::{
+				use bp_rialto::{
 					derive_account_from_millau_id as derive_target_account_from_source_account,
 					TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_SOURCE_TO_TARGET_MESSAGE_FEE_METHOD,
 				};

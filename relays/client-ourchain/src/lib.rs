@@ -17,7 +17,7 @@
 //! Types used to connect to the Millau-Substrate chain.
 
 use bp_messages::MessageNonce;
-//use our_chain::Substrate;
+//use bp_millau::Substrate;
 use codec::{Compact, Decode, Encode};
 use frame_support::weights::Weight;
 use relay_substrate_client::{
@@ -47,29 +47,29 @@ impl ChainBase for Millau {
 	type Signature = kitchensink_runtime::Signature;
 
 	fn max_extrinsic_size() -> u32 {
-		our_chain::Millau::max_extrinsic_size()
+		bp_millau::Millau::max_extrinsic_size()
 	}
 
 	fn max_extrinsic_weight() -> Weight {
-		our_chain::Millau::max_extrinsic_weight()
+		bp_millau::Millau::max_extrinsic_weight()
 	}
 }
 
 impl ChainWithGrandpa for Millau {
-	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = our_chain::WITH_MILLAU_GRANDPA_PALLET_NAME;
+	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = bp_millau::WITH_MILLAU_GRANDPA_PALLET_NAME;
 }
 
 impl ChainWithMessages for Millau {
 	const WITH_CHAIN_MESSAGES_PALLET_NAME: &'static str =
-		our_chain::WITH_MILLAU_MESSAGES_PALLET_NAME;
+		bp_millau::WITH_MILLAU_MESSAGES_PALLET_NAME;
 	const TO_CHAIN_MESSAGE_DETAILS_METHOD: &'static str =
-		our_chain::TO_MILLAU_MESSAGE_DETAILS_METHOD;
+		bp_millau::TO_MILLAU_MESSAGE_DETAILS_METHOD;
 	const PAY_INBOUND_DISPATCH_FEE_WEIGHT_AT_CHAIN: Weight =
-		our_chain::PAY_INBOUND_DISPATCH_FEE_WEIGHT;
+		bp_millau::PAY_INBOUND_DISPATCH_FEE_WEIGHT;
 	const MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX: MessageNonce =
-		our_chain::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		bp_millau::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	const MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX: MessageNonce =
-		our_chain::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+		bp_millau::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	type WeightInfo = ();
 }
 
@@ -78,14 +78,14 @@ impl Chain for Millau {
 	// Rialto token has no value, but we associate it with KSM token
 	const TOKEN_ID: Option<&'static str> = Some("kusama");
 	const BEST_FINALIZED_HEADER_ID_METHOD: &'static str =
-		our_chain::BEST_FINALIZED_MILLAU_HEADER_METHOD;
+		bp_millau::BEST_FINALIZED_MILLAU_HEADER_METHOD;
 	const AVERAGE_BLOCK_INTERVAL: Duration = Duration::from_secs(5);
-	const STORAGE_PROOF_OVERHEAD: u32 = our_chain::EXTRA_STORAGE_PROOF_SIZE;
-	const MAXIMAL_ENCODED_ACCOUNT_ID_SIZE: u32 = our_chain::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE;
+	const STORAGE_PROOF_OVERHEAD: u32 = bp_millau::EXTRA_STORAGE_PROOF_SIZE;
+	const MAXIMAL_ENCODED_ACCOUNT_ID_SIZE: u32 = bp_millau::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE;
 
 	type SignedBlock = kitchensink_runtime::SignedBlock;
 	type Call = kitchensink_runtime::RuntimeCall;
-	type WeightToFee = our_chain::WeightToFee;
+	type WeightToFee = bp_millau::WeightToFee;
 }
 
 impl ChainWithBalances for Millau {

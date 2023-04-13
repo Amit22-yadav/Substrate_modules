@@ -130,8 +130,8 @@ macro_rules! select_bridge {
 				type RightToLeftFinality =
 					crate::chains::rialto_headers_to_millau::RialtoFinalityToMillau;
 
-				type LeftAccountIdConverter = our_chain::AccountIdConverter;
-				type RightAccountIdConverter = chain_substrate::AccountIdConverter;
+				type LeftAccountIdConverter = bp_millau::AccountIdConverter;
+				type RightAccountIdConverter = bp_rialto::AccountIdConverter;
 
 				use crate::chains::{
 					millau_messages_to_rialto::MillauMessagesToRialto as LeftToRightMessageLane,

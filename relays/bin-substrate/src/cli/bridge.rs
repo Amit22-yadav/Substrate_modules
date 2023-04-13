@@ -64,7 +64,7 @@ macro_rules! select_full_bridge {
 
 				// Derive-account
 				#[allow(unused_imports)]
-				use chain_substrate::derive_account_from_millau_id as derive_account;
+				use bp_rialto::derive_account_from_millau_id as derive_account;
 
 				// Relay-messages
 				#[allow(unused_imports)]
@@ -72,7 +72,7 @@ macro_rules! select_full_bridge {
 
 				// Send-message / Estimate-fee
 				#[allow(unused_imports)]
-				use chain_substrate::TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+				use bp_rialto::TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 				// Send-message
 				#[allow(unused_imports)]
 				use kitchensink_runtime::substrate_to_substrate2_account_ownership_digest as account_ownership_digest;
@@ -86,14 +86,14 @@ macro_rules! select_full_bridge {
 
 				// Derive-account
 				#[allow(unused_imports)]
-				use our_chain::derive_account_from_rialto_id as derive_account;
+				use bp_millau::derive_account_from_rialto_id as derive_account;
 
 				// Relay-messages
 				#[allow(unused_imports)]
 				use crate::chains::rialto_messages_to_millau::RialtoMessagesToMillau as MessagesLane;
 
 				// Send-message / Estimate-fee
-				use our_chain::TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+				use bp_millau::TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 
 				// Send-message
 				#[allow(unused_imports)]

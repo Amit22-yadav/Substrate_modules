@@ -41,7 +41,7 @@ use sp_runtime::{
 };
 
 pub use kitchensink_runtime::GenesisConfig;
-use our_chain::derive_account_from_rialto_id;
+use bp_millau::derive_account_from_rialto_id;
 pub use node_primitives::{AccountId, Balance, Signature};
 
 type AccountPublic = <Signature as Verify>::Signer;
@@ -262,8 +262,8 @@ pub fn testnet_genesis(
 			get_account_id_from_seed::<sr25519::Public>("RialtoMessagesOwner"),
 		get_account_id_from_seed::<sr25519::Public>("WithRialtoTokenSwap"),
 		pallet_bridge_messages::relayer_fund_account_id::<
-			our_chain::AccountId,
-			our_chain::AccountIdConverter,
+			bp_millau::AccountId,
+			bp_millau::AccountIdConverter,
 		>(),
 		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Alice"),

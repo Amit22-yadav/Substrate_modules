@@ -77,9 +77,9 @@ impl CliChain for Millau {
 
 	type KeyPair = sp_core::sr25519::Pair;
 	type MessagePayload = MessagePayload<
-		our_chain::AccountId,
-		chain_substrate::AccountSigner,
-		chain_substrate::Signature,
+		bp_millau::AccountId,
+		bp_rialto::AccountSigner,
+		bp_rialto::Signature,
 		Vec<u8>,
 	>;
 

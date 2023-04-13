@@ -72,11 +72,11 @@ pub type FromMillauMessageDispatch = messages::target::FromBridgedChainMessageDi
 >;
 
 /// Messages proof for Millau -> Rialto messages.
-pub type FromMillauMessagesProof = messages::target::FromBridgedChainMessagesProof<our_chain::Hash>;
+pub type FromMillauMessagesProof = messages::target::FromBridgedChainMessagesProof<bp_millau::Hash>;
 
 /// Messages delivery proof for Rialto -> Millau messages.
 pub type ToMillauMessagesDeliveryProof =
-	messages::source::FromBridgedChainMessagesDeliveryProof<our_chain::Hash>;
+	messages::source::FromBridgedChainMessagesDeliveryProof<bp_millau::Hash>;
 
 /// Millau <-> Rialto message bridge.
 #[derive(RuntimeDebug, Clone, Copy)]
@@ -86,19 +86,19 @@ impl MessageBridge for WithMillauMessageBridge {
 	const RELAYER_FEE_PERCENT: u32 = 10;
 	const THIS_CHAIN_ID: ChainId = RIALTO_CHAIN_ID;
 	const BRIDGED_CHAIN_ID: ChainId = MILLAU_CHAIN_ID;
-	const BRIDGED_MESSAGES_PALLET_NAME: &'static str = chain_substrate::WITH_RIALTO_MESSAGES_PALLET_NAME;
+	const BRIDGED_MESSAGES_PALLET_NAME: &'static str = bp_rialto::WITH_RIALTO_MESSAGES_PALLET_NAME;
 
 	type ThisChain = Rialto;
 	type BridgedChain = Millau;
 
 	fn bridged_balance_to_this_balance(
-		bridged_balance: our_chain::Balance,
+		bridged_balance: bp_millau::Balance,
 		bridged_to_this_conversion_rate_override: Option<FixedU128>,
-	) -> chain_substrate::Balance {
+	) -> bp_rialto::Balance {
 		let conversion_rate = bridged_to_this_conversion_rate_override
 			.unwrap_or_else(|| MillauToRialtoConversionRate::get());
-		chain_substrate::Balance::try_from(conversion_rate.saturating_mul_int(bridged_balance))
-			.unwrap_or(chain_substrate::Balance::MAX)
+		bp_rialto::Balance::try_from(conversion_rate.saturating_mul_int(bridged_balance))
+			.unwrap_or(bp_rialto::Balance::MAX)
 	}
 }
 
@@ -107,12 +107,12 @@ impl MessageBridge for WithMillauMessageBridge {
 pub struct Rialto;
 
 impl messages::ChainWithMessages for Rialto {
-	type Hash = chain_substrate::Hash;
-	type AccountId = chain_substrate::AccountId;
-	type Signer = chain_substrate::AccountSigner;
-	type Signature = chain_substrate::Signature;
+	type Hash = bp_rialto::Hash;
+	type AccountId = bp_rialto::AccountId;
+	type Signer = bp_rialto::AccountSigner;
+	type Signature = bp_rialto::Signature;
 	type Weight = Weight;
-	type Balance = chain_substrate::Balance;
+	type Balance = bp_rialto::Balance;
 }
 
 impl messages::ThisChainWithMessages for Rialto {
@@ -128,29 +128,29 @@ impl messages::ThisChainWithMessages for Rialto {
 	}
 
 	fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight> {
-		let inbound_data_size = InboundLaneData::<chain_substrate::AccountId>::encoded_size_hint(
-			chain_substrate::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
+		let inbound_data_size = InboundLaneData::<bp_rialto::AccountId>::encoded_size_hint(
+			bp_rialto::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
 			1,
 			1,
 		)
 		.unwrap_or(u32::MAX);
 
 		MessageTransaction {
-			dispatch_weight: chain_substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
+			dispatch_weight: bp_rialto::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
 			size: inbound_data_size
-				.saturating_add(our_chain::EXTRA_STORAGE_PROOF_SIZE)
-				.saturating_add(chain_substrate::TX_EXTRA_BYTES),
+				.saturating_add(bp_millau::EXTRA_STORAGE_PROOF_SIZE)
+				.saturating_add(bp_rialto::TX_EXTRA_BYTES),
 		}
 	}
 
-	fn transaction_payment(transaction: MessageTransaction<Weight>) -> chain_substrate::Balance {
+	fn transaction_payment(transaction: MessageTransaction<Weight>) -> bp_rialto::Balance {
 		// `transaction` may represent transaction from the future, when multiplier value will
 		// be larger, so let's use slightly increased value
 		let multiplier = FixedU128::saturating_from_rational(110, 100)
 			.saturating_mul(pallet_transaction_payment::Pallet::<Runtime>::next_fee_multiplier());
 		// in our testnets, both per-byte fee and weight-to-fee are 1:1
 		messages::transaction_payment(
-			chain_substrate::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
+			bp_rialto::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
 			1,
 			multiplier,
 			|weight| weight.ref_time() as _,
@@ -164,23 +164,23 @@ impl messages::ThisChainWithMessages for Rialto {
 pub struct Millau;
 
 impl messages::ChainWithMessages for Millau {
-	type Hash = our_chain::Hash;
-	type AccountId = our_chain::AccountId;
-	type Signer = our_chain::AccountSigner;
-	type Signature = our_chain::Signature;
+	type Hash = bp_millau::Hash;
+	type AccountId = bp_millau::AccountId;
+	type Signer = bp_millau::AccountSigner;
+	type Signature = bp_millau::Signature;
 	type Weight = Weight;
-	type Balance = our_chain::Balance;
+	type Balance = bp_millau::Balance;
 }
 
 impl messages::BridgedChainWithMessages for Millau {
 	fn maximal_extrinsic_size() -> u32 {
-		our_chain::Millau::max_extrinsic_size()
+		bp_millau::Millau::max_extrinsic_size()
 	}
 
 	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
 		// we don't want to relay too large messages + keep reserve for future upgrades
 		let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
-			our_chain::Millau::max_extrinsic_weight(),
+			bp_millau::Millau::max_extrinsic_weight(),
 		);
 
 		// we're charging for payload bytes in `WithMillauMessageBridge::transaction_payment`
@@ -202,28 +202,28 @@ impl messages::BridgedChainWithMessages for Millau {
 			.saturating_sub(pallet_bridge_messages::EXPECTED_DEFAULT_MESSAGE_LENGTH);
 
 		MessageTransaction {
-			dispatch_weight: our_chain::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT
+			dispatch_weight: bp_millau::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT
 				.saturating_mul(extra_bytes_in_payload as u64)
-				.saturating_add(our_chain::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT)
+				.saturating_add(bp_millau::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT)
 				.saturating_sub(if include_pay_dispatch_fee_cost {
 					Weight::from_ref_time(0)
 				} else {
-					our_chain::PAY_INBOUND_DISPATCH_FEE_WEIGHT
+					bp_millau::PAY_INBOUND_DISPATCH_FEE_WEIGHT
 				})
 				.saturating_add(message_dispatch_weight),
 			size: message_payload_len
-				.saturating_add(chain_substrate::EXTRA_STORAGE_PROOF_SIZE)
-				.saturating_add(our_chain::TX_EXTRA_BYTES),
+				.saturating_add(bp_rialto::EXTRA_STORAGE_PROOF_SIZE)
+				.saturating_add(bp_millau::TX_EXTRA_BYTES),
 		}
 	}
 
-	fn transaction_payment(transaction: MessageTransaction<Weight>) -> our_chain::Balance {
+	fn transaction_payment(transaction: MessageTransaction<Weight>) -> bp_millau::Balance {
 		// we don't have a direct access to the value of multiplier at Millau chain
 		// => it is a messages module parameter
 		let multiplier = MillauFeeMultiplier::get();
 		// in our testnets, both per-byte fee and weight-to-fee are 1:1
 		messages::transaction_payment(
-			our_chain::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
+			bp_millau::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
 			1,
 			multiplier,
 			|weight| weight.ref_time() as _,
@@ -232,7 +232,7 @@ impl messages::BridgedChainWithMessages for Millau {
 	}
 }
 
-impl TargetHeaderChain<ToMillauMessagePayload, our_chain::AccountId> for Millau {
+impl TargetHeaderChain<ToMillauMessagePayload, bp_millau::AccountId> for Millau {
 	type Error = &'static str;
 	// The proof is:
 	// - hash of the header this proof has been created with;
@@ -246,7 +246,7 @@ impl TargetHeaderChain<ToMillauMessagePayload, our_chain::AccountId> for Millau 
 
 	fn verify_messages_delivery_proof(
 		proof: Self::MessagesDeliveryProof,
-	) -> Result<(LaneId, InboundLaneData<chain_substrate::AccountId>), Self::Error> {
+	) -> Result<(LaneId, InboundLaneData<bp_rialto::AccountId>), Self::Error> {
 		messages::source::verify_messages_delivery_proof::<
 			WithMillauMessageBridge,
 			Runtime,
@@ -255,7 +255,7 @@ impl TargetHeaderChain<ToMillauMessagePayload, our_chain::AccountId> for Millau 
 	}
 }
 
-impl SourceHeaderChain<our_chain::Balance> for Millau {
+impl SourceHeaderChain<bp_millau::Balance> for Millau {
 	type Error = &'static str;
 	// The proof is:
 	// - hash of the header this proof has been created with;
@@ -267,7 +267,7 @@ impl SourceHeaderChain<our_chain::Balance> for Millau {
 	fn verify_messages_proof(
 		proof: Self::MessagesProof,
 		messages_count: u32,
-	) -> Result<ProvedMessages<Message<our_chain::Balance>>, Self::Error> {
+	) -> Result<ProvedMessages<Message<bp_millau::Balance>>, Self::Error> {
 		messages::target::verify_messages_proof::<
 			WithMillauMessageBridge,
 			Runtime,

@@ -65,9 +65,9 @@ use codec::{Decode, Encode};
 use frame_support::{
 	fail,
 	traits::Get,
-	weights::{Pays, PostDispatchInfo},
+	weights::{Pays},
 };
-
+use frame_support::dispatch::PostDispatchInfo;
 use frame_support::{
 weights::{RuntimeDbWeight}
 };
@@ -436,8 +436,8 @@ pub mod pallet {
 					// ensure that relayer has declared enough weight for dispatching next message
 					// on this lane. We can't dispatch lane messages out-of-order, so if declared
 					// weight is not enough, let's move to next lane
-					let dispatch_weight = T::MessageDispatch::dispatch_weight(&message);
-					if dispatch_weight .any_gt( dispatch_weight_left ){
+					let dispatch_weight = T::MessageDispatch::dispatch_weight(& message);
+					if dispatch_weight.any_gt(dispatch_weight_left ){
 						log::trace!(
 							target: "runtime::bridge-messages",
 							"Cannot dispatch any more messages on lane {:?}. Weight: declared={}, left={}",
@@ -477,16 +477,16 @@ pub mod pallet {
 
 					let unspent_weight = unspent_weight.min(dispatch_weight);
 					dispatch_weight_left -= dispatch_weight - unspent_weight;
-					actual_weight = actual_weight.saturating_sub(unspent_weight);
+					actual_weight = actual_weight.saturating_sub(unspent_weight).saturating_sub(
 					// 	// delivery call weight formula assumes that the fee is paid at
 					// 	// this (target) chain. If the message is prepaid at the source
 					// 	// chain, let's refund relayer with this extra cost.
-					// 	if refund_pay_dispatch_fee {
-					// 		T::WeightInfo::pay_inbound_dispatch_fee_overhead()
-					// 	} else {
-					// 		Weight::zero()
-					// 	},
-					// );
+					if refund_pay_dispatch_fee {
+						T::WeightInfo::pay_inbound_dispatch_fee_overhead()
+					} else {
+						Weight::zero()
+					},
+				);
 				}
 			}
 

@@ -14,7 +14,7 @@ relay-utils = { path = "../utils" }
 
 # Supported Chains
 
-chain-substrate = { path = "../../primitives_bridge/chain-substrate" }
+bp-rialto = { path = "../../primitives_bridge/chain-substrate" }
 runtime = { path = "../../bin/substrate2/runtime" }
 bp-messages = { path = "../../primitives_bridge/messages" }
 

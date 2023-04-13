@@ -27,9 +27,9 @@ bp-header-chain = { path = "../../primitives_bridge/header-chain" }
 #bp-kusama = { path = "../../primitives/chain-kusama" }
 bp-messages = { path = "../../primitives_bridge/messages" }
 bp-message-dispatch = { path = "../../primitives_bridge/message-dispatch" }
-our-chain = { path = "../../primitives_bridge/our-chain" }
+bp-millau = { path = "../../primitives_bridge/bp-millau" }
 #bp-polkadot = { path = "../../primitives/chain-polkadot" }
-chain-substrate= { path = "../../primitives_bridge/chain-substrate" }
+bp-rialto= { path = "../../primitives_bridge/chain-substrate" }
 #bp-rialto-parachain = { path = "../../primitives/chain-rialto-parachain" }
 #bp-rococo = { path = "../../primitives/chain-rococo" }
 bp-runtime = { path = "../../primitives_bridge/runtime" }

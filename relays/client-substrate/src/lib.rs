@@ -46,11 +46,11 @@ impl ChainBase for Rialto {
 	type Signature = runtime::Signature;
 
 	fn max_extrinsic_size() -> u32 {
-		chain_substrate::Rialto::max_extrinsic_size()
+		bp_rialto::Rialto::max_extrinsic_size()
 	}
 
 	fn max_extrinsic_weight() -> Weight {
-		chain_substrate::Rialto::max_extrinsic_weight()
+		bp_rialto::Rialto::max_extrinsic_weight()
 	}
 }
 
@@ -59,31 +59,31 @@ impl Chain for Rialto {
 	// Rialto token has no value, but we associate it with DOT token
 	const TOKEN_ID: Option<&'static str> = Some("polkadot");
 	const BEST_FINALIZED_HEADER_ID_METHOD: &'static str =
-		chain_substrate::BEST_FINALIZED_RIALTO_HEADER_METHOD;
+		bp_rialto::BEST_FINALIZED_RIALTO_HEADER_METHOD;
 	const AVERAGE_BLOCK_INTERVAL: Duration = Duration::from_secs(5);
-	const STORAGE_PROOF_OVERHEAD: u32 = chain_substrate::EXTRA_STORAGE_PROOF_SIZE;
-	const MAXIMAL_ENCODED_ACCOUNT_ID_SIZE: u32 = chain_substrate::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE;
+	const STORAGE_PROOF_OVERHEAD: u32 = bp_rialto::EXTRA_STORAGE_PROOF_SIZE;
+	const MAXIMAL_ENCODED_ACCOUNT_ID_SIZE: u32 = bp_rialto::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE;
 
 	type SignedBlock = runtime::SignedBlock;
 	type Call = runtime::RuntimeCall;
-	type WeightToFee = chain_substrate::WeightToFee;
+	type WeightToFee = bp_rialto::WeightToFee;
 }
 
 impl ChainWithGrandpa for Rialto {
-	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = chain_substrate::WITH_RIALTO_GRANDPA_PALLET_NAME;
+	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = bp_rialto::WITH_RIALTO_GRANDPA_PALLET_NAME;
 }
 
 impl ChainWithMessages for Rialto {
 	const WITH_CHAIN_MESSAGES_PALLET_NAME: &'static str =
-		chain_substrate::WITH_RIALTO_MESSAGES_PALLET_NAME;
+		bp_rialto::WITH_RIALTO_MESSAGES_PALLET_NAME;
 	const TO_CHAIN_MESSAGE_DETAILS_METHOD: &'static str =
-		chain_substrate::TO_RIALTO_MESSAGE_DETAILS_METHOD;
+		bp_rialto::TO_RIALTO_MESSAGE_DETAILS_METHOD;
 	const PAY_INBOUND_DISPATCH_FEE_WEIGHT_AT_CHAIN: Weight =
-		chain_substrate::PAY_INBOUND_DISPATCH_FEE_WEIGHT;
+		bp_rialto::PAY_INBOUND_DISPATCH_FEE_WEIGHT;
 	const MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX: MessageNonce =
-		chain_substrate::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		bp_rialto::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	const MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX: MessageNonce =
-		chain_substrate::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+		bp_rialto::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	type WeightInfo = ();
 }
 

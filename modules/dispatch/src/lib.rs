@@ -281,7 +281,7 @@ impl<T: Config<I>, I: 'static> MessageDispatch<T::AccountId, T::BridgeMessageId>
 		// because otherwise Calls may be dispatched at lower price)
 		let dispatch_info = call.get_dispatch_info();
 		let expected_weight = dispatch_info.weight;
-		if message.weight .any_gt(expected_weight){
+		if message.weight.any_gt(expected_weight){
 			log::trace!(
 				target: "runtime::bridge-dispatch",
 				"Message {:?}/{:?}: passed weight is too low. Expected at least {:?}, got {:?}",

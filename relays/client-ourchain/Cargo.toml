@@ -13,7 +13,7 @@ relay-utils = { path = "../utils" }
 
 # Supported Chains
 
-our-chain = { path = "../../primitives_bridge/our-chain" }
+bp-millau = { path = "../../primitives_bridge/bp-millau" }
 kitchensink-runtime = { path = "../../bin/node/runtime" }
 bp-messages = { path = "../../primitives_bridge/messages" }
 

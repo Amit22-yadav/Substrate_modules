@@ -45,7 +45,7 @@ log = "0.4.17"
 rand = "0.8"
 
 bp-runtime = { path = "../../../../primitives_bridge/runtime" }
-chain-substrate = { path = "../../../../primitives_bridge/chain-substrate" }
+bp-rialto = { path = "../../../../primitives_bridge/chain-substrate" }
 pallet-bridge-messages = { path = "../../../../modules/messages" }
 
 

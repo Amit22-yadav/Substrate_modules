@@ -495,10 +495,10 @@ impl pallet_bridge_dispatch::Config for Runtime {
 	type Call = RuntimeCall;
 	type CallFilter = frame_support::traits::Everything;
 	type EncodedCall = crate::our_chain_messages::FromMillauEncodedCall;
-	type SourceChainAccountId = our_chain::AccountId;
+	type SourceChainAccountId = bp_millau::AccountId;
 	type TargetChainAccountPublic = MultiSigner;
 	type TargetChainSignature = MultiSignature;
-	type AccountIdConverter = chain_substrate::AccountIdConverter;
+	type AccountIdConverter = bp_rialto::AccountIdConverter;
 }
 
 
@@ -532,12 +532,12 @@ impl_opaque_keys! {
 parameter_types! {
 	pub const MaxMessagesToPruneAtOnce: bp_messages::MessageNonce = 8;
 	pub const MaxUnrewardedRelayerEntriesAtInboundLane: bp_messages::MessageNonce =
-		our_chain::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		bp_millau::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	pub const MaxUnconfirmedMessagesAtInboundLane: bp_messages::MessageNonce =
-	our_chain::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+	bp_millau::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	// `IdentityFee` is used by Rialto => we may use weight directly
 	pub const GetDeliveryConfirmationTransactionFee: Balance =
-		chain_substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
+		bp_rialto::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
 	pub const RootAccountForPayments: Option<AccountId> = None;
   pub const BridgedChainId: bp_runtime::ChainId = bp_runtime::MILLAU_CHAIN_ID;
 }
@@ -553,13 +553,13 @@ parameter_types! {
 	///
 	/// Assuming the worst case of every header being finalized, we will keep headers at least for a
 	/// week.
-	pub const HeadersToKeep: u32 = 7 * chain_substrate::DAYS as u32;
+	pub const HeadersToKeep: u32 = 7 * bp_rialto::DAYS as u32;
 }
 
 
 pub type MillauGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = our_chain::Millau;
+	type BridgedChain = bp_millau::Millau;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
 	type WeightInfo = pallet_bridge_grandpa::weights::MillauWeight<Runtime>;
@@ -1559,10 +1559,10 @@ impl pallet_bridge_messages::Config<WithMillauMessagesInstance> for Runtime {
 	type OutboundMessageFee = Balance;
 
 	type InboundPayload = crate::our_chain_messages::FromMillauMessagePayload;
-	type InboundMessageFee = our_chain::Balance;
-	type InboundRelayer = our_chain::AccountId;
+	type InboundMessageFee = bp_millau::Balance;
+	type InboundRelayer = bp_millau::AccountId;
 
-	type AccountIdConverter = chain_substrate::AccountIdConverter;
+	type AccountIdConverter = bp_rialto::AccountIdConverter;
 
 	type TargetHeaderChain = crate::our_chain_messages::Millau;
 	type LaneMessageVerifier = crate::our_chain_messages::ToMillauMessageVerifier;
@@ -2017,8 +2017,8 @@ impl_runtime_apis! {
 
 	
 
-	impl our_chain::MillauFinalityApi<Block> for Runtime {
-		fn best_finalized() -> (our_chain::BlockNumber, our_chain::Hash) {
+	impl bp_millau::MillauFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (bp_millau::BlockNumber, bp_millau::Hash) {
 			let header = BridgeMillauGrandpa::best_finalized();
 			(header.number, header.hash())
 		}
@@ -2372,7 +2372,7 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl our_chain::ToMillauOutboundLaneApi<Block, Balance, ToMillauMessagePayload> for Runtime {
+	impl bp_millau::ToMillauOutboundLaneApi<Block, Balance, ToMillauMessagePayload> for Runtime {
 		fn estimate_message_delivery_and_dispatch_fee(
 			_lane_id: bp_messages::LaneId,
 			payload: ToMillauMessagePayload,

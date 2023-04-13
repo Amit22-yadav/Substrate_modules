@@ -26,7 +26,7 @@ use runtime::{
 	SessionKeys, SocietyConfig, StakerStatus, StakingConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig,
 };
-use chain_substrate::derive_account_from_millau_id;
+use bp_rialto::derive_account_from_millau_id;
 use runtime::BridgeMillauMessagesConfig;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
@@ -262,8 +262,8 @@ pub fn testnet_genesis(
 			get_account_id_from_seed::<sr25519::Public>("MillauMessagesOwner"),
 		get_account_id_from_seed::<sr25519::Public>("WithMillauTokenSwap"),
 		pallet_bridge_messages::relayer_fund_account_id::<
-			chain_substrate::AccountId,
-			chain_substrate::AccountIdConverter,
+			bp_rialto::AccountId,
+			bp_rialto::AccountIdConverter,
 		>(),
 		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Alice"),

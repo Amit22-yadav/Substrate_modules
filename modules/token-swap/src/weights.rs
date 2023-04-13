@@ -57,37 +57,37 @@ pub trait WeightInfo {
 pub struct MillauWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for MillauWeight<T> {
 	fn create_swap() -> Weight {
-		Weight::from_parts(90_368_000, 0)
-			.saturating_add(T::DbWeight::get().reads(3_u64))
-			.saturating_add(T::DbWeight::get().writes(4_u64))
+		Weight::from_ref_time(90_368_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(3 as u64))
+			.saturating_add(T::DbWeight::get().writes(4 as u64))
 	}
 	fn claim_swap() -> Weight {
-		Weight::from_parts(88_397_000, 0)
-			.saturating_add(T::DbWeight::get().reads(3_u64))
-			.saturating_add(T::DbWeight::get().writes(3_u64))
+		Weight::from_ref_time(88_397_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(3 as u64))
+			.saturating_add(T::DbWeight::get().writes(3 as u64))
 	}
 	fn cancel_swap() -> Weight {
-		Weight::from_parts(91_253_000, 0)
-			.saturating_add(T::DbWeight::get().reads(3_u64))
-			.saturating_add(T::DbWeight::get().writes(3_u64))
+		Weight::from_ref_time(91_253_000 as u64)
+			.saturating_add(T::DbWeight::get().reads(3 as u64))
+			.saturating_add(T::DbWeight::get().writes(3 as u64))
 	}
 }
 
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn create_swap() -> Weight {
-		Weight::from_parts(90_368_000, 0)
-			.saturating_add(RocksDbWeight::get().reads(3_u64))
-			.saturating_add(RocksDbWeight::get().writes(4_u64))
+		Weight::from_ref_time(90_368_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(3 as u64))
+			.saturating_add(RocksDbWeight::get().writes(4 as u64))
 	}
 	fn claim_swap() -> Weight {
-		Weight::from_parts(88_397_000, 0)
-			.saturating_add(RocksDbWeight::get().reads(3_u64))
-			.saturating_add(RocksDbWeight::get().writes(3_u64))
+		Weight::from_ref_time(88_397_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(3 as u64))
+			.saturating_add(RocksDbWeight::get().writes(3 as u64))
 	}
 	fn cancel_swap() -> Weight {
-		Weight::from_parts(91_253_000, 0)
-			.saturating_add(RocksDbWeight::get().reads(3_u64))
-			.saturating_add(RocksDbWeight::get().writes(3_u64))
+		Weight::from_ref_time(91_253_000 as u64)
+			.saturating_add(RocksDbWeight::get().reads(3 as u64))
+			.saturating_add(RocksDbWeight::get().writes(3 as u64))
 	}
 }

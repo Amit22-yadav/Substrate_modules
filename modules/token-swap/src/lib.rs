@@ -74,9 +74,10 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{
 	fail,
 	traits::{Currency, ExistenceRequirement},
-	weights::PostDispatchInfo,
+	//weights::PostDispatchInfo,
 	RuntimeDebug,
 };
+use frame_support::dispatch::PostDispatchInfo;
 use scale_info::TypeInfo;
 use sp_core::H256;
 use sp_io::hashing::blake2_256;
@@ -398,6 +399,12 @@ pub mod pallet {
 					swap_hash,
 				);
 
+				log::info!(
+					target: "runtime::bridge-token-swap",
+					"The swap {:?} (hash {:?}) has been started",
+					swap,
+					swap_hash,
+				);
 				// remember that we're waiting for the transfer message delivery confirmation
 				PendingMessages::<T, I>::insert(sent_message.nonce, swap_hash);
 

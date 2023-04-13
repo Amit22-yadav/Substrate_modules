@@ -77,9 +77,9 @@ impl CliChain for Rialto {
 
 	type KeyPair = sp_core::sr25519::Pair;
 	type MessagePayload = MessagePayload<
-		chain_substrate::AccountId,
-		our_chain::AccountSigner,
-		our_chain::Signature,
+		bp_rialto::AccountId,
+		bp_millau::AccountSigner,
+		bp_millau::Signature,
 		Vec<u8>,
 	>;
 

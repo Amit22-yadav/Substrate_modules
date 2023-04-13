@@ -6,6 +6,7 @@ members = [
 	#"bin/substrate2/node",
 	#"bin/substrate2/node/primitives",
 	"bin/substrate2/node/*",
+	"fuzz/*",
 	"bin/substrate2/runtime",
 	"modules/beefy",
 	"relays/*",

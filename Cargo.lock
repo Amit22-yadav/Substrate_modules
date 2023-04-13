@@ -529,11 +529,12 @@ dependencies = [
  "bp-header-chain",
  "bp-message-dispatch",
  "bp-messages",
+ "bp-millau",
+ "bp-rialto",
  "bp-runtime",
  "bp-test-utils",
  "bp-token-swap",
  "bridge-runtime-common",
- "chain-substrate",
  "client-ourchain",
  "client-substrate",
  "finality-grandpa 0.15.0",
@@ -547,7 +548,6 @@ dependencies = [
  "messages-relay",
  "num-format",
  "num-traits",
- "our-chain",
  "pallet-balances",
  "pallet-bridge-dispatch",
  "pallet-bridge-grandpa",
@@ -785,6 +785,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "bp-millau"
+version = "0.1.0"
+dependencies = [
+ "bp-messages",
+ "bp-runtime",
+ "fixed-hash",
+ "frame-support",
+ "frame-system",
+ "hash256-std-hasher",
+ "impl-codec",
+ "impl-serde",
+ "pallet-transaction-payment",
+ "parity-util-mem",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-trie",
+]
+
+[[package]]
 name = "bp-polkadot-core"
 version = "0.1.0"
 dependencies = [
@@ -800,6 +824,21 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "sp-version",
+]
+
+[[package]]
+name = "bp-rialto"
+version = "0.1.0"
+dependencies = [
+ "bp-messages",
+ "bp-runtime",
+ "frame-support",
+ "frame-system",
+ "pallet-transaction-payment",
+ "sp-api",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
 ]
 
 [[package]]
@@ -1093,21 +1132,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "chain-substrate"
-version = "0.1.0"
-dependencies = [
- "bp-messages",
- "bp-runtime",
- "frame-support",
- "frame-system",
- "pallet-transaction-payment",
- "sp-api",
- "sp-core",
- "sp-runtime",
- "sp-std",
-]
-
-[[package]]
 name = "chrono"
 version = "0.4.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1233,10 +1257,10 @@ name = "client-ourchain"
 version = "0.1.0"
 dependencies = [
  "bp-messages",
+ "bp-millau",
  "frame-support",
  "frame-system",
  "kitchensink-runtime",
- "our-chain",
  "pallet-asset-tx-payment",
  "pallet-transaction-payment",
  "parity-scale-codec",
@@ -1251,7 +1275,7 @@ name = "client-substrate"
 version = "0.1.0"
 dependencies = [
  "bp-messages",
- "chain-substrate",
+ "bp-rialto",
  "frame-support",
  "frame-system",
  "pallet-asset-tx-payment",
@@ -3947,9 +3971,10 @@ name = "kitchensink-runtime"
 version = "3.0.0-dev"
 dependencies = [
  "bp-messages",
+ "bp-millau",
+ "bp-rialto",
  "bp-runtime",
  "bridge-runtime-common",
- "chain-substrate",
  "frame-benchmarking",
  "frame-election-provider-support",
  "frame-executive",
@@ -3961,7 +3986,6 @@ dependencies = [
  "frame-try-runtime",
  "log",
  "node-primitives",
- "our-chain",
  "pallet-alliance",
  "pallet-asset-tx-payment",
  "pallet-assets",
@@ -5162,6 +5186,7 @@ version = "3.0.0-dev"
 dependencies = [
  "array-bytes",
  "assert_cmd",
+ "bp-millau",
  "bp-runtime",
  "clap 4.1.14",
  "clap_complete",
@@ -5178,7 +5203,6 @@ dependencies = [
  "node-inspect",
  "node-primitives",
  "node-rpc",
- "our-chain",
  "pallet-asset-tx-payment",
  "pallet-assets",
  "pallet-balances",
@@ -5649,30 +5673,6 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
-]
-
-[[package]]
-name = "our-chain"
-version = "0.1.0"
-dependencies = [
- "bp-messages",
- "bp-runtime",
- "fixed-hash",
- "frame-support",
- "frame-system",
- "hash256-std-hasher",
- "impl-codec",
- "impl-serde",
- "pallet-transaction-payment",
- "parity-util-mem",
- "scale-info",
- "serde",
- "sp-api",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-trie",
 ]
 
 [[package]]
@@ -8214,9 +8214,10 @@ name = "runtime"
 version = "3.0.0-dev"
 dependencies = [
  "bp-messages",
+ "bp-millau",
+ "bp-rialto",
  "bp-runtime",
  "bridge-runtime-common",
- "chain-substrate",
  "frame-benchmarking",
  "frame-election-provider-support",
  "frame-executive",
@@ -8228,7 +8229,6 @@ dependencies = [
  "frame-try-runtime",
  "log",
  "node-primitives",
- "our-chain",
  "pallet-alliance",
  "pallet-asset-tx-payment",
  "pallet-assets",
@@ -11169,6 +11169,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "storage-proof-fuzzer"
+version = "0.1.0"
+dependencies = [
+ "bp-runtime",
+ "env_logger 0.10.0",
+ "honggfuzz",
+ "log",
+ "sp-core",
+ "sp-runtime",
+ "sp-state-machine",
+ "sp-std",
+ "sp-trie",
+]
+
+[[package]]
 name = "strsim"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11330,9 +11345,10 @@ dependencies = [
  "async-trait",
  "bp-header-chain",
  "bp-messages",
+ "bp-millau",
+ "bp-rialto",
  "bp-runtime",
  "bridge-runtime-common",
- "chain-substrate",
  "finality-grandpa 0.16.2",
  "finality-relay",
  "frame-support",
@@ -11341,7 +11357,6 @@ dependencies = [
  "log",
  "messages-relay",
  "num-traits",
- "our-chain",
  "pallet-balances",
  "pallet-bridge-grandpa",
  "pallet-bridge-messages",
@@ -11584,8 +11599,8 @@ version = "3.0.0-dev"
 dependencies = [
  "array-bytes",
  "assert_cmd",
+ "bp-rialto",
  "bp-runtime",
- "chain-substrate",
  "clap 4.1.14",
  "clap_complete",
  "criterion",

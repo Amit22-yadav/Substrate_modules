@@ -176,7 +176,7 @@ impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 		}
 	}
 }
-pub type Hashing = our_chain::Hasher;
+pub type Hashing = bp_millau::Hasher;
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -483,7 +483,7 @@ parameter_types! {
 
 pub type RialtoGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = chain_substrate::Rialto;
+	type BridgedChain = bp_rialto::Rialto;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
 
@@ -553,10 +553,10 @@ impl pallet_bridge_dispatch::Config for Runtime {
 	type Call = RuntimeCall;
 	type CallFilter = frame_support::traits::Everything;
 	type EncodedCall = crate::substrate_messages::FromRialtoEncodedCall;
-	type SourceChainAccountId = chain_substrate::AccountId;
+	type SourceChainAccountId = bp_rialto::AccountId;
 	type TargetChainAccountPublic = MultiSigner;
 	type TargetChainSignature = MultiSignature;
-	type AccountIdConverter = our_chain::AccountIdConverter;
+	type AccountIdConverter = bp_millau::AccountIdConverter;
 }
 
 
@@ -1560,10 +1560,10 @@ impl pallet_bridge_messages::Config<WithRialtoMessagesInstance> for Runtime {
 	type OutboundMessageFee = Balance;
 
 	type InboundPayload = crate::substrate_messages::FromRialtoMessagePayload;
-	type InboundMessageFee = chain_substrate::Balance;
-	type InboundRelayer = chain_substrate::AccountId;
+	type InboundMessageFee = bp_rialto::Balance;
+	type InboundRelayer = bp_rialto::AccountId;
 
-	type AccountIdConverter = our_chain::AccountIdConverter;
+	type AccountIdConverter = bp_millau::AccountIdConverter;
 
 	type TargetHeaderChain = crate::substrate_messages::Rialto;
 	type LaneMessageVerifier = crate::substrate_messages::ToRialtoMessageVerifier;
@@ -1601,10 +1601,10 @@ impl pallet_bridge_token_swap::Config<WithRialtoTokenSwapInstance> for Runtime {
 	#[cfg(feature = "runtime-benchmarks")]
 	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
 	type ThisCurrency = pallet_balances::Pallet<Runtime>;
-	type FromSwapToThisAccountIdConverter = chain_substrate::AccountIdConverter;
+	type FromSwapToThisAccountIdConverter = bp_rialto::AccountIdConverter;
 
-	type BridgedChain = chain_substrate::Rialto;
-	type FromBridgedToThisAccountIdConverter = our_chain::AccountIdConverter;
+	type BridgedChain = bp_rialto::Rialto;
+	type FromBridgedToThisAccountIdConverter = bp_millau::AccountIdConverter;
 }
 
 parameter_types! {
@@ -1613,12 +1613,12 @@ parameter_types! {
 parameter_types! {
 	pub const MaxMessagesToPruneAtOnce: bp_messages::MessageNonce = 8;
 	pub const MaxUnrewardedRelayerEntriesAtInboundLane: bp_messages::MessageNonce =
-		chain_substrate::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		bp_rialto::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	pub const MaxUnconfirmedMessagesAtInboundLane: bp_messages::MessageNonce =
-	chain_substrate::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+	bp_rialto::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	// `IdentityFee` is used by Millau => we may use weight directly
 	pub const GetDeliveryConfirmationTransactionFee: Balance =
-		our_chain::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
+		bp_millau::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
 	pub const RootAccountForPayments: Option<AccountId> = None;
 	pub const RialtoChainId: bp_runtime::ChainId = bp_runtime::RIALTO_CHAIN_ID;
 }
@@ -2162,14 +2162,14 @@ impl_runtime_apis! {
 	}
 
 
-	impl chain_substrate::RialtoFinalityApi<Block> for Runtime {
-		fn best_finalized() -> (chain_substrate::BlockNumber, chain_substrate::Hash) {
+	impl bp_rialto::RialtoFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (bp_rialto::BlockNumber, bp_rialto::Hash) {
 			let header = BridgeRialtoGrandpa::best_finalized();
 			(header.number, header.hash())
 		}
 	}
 
-		impl chain_substrate::ToRialtoOutboundLaneApi<Block, Balance, ToRialtoMessagePayload> for Runtime {
+		impl bp_rialto::ToRialtoOutboundLaneApi<Block, Balance, ToRialtoMessagePayload> for Runtime {
 		fn estimate_message_delivery_and_dispatch_fee(
 			_lane_id: bp_messages::LaneId,
 			payload: ToRialtoMessagePayload,
@@ -2481,7 +2481,7 @@ impl_runtime_apis! {
 				fn prepare_message_proof(
 					params: MessageProofParams,
 				) -> (substrate_messages::FromRialtoMessagesProof, Weight) {
-					prepare_message_proof::<Runtime, (), (), WithRialtoMessageBridge, chain_substrate::Header, chain_substrate::Hasher>(
+					prepare_message_proof::<Runtime, (), (), WithRialtoMessageBridge, bp_rialto::Header, bp_rialto::Hasher>(
 						params,
 						&VERSION,
 						Balance::MAX / 100,
@@ -2491,7 +2491,7 @@ impl_runtime_apis! {
 				fn prepare_message_delivery_proof(
 					params: MessageDeliveryProofParams<Self::AccountId>,
 				) -> rialto_messages::ToRialtoMessagesDeliveryProof {
-					prepare_message_delivery_proof::<Runtime, (), WithRialtoMessageBridge, chain_substrate::Header, chain_substrate::Hasher>(
+					prepare_message_delivery_proof::<Runtime, (), WithRialtoMessageBridge, bp_rialto::Header, bp_rialto::Hasher>(
 						params,
 					)
 				}
@@ -2514,8 +2514,8 @@ impl_runtime_apis! {
 			impl TokenSwapConfig<WithRialtoTokenSwapInstance> for Runtime {
 				fn initialize_environment() {
 					let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
-						our_chain::AccountId,
-						our_chain::AccountIdConverter,
+						bp_millau::AccountId,
+						bp_millau::AccountIdConverter,
 					>();
 					pallet_balances::Pallet::<Runtime>::make_free_balance_be(
 						&relayers_fund_account,
