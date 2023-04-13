@@ -102,32 +102,32 @@ pub enum TokenSwapType {
 #[strum(serialize_all = "kebab_case")]
 pub enum SwapTokensBridge {
 	/// Use token-swap pallet deployed at Millau to swap tokens with Rialto.
-	MillauToRialto,
+	PeerToSubstrate,
 }
 
 macro_rules! select_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
-			SwapTokensBridge::MillauToRialto => {
-				type Source = client_ourchain::Millau;
-				type Target = client_substrate::Rialto;
+			SwapTokensBridge::PeerToSubstrate => {
+				type Source = client_peer::Peer;
+				type Target = client_substrate::Substrate;
 				const SOURCE_SPEC_VERSION: u32 = kitchensink_runtime::VERSION.spec_version;
 				const TARGET_SPEC_VERSION: u32 = runtime::VERSION.spec_version;
 
-				type FromSwapToThisAccountIdConverter = bp_rialto::AccountIdConverter;
+				type FromSwapToThisAccountIdConverter = substrate::AccountIdConverter;
 
-				use bp_millau::{
-					derive_account_from_rialto_id as derive_source_account_from_target_account,
-					TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_TARGET_TO_SOURCE_MESSAGE_FEE_METHOD,
-					WITH_RIALTO_TOKEN_SWAP_PALLET_NAME as TOKEN_SWAP_PALLET_NAME,
+				use peer::{
+					derive_account_from_substrate_id as derive_source_account_from_target_account,
+					TO_PEER_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_TARGET_TO_SOURCE_MESSAGE_FEE_METHOD,
+					WITH_SUBSTRATE_TOKEN_SWAP_PALLET_NAME as TOKEN_SWAP_PALLET_NAME,
 				};
-				use bp_rialto::{
-					derive_account_from_millau_id as derive_target_account_from_source_account,
-					TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_SOURCE_TO_TARGET_MESSAGE_FEE_METHOD,
+				use substrate::{
+					derive_account_from_peer_id as derive_target_account_from_source_account,
+					TO_SUBSTRATE_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_SOURCE_TO_TARGET_MESSAGE_FEE_METHOD,
 				};
 
-				const SOURCE_CHAIN_ID: bp_runtime::ChainId = bp_runtime::MILLAU_CHAIN_ID;
-				const TARGET_CHAIN_ID: bp_runtime::ChainId = bp_runtime::RIALTO_CHAIN_ID;
+				const SOURCE_CHAIN_ID: bp_runtime::ChainId = bp_runtime::PEER_CHAIN_ID;
+				const TARGET_CHAIN_ID: bp_runtime::ChainId = bp_runtime::SUBSTRATE_CHAIN_ID;
 
 				const SOURCE_TO_TARGET_LANE_ID: bp_messages::LaneId = *b"swap";
 				const TARGET_TO_SOURCE_LANE_ID: bp_messages::LaneId = [0, 0, 0, 0];

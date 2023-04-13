@@ -20,8 +20,8 @@ use strum::{EnumString, EnumVariantNames};
 #[strum(serialize_all = "kebab_case")]
 /// Supported full bridges (headers + messages).
 pub enum FullBridge {
-	MillauToRialto,
-	RialtoToMillau,
+	PeerToSubstrate,
+	SubstrateToPeer,
 	// RococoToWococo,
 	// WococoToRococo,
 	// KusamaToPolkadot,
@@ -32,8 +32,8 @@ impl FullBridge {
 	/// Return instance index of the bridge pallet in source runtime.
 	pub fn bridge_instance_index(&self) -> u8 {
 		match self {
-			Self::MillauToRialto => MILLAU_TO_RIALTO_INDEX,
-			Self::RialtoToMillau => RIALTO_TO_MILLAU_INDEX,
+			Self::PeerToSubstrate => PEER_TO_SUBSTRATE_INDEX,
+			Self::SubstrateToPeer => SUBSTRATE_TO_PEER_INDEX,
 			// Self::RococoToWococo => ROCOCO_TO_WOCOCO_INDEX,
 			// Self::WococoToRococo => WOCOCO_TO_ROCOCO_INDEX,
 			// Self::KusamaToPolkadot => KUSAMA_TO_POLKADOT_INDEX,
@@ -42,8 +42,8 @@ impl FullBridge {
 	}
 }
 
-pub const MILLAU_TO_RIALTO_INDEX: u8 = 0;
-pub const RIALTO_TO_MILLAU_INDEX: u8 = 0;
+pub const PEER_TO_SUBSTRATE_INDEX: u8 = 0;
+pub const SUBSTRATE_TO_PEER_INDEX: u8 = 0;
 // pub const ROCOCO_TO_WOCOCO_INDEX: u8 = 0;
 // pub const WOCOCO_TO_ROCOCO_INDEX: u8 = 0;
 // pub const KUSAMA_TO_POLKADOT_INDEX: u8 = 0;
@@ -57,47 +57,47 @@ pub const RIALTO_TO_MILLAU_INDEX: u8 = 0;
 macro_rules! select_full_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
-			FullBridge::MillauToRialto => {
-				type Source = client_ourchain::Millau;
+			FullBridge::PeerToSubstrate => {
+				type Source = client_peer::Peer;
 				#[allow(dead_code)]
-				type Target = client_substrate::Rialto;
+				type Target = client_substrate::Substrate;
 
 				// Derive-account
 				#[allow(unused_imports)]
-				use bp_rialto::derive_account_from_millau_id as derive_account;
+				use substrate::derive_account_from_peer_id as derive_account;
 
 				// Relay-messages
 				#[allow(unused_imports)]
-				use crate::chains::millau_messages_to_rialto::MillauMessagesToRialto as MessagesLane;
+				use crate::chains::peer_messages_to_substrate::PeerMessagesToSubstrate as MessagesLane;
 
 				// Send-message / Estimate-fee
 				#[allow(unused_imports)]
-				use bp_rialto::TO_RIALTO_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+				use substrate::TO_SUBSTRATE_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 				// Send-message
 				#[allow(unused_imports)]
 				use kitchensink_runtime::substrate_to_substrate2_account_ownership_digest as account_ownership_digest;
 
 				$generic
 			}
-			FullBridge::RialtoToMillau => {
-				type Source = client_substrate::Rialto;
+			FullBridge::SubstrateToPeer => {
+				type Source = client_substrate::Substrate;
 				#[allow(dead_code)]
-				type Target = client_ourchain::Millau;
+				type Target = client_peer::Peer;
 
 				// Derive-account
 				#[allow(unused_imports)]
-				use bp_millau::derive_account_from_rialto_id as derive_account;
+				use peer::derive_account_from_substrate_id as derive_account;
 
 				// Relay-messages
 				#[allow(unused_imports)]
-				use crate::chains::rialto_messages_to_millau::RialtoMessagesToMillau as MessagesLane;
+				use crate::chains::substrate_messages_to_peer::SubstrateMessagesToPeer as MessagesLane;
 
 				// Send-message / Estimate-fee
-				use bp_millau::TO_MILLAU_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
+				use peer::TO_PEER_ESTIMATE_MESSAGE_FEE_METHOD as ESTIMATE_MESSAGE_FEE_METHOD;
 
 				// Send-message
 				#[allow(unused_imports)]
-				use runtime::rialto_to_millau_account_ownership_digest as account_ownership_digest;
+				use runtime::substrate_to_peer_account_ownership_digest as account_ownership_digest;
 
 				$generic
 			}

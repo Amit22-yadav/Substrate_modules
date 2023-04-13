@@ -26,8 +26,8 @@ use codec::{Decode, Encode, MaxEncodedLen};
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
-use crate::substrate_messages::ToRialtoMessagePayload;
-use crate::substrate_messages::WithRialtoMessageBridge;
+use crate::substrate_messages::ToSubstrateMessagePayload;
+use crate::substrate_messages::WithSubstrateMessageBridge;
 pub mod  substrate_messages;
 use sp_runtime::MultiSignature;
 use sp_runtime::MultiSigner;
@@ -176,7 +176,7 @@ impl OnUnbalanced<NegativeImbalance> for DealWithFees {
 		}
 	}
 }
-pub type Hashing = bp_millau::Hasher;
+pub type Hashing = peer::Hasher;
 /// We assume that ~10% of the block weight is consumed by `on_initialize` handlers.
 /// This is used to limit the maximal weight of a single extrinsic.
 const AVERAGE_ON_INITIALIZE_RATIO: Perbill = Perbill::from_percent(10);
@@ -481,13 +481,13 @@ parameter_types! {
 }
 
 
-pub type RialtoGrandpaInstance = ();
+pub type SubstrateGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = bp_rialto::Rialto;
+	type BridgedChain = substrate::Substrate;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
 
-	type WeightInfo = pallet_bridge_grandpa::weights::MillauWeight<Runtime>;
+	type WeightInfo = pallet_bridge_grandpa::weights::PeerWeight<Runtime>;
 }
 
 
@@ -552,11 +552,11 @@ impl pallet_bridge_dispatch::Config for Runtime {
 	type BridgeMessageId = (bp_messages::LaneId, bp_messages::MessageNonce);
 	type Call = RuntimeCall;
 	type CallFilter = frame_support::traits::Everything;
-	type EncodedCall = crate::substrate_messages::FromRialtoEncodedCall;
-	type SourceChainAccountId = bp_rialto::AccountId;
+	type EncodedCall = crate::substrate_messages::FromSubstrateEncodedCall;
+	type SourceChainAccountId = substrate::AccountId;
 	type TargetChainAccountPublic = MultiSigner;
 	type TargetChainSignature = MultiSignature;
-	type AccountIdConverter = bp_millau::AccountIdConverter;
+	type AccountIdConverter = peer::AccountIdConverter;
 }
 
 
@@ -1545,42 +1545,42 @@ impl pallet_assets::Config for Runtime {
 	type BenchmarkHelper = ();
 }
 
-/// Instance of the messages pallet used to relay messages to/from Rialto chain.
-pub type WithRialtoMessagesInstance = ();
+/// Instance of the messages pallet used to relay messages to/from Substrate chain.
+pub type WithSubstrateMessagesInstance = ();
 
-impl pallet_bridge_messages::Config<WithRialtoMessagesInstance> for Runtime {
+impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = pallet_bridge_messages::weights::MillauWeight<Runtime>;
-	type Parameter = substrate_messages::MillauToRialtoMessagesParameter;
+	type WeightInfo = pallet_bridge_messages::weights::PeerWeight<Runtime>;
+	type Parameter = substrate_messages::PeerToSubstrateMessagesParameter;
 	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
 	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
 	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
 
-	type OutboundPayload = crate::substrate_messages::ToRialtoMessagePayload;
+	type OutboundPayload = crate::substrate_messages::ToSubstrateMessagePayload;
 	type OutboundMessageFee = Balance;
 
-	type InboundPayload = crate::substrate_messages::FromRialtoMessagePayload;
-	type InboundMessageFee = bp_rialto::Balance;
-	type InboundRelayer = bp_rialto::AccountId;
+	type InboundPayload = crate::substrate_messages::FromSubstrateMessagePayload;
+	type InboundMessageFee = substrate::Balance;
+	type InboundRelayer = substrate::AccountId;
 
-	type AccountIdConverter = bp_millau::AccountIdConverter;
+	type AccountIdConverter = peer::AccountIdConverter;
 
-	type TargetHeaderChain = crate::substrate_messages::Rialto;
-	type LaneMessageVerifier = crate::substrate_messages::ToRialtoMessageVerifier;
+	type TargetHeaderChain = crate::substrate_messages::Substrate;
+	type LaneMessageVerifier = crate::substrate_messages::ToSubstrateMessageVerifier;
 	type MessageDeliveryAndDispatchPayment =
 		pallet_bridge_messages::instant_payments::InstantCurrencyPayments<
 			Runtime,
-			WithRialtoMessagesInstance,
+			WithSubstrateMessagesInstance,
 			pallet_balances::Pallet<Runtime>,
 			GetDeliveryConfirmationTransactionFee,
 		>;
 	type OnMessageAccepted = ();
 	type OnDeliveryConfirmed =
-		pallet_bridge_token_swap::Pallet<Runtime, WithRialtoTokenSwapInstance>;
+		pallet_bridge_token_swap::Pallet<Runtime, WithSubstrateTokenSwapInstance>;
 
-	type SourceHeaderChain = crate::substrate_messages::Rialto;
-	type MessageDispatch = crate::substrate_messages::FromRialtoMessageDispatch;
-	type BridgedChainId = RialtoChainId;
+	type SourceHeaderChain = crate::substrate_messages::Substrate;
+	type MessageDispatch = crate::substrate_messages::FromSubstrateMessageDispatch;
+	type BridgedChainId = SubstrateChainId;
 }
 
 
@@ -1589,22 +1589,22 @@ impl pallet_bridge_messages::Config<WithRialtoMessagesInstance> for Runtime {
 
 
 //pub type WithRialtoMessagesInstance = ();
-pub type WithRialtoTokenSwapInstance = ();
-impl pallet_bridge_token_swap::Config<WithRialtoTokenSwapInstance> for Runtime {
+pub type WithSubstrateTokenSwapInstance = ();
+impl pallet_bridge_token_swap::Config<WithSubstrateTokenSwapInstance> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = ();
 
-	type BridgedChainId = RialtoChainId;
+	type BridgedChainId = SubstrateChainId;
 	type OutboundMessageLaneId = TokenSwapMessagesLane;
 	#[cfg(not(feature = "runtime-benchmarks"))]
-	type MessagesBridge = pallet_bridge_messages::Pallet<Runtime, WithRialtoMessagesInstance>;
+	type MessagesBridge = pallet_bridge_messages::Pallet<Runtime, WithSubstrateMessagesInstance>;
 	#[cfg(feature = "runtime-benchmarks")]
 	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
 	type ThisCurrency = pallet_balances::Pallet<Runtime>;
-	type FromSwapToThisAccountIdConverter = bp_rialto::AccountIdConverter;
+	type FromSwapToThisAccountIdConverter = substrate::AccountIdConverter;
 
-	type BridgedChain = bp_rialto::Rialto;
-	type FromBridgedToThisAccountIdConverter = bp_millau::AccountIdConverter;
+	type BridgedChain = substrate::Substrate;
+	type FromBridgedToThisAccountIdConverter = peer::AccountIdConverter;
 }
 
 parameter_types! {
@@ -1613,14 +1613,14 @@ parameter_types! {
 parameter_types! {
 	pub const MaxMessagesToPruneAtOnce: bp_messages::MessageNonce = 8;
 	pub const MaxUnrewardedRelayerEntriesAtInboundLane: bp_messages::MessageNonce =
-		bp_rialto::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		substrate::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	pub const MaxUnconfirmedMessagesAtInboundLane: bp_messages::MessageNonce =
-	bp_rialto::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+	substrate::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	// `IdentityFee` is used by Millau => we may use weight directly
 	pub const GetDeliveryConfirmationTransactionFee: Balance =
-		bp_millau::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
+		peer::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
 	pub const RootAccountForPayments: Option<AccountId> = None;
-	pub const RialtoChainId: bp_runtime::ChainId = bp_runtime::RIALTO_CHAIN_ID;
+	pub const SubstrateChainId: bp_runtime::ChainId = bp_runtime::SUBSTRATE_CHAIN_ID;
 }
 parameter_types! {
 	pub IgnoredIssuance: Balance = Treasury::pot();
@@ -1858,10 +1858,10 @@ construct_runtime!(
 		RankedCollective: pallet_ranked_collective,
 		FastUnstake: pallet_fast_unstake,
 		MessageQueue: pallet_message_queue,
-		BridgeRialtoGrandpa : pallet_bridge_grandpa,
+		BridgeSubstrateGrandpa : pallet_bridge_grandpa,
 		BridgeDispatch: pallet_bridge_dispatch,
-		BridgeRialtoTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
-		BridgeRialtoMessages: pallet_bridge_messages,
+		BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
+		BridgeSubstrateMessages: pallet_bridge_messages,
 	}
 );
 
@@ -1918,9 +1918,9 @@ type Migrations = (
 );
 
 pub fn substrate_to_substrate2_account_ownership_digest<Call, AccountId, SpecVersion>(
-	rialto_call: &Call,
-	millau_account_id: AccountId,
-	rialto_spec_version: SpecVersion,
+	substrate_call: &Call,
+	peer_account_id: AccountId,
+	substrate_spec_version: SpecVersion,
 ) -> sp_std::vec::Vec<u8>
 where
 	Call: codec::Encode,
@@ -1928,11 +1928,11 @@ where
 	SpecVersion: codec::Encode,
 {
 	pallet_bridge_dispatch::account_ownership_digest(
-		rialto_call,
-		millau_account_id,
-		rialto_spec_version,
-		bp_runtime::MILLAU_CHAIN_ID,
-		bp_runtime::RIALTO_CHAIN_ID,
+		substrate_call,
+		peer_account_id,
+		substrate_spec_version,
+		bp_runtime::PEER_CHAIN_ID,
+		bp_runtime::SUBSTRATE_CHAIN_ID,
 	)
 }
 
@@ -2162,23 +2162,23 @@ impl_runtime_apis! {
 	}
 
 
-	impl bp_rialto::RialtoFinalityApi<Block> for Runtime {
-		fn best_finalized() -> (bp_rialto::BlockNumber, bp_rialto::Hash) {
-			let header = BridgeRialtoGrandpa::best_finalized();
+	impl substrate::SubstrateFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (substrate::BlockNumber, substrate::Hash) {
+			let header = BridgeSubstrateGrandpa::best_finalized();
 			(header.number, header.hash())
 		}
 	}
 
-		impl bp_rialto::ToRialtoOutboundLaneApi<Block, Balance, ToRialtoMessagePayload> for Runtime {
+		impl substrate::ToSubstrateOutboundLaneApi<Block, Balance, ToSubstrateMessagePayload> for Runtime {
 		fn estimate_message_delivery_and_dispatch_fee(
 			_lane_id: bp_messages::LaneId,
-			payload: ToRialtoMessagePayload,
-			rialto_to_this_conversion_rate: Option<FixedU128>,
+			payload: ToSubstrateMessagePayload,
+			substrate_to_this_conversion_rate: Option<FixedU128>,
 		) -> Option<Balance> {
-			estimate_message_dispatch_and_delivery_fee::<WithRialtoMessageBridge>(
+			estimate_message_dispatch_and_delivery_fee::<WithSubstrateMessageBridge>(
 				&payload,
-				WithRialtoMessageBridge::RELAYER_FEE_PERCENT,
-				rialto_to_this_conversion_rate,
+				WithSubstrateMessageBridge::RELAYER_FEE_PERCENT,
+				substrate_to_this_conversion_rate,
 			).ok()
 		}
 
@@ -2189,8 +2189,8 @@ impl_runtime_apis! {
 		) -> Vec<bp_messages::MessageDetails<Balance>> {
 			bridge_runtime_common::messages_api::outbound_message_details::<
 				Runtime,
-				WithRialtoMessagesInstance,
-				WithRialtoMessageBridge,
+				WithSubstrateMessagesInstance,
+				WithSubstrateMessageBridge,
 			>(lane, begin, end)
 		}
 	}
@@ -2395,9 +2395,9 @@ impl_runtime_apis! {
 
 			let mut list = Vec::<BenchmarkList>::new();
 		
-			list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeRialtoTokenSwap);
-			list_benchmark!(list, extra, pallet_bridge_messages, MessagesBench::<Runtime, WithRialtoMessagesInstance>);
-			list_benchmark!(list, extra, pallet_bridge_grandpa, BridgeRialtoGrandpa);
+			list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeSubstrateTokenSwap);
+			list_benchmark!(list, extra, pallet_bridge_messages, MessagesBench::<Runtime, WithSubstrateMessagesInstance>);
+			list_benchmark!(list, extra, pallet_bridge_grandpa, BridgeSubstrateGrandpa);
 
 			let storage_info = AllPalletsWithSystem::storage_info();
 
@@ -2474,14 +2474,14 @@ impl_runtime_apis! {
 
 				fn prepare_outbound_message(
 					params: MessageParams<Self::AccountId>,
-				) -> (substrate_messages::ToRialtoMessagePayload, Balance) {
-					(prepare_outbound_message::<WithRialtoMessageBridge>(params), Self::message_fee())
+				) -> (substrate_messages::ToSubstrateMessagePayload, Balance) {
+					(prepare_outbound_message::<WithSubstrateMessageBridge>(params), Self::message_fee())
 				}
 
 				fn prepare_message_proof(
 					params: MessageProofParams,
-				) -> (substrate_messages::FromRialtoMessagesProof, Weight) {
-					prepare_message_proof::<Runtime, (), (), WithRialtoMessageBridge, bp_rialto::Header, bp_rialto::Hasher>(
+				) -> (substrate_messages::FromSubstrateMessagesProof, Weight) {
+					prepare_message_proof::<Runtime, (), (), WithSubstrateMessageBridge, substrate::Header, substrate::Hasher>(
 						params,
 						&VERSION,
 						Balance::MAX / 100,
@@ -2490,8 +2490,8 @@ impl_runtime_apis! {
 
 				fn prepare_message_delivery_proof(
 					params: MessageDeliveryProofParams<Self::AccountId>,
-				) -> rialto_messages::ToRialtoMessagesDeliveryProof {
-					prepare_message_delivery_proof::<Runtime, (), WithRialtoMessageBridge, bp_rialto::Header, bp_rialto::Hasher>(
+				) -> rialto_messages::ToSubstrateMessagesDeliveryProof {
+					prepare_message_delivery_proof::<Runtime, (), WithRialtoMessageBridge, substrate::Header, substrate::Hasher>(
 						params,
 					)
 				}
@@ -2514,8 +2514,8 @@ impl_runtime_apis! {
 			impl TokenSwapConfig<WithRialtoTokenSwapInstance> for Runtime {
 				fn initialize_environment() {
 					let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
-						bp_millau::AccountId,
-						bp_millau::AccountIdConverter,
+						peer::AccountId,
+						peer::AccountIdConverter,
 					>();
 					pallet_balances::Pallet::<Runtime>::make_free_balance_be(
 						&relayers_fund_account,

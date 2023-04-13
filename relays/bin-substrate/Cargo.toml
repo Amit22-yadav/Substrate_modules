@@ -27,9 +27,9 @@ bp-header-chain = { path = "../../primitives_bridge/header-chain" }
 #bp-kusama = { path = "../../primitives/chain-kusama" }
 bp-messages = { path = "../../primitives_bridge/messages" }
 bp-message-dispatch = { path = "../../primitives_bridge/message-dispatch" }
-bp-millau = { path = "../../primitives_bridge/bp-millau" }
+peer = { path = "../../primitives_bridge/peer" }
 #bp-polkadot = { path = "../../primitives/chain-polkadot" }
-bp-rialto= { path = "../../primitives_bridge/chain-substrate" }
+substrate= { path = "../../primitives_bridge/substrate" }
 #bp-rialto-parachain = { path = "../../primitives/chain-rialto-parachain" }
 #bp-rococo = { path = "../../primitives/chain-rococo" }
 bp-runtime = { path = "../../primitives_bridge/runtime" }
@@ -45,7 +45,7 @@ pallet-bridge-grandpa = { path = "../../modules/grandpa" }
 pallet-bridge-messages = { path = "../../modules/messages" }
 pallet-bridge-token-swap = { path = "../../modules/token-swap" }
 #relay-kusama-client = { path = "../client-kusama" }
-client-ourchain = { path = "../client-ourchain" }
+client-peer = { path = "../client-peer" }
 #relay-polkadot-client = { path = "../client-polkadot" }
 client-substrate = { path = "../client-substrate" }
 relay-substrate-client = {path ="../substrate-client"}

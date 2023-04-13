@@ -529,13 +529,11 @@ dependencies = [
  "bp-header-chain",
  "bp-message-dispatch",
  "bp-messages",
- "bp-millau",
- "bp-rialto",
  "bp-runtime",
  "bp-test-utils",
  "bp-token-swap",
  "bridge-runtime-common",
- "client-ourchain",
+ "client-peer",
  "client-substrate",
  "finality-grandpa 0.15.0",
  "finality-relay",
@@ -555,6 +553,7 @@ dependencies = [
  "pallet-bridge-token-swap",
  "parity-scale-codec",
  "paste",
+ "peer",
  "rand 0.8.5",
  "relay-substrate-client",
  "relay-utils",
@@ -566,6 +565,7 @@ dependencies = [
  "sp-version",
  "structopt",
  "strum",
+ "substrate",
  "substrate-relay-helper",
  "tempfile",
 ]
@@ -785,30 +785,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "bp-millau"
-version = "0.1.0"
-dependencies = [
- "bp-messages",
- "bp-runtime",
- "fixed-hash",
- "frame-support",
- "frame-system",
- "hash256-std-hasher",
- "impl-codec",
- "impl-serde",
- "pallet-transaction-payment",
- "parity-util-mem",
- "scale-info",
- "serde",
- "sp-api",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "sp-trie",
-]
-
-[[package]]
 name = "bp-polkadot-core"
 version = "0.1.0"
 dependencies = [
@@ -824,21 +800,6 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "sp-version",
-]
-
-[[package]]
-name = "bp-rialto"
-version = "0.1.0"
-dependencies = [
- "bp-messages",
- "bp-runtime",
- "frame-support",
- "frame-system",
- "pallet-transaction-payment",
- "sp-api",
- "sp-core",
- "sp-runtime",
- "sp-std",
 ]
 
 [[package]]
@@ -1253,17 +1214,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f0807fb6f644c83f3e4ec014fec9858c1c8b26a7db8eb5f0bde5817df9c1df7"
 
 [[package]]
-name = "client-ourchain"
+name = "client-peer"
 version = "0.1.0"
 dependencies = [
  "bp-messages",
- "bp-millau",
  "frame-support",
  "frame-system",
  "kitchensink-runtime",
  "pallet-asset-tx-payment",
  "pallet-transaction-payment",
  "parity-scale-codec",
+ "peer",
  "relay-substrate-client",
  "relay-utils",
  "sp-core",
@@ -1275,7 +1236,6 @@ name = "client-substrate"
 version = "0.1.0"
 dependencies = [
  "bp-messages",
- "bp-rialto",
  "frame-support",
  "frame-system",
  "pallet-asset-tx-payment",
@@ -1286,6 +1246,7 @@ dependencies = [
  "runtime",
  "sp-core",
  "sp-runtime",
+ "substrate",
 ]
 
 [[package]]
@@ -3971,8 +3932,6 @@ name = "kitchensink-runtime"
 version = "3.0.0-dev"
 dependencies = [
  "bp-messages",
- "bp-millau",
- "bp-rialto",
  "bp-runtime",
  "bridge-runtime-common",
  "frame-benchmarking",
@@ -4051,6 +4010,7 @@ dependencies = [
  "pallet-vesting",
  "pallet-whitelist",
  "parity-scale-codec",
+ "peer",
  "scale-info",
  "sp-api",
  "sp-authority-discovery",
@@ -4067,6 +4027,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "static_assertions",
+ "substrate",
  "substrate-wasm-builder",
 ]
 
@@ -5186,7 +5147,6 @@ version = "3.0.0-dev"
 dependencies = [
  "array-bytes",
  "assert_cmd",
- "bp-millau",
  "bp-runtime",
  "clap 4.1.14",
  "clap_complete",
@@ -5211,6 +5171,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment",
  "parity-scale-codec",
+ "peer",
  "platforms",
  "rand 0.8.5",
  "regex",
@@ -5371,86 +5332,6 @@ dependencies = [
  "clap 4.1.14",
  "generate-bags",
  "kitchensink-runtime",
-]
-
-[[package]]
-name = "node-template"
-version = "4.0.0-dev"
-dependencies = [
- "clap 4.1.14",
- "frame-benchmarking",
- "frame-benchmarking-cli",
- "frame-system",
- "futures",
- "jsonrpsee 0.16.2",
- "node-template-runtime",
- "pallet-transaction-payment",
- "pallet-transaction-payment-rpc",
- "sc-basic-authorship",
- "sc-cli",
- "sc-client-api",
- "sc-consensus",
- "sc-consensus-aura",
- "sc-executor",
- "sc-finality-grandpa",
- "sc-keystore",
- "sc-rpc",
- "sc-rpc-api",
- "sc-service",
- "sc-telemetry",
- "sc-transaction-pool",
- "sc-transaction-pool-api",
- "sp-api",
- "sp-block-builder",
- "sp-blockchain",
- "sp-consensus",
- "sp-consensus-aura",
- "sp-core",
- "sp-finality-grandpa",
- "sp-inherents",
- "sp-io",
- "sp-keyring",
- "sp-runtime",
- "sp-timestamp",
- "substrate-build-script-utils",
- "substrate-frame-rpc-system",
- "try-runtime-cli",
-]
-
-[[package]]
-name = "node-template-runtime"
-version = "4.0.0-dev"
-dependencies = [
- "frame-benchmarking",
- "frame-executive",
- "frame-support",
- "frame-system",
- "frame-system-benchmarking",
- "frame-system-rpc-runtime-api",
- "frame-try-runtime",
- "pallet-aura",
- "pallet-balances",
- "pallet-grandpa",
- "pallet-randomness-collective-flip",
- "pallet-sudo",
- "pallet-template",
- "pallet-timestamp",
- "pallet-transaction-payment",
- "pallet-transaction-payment-rpc-runtime-api",
- "parity-scale-codec",
- "scale-info",
- "sp-api",
- "sp-block-builder",
- "sp-consensus-aura",
- "sp-core",
- "sp-inherents",
- "sp-offchain",
- "sp-runtime",
- "sp-session",
- "sp-std",
- "sp-transaction-pool",
- "sp-version",
- "substrate-wasm-builder",
 ]
 
 [[package]]
@@ -5664,11 +5545,10 @@ checksum = "77af24da69f9d9341038eba93a073b1fdaaa1b788221b00a69bce9e762cb32de"
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.83"
+version = "0.9.85"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "666416d899cf077260dac8698d60a60b435a46d57e82acb1be3d0dad87284e5b"
+checksum = "0d3d193fb1488ad46ffe3aaabc912cc931d02ee8518fe2959aea8ef52718b0c0"
 dependencies = [
- "autocfg",
  "cc",
  "libc",
  "pkg-config",
@@ -7038,20 +6918,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-template"
-version = "4.0.0-dev"
-dependencies = [
- "frame-benchmarking",
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
-]
-
-[[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
 dependencies = [
@@ -7408,6 +7274,30 @@ name = "peeking_take_while"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "19b17cddbe7ec3f8bc800887bab5e717348c95ea2ca0b1bf0837fb964dc67099"
+
+[[package]]
+name = "peer"
+version = "0.1.0"
+dependencies = [
+ "bp-messages",
+ "bp-runtime",
+ "fixed-hash",
+ "frame-support",
+ "frame-system",
+ "hash256-std-hasher",
+ "impl-codec",
+ "impl-serde",
+ "pallet-transaction-payment",
+ "parity-util-mem",
+ "scale-info",
+ "serde",
+ "sp-api",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "sp-trie",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -8214,8 +8104,6 @@ name = "runtime"
 version = "3.0.0-dev"
 dependencies = [
  "bp-messages",
- "bp-millau",
- "bp-rialto",
  "bp-runtime",
  "bridge-runtime-common",
  "frame-benchmarking",
@@ -8295,6 +8183,7 @@ dependencies = [
  "pallet-vesting",
  "pallet-whitelist",
  "parity-scale-codec",
+ "peer",
  "scale-info",
  "sp-api",
  "sp-authority-discovery",
@@ -8311,6 +8200,7 @@ dependencies = [
  "sp-transaction-pool",
  "sp-version",
  "static_assertions",
+ "substrate",
  "substrate-wasm-builder",
 ]
 
@@ -11250,6 +11140,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "substrate"
+version = "0.1.0"
+dependencies = [
+ "bp-messages",
+ "bp-runtime",
+ "frame-support",
+ "frame-system",
+ "pallet-transaction-payment",
+ "sp-api",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+]
+
+[[package]]
 name = "substrate-bip39"
 version = "0.4.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -11345,8 +11250,6 @@ dependencies = [
  "async-trait",
  "bp-header-chain",
  "bp-messages",
- "bp-millau",
- "bp-rialto",
  "bp-runtime",
  "bridge-runtime-common",
  "finality-grandpa 0.16.2",
@@ -11362,12 +11265,14 @@ dependencies = [
  "pallet-bridge-messages",
  "pallet-transaction-payment",
  "parity-scale-codec",
+ "peer",
  "relay-substrate-client",
  "relay-utils",
  "runtime",
  "sp-core",
  "sp-finality-grandpa",
  "sp-runtime",
+ "substrate",
  "thiserror",
 ]
 
@@ -11599,7 +11504,6 @@ version = "3.0.0-dev"
 dependencies = [
  "array-bytes",
  "assert_cmd",
- "bp-rialto",
  "bp-runtime",
  "clap 4.1.14",
  "clap_complete",
@@ -11668,6 +11572,7 @@ dependencies = [
  "sp-tracing",
  "sp-transaction-pool",
  "sp-transaction-storage-proof",
+ "substrate",
  "substrate-build-script-utils",
  "substrate-frame-cli",
  "substrate-rpc-client",

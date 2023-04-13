@@ -86,7 +86,7 @@ pub fn config_endowed(code: Option<&[u8]>, extra_endowed: Vec<AccountId>) -> Gen
 		technical_committee: Default::default(),
 		technical_membership: Default::default(),
 		elections: Default::default(),
-		bridge_millau_messages: Default::default(),
+		bridge_peer_messages: Default::default(),
 		sudo: Default::default(),
 		treasury: Default::default(),
 		society: SocietyConfig { members: vec![alice(), bob()], pot: 0, max_members: 999 },
@@ -98,6 +98,6 @@ pub fn config_endowed(code: Option<&[u8]>, extra_endowed: Vec<AccountId>) -> Gen
 		alliance: Default::default(),
 		alliance_motion: Default::default(),
 		nomination_pools: Default::default(),
-		bridge_millau_grandpa : Default::default()
+		bridge_peer_grandpa : Default::default()
 	}
 }

@@ -2,7 +2,7 @@
 resolver = "2"
 
 members = [
-	"bin/node-template/node",
+	#"bin/node-template/node",
 	#"bin/substrate2/node",
 	#"bin/substrate2/node/primitives",
 	"bin/substrate2/node/*",
@@ -18,8 +18,8 @@ members = [
 	"modules/shift-session-manager",
 	"modules/grandpa",
 	"modules/token-swap",
-	"bin/node-template/pallets/template",
-	"bin/node-template/runtime",
+	#"bin/node-template/pallets/template",
+	#"bin/node-template/runtime",
 	"bin/node/bench",
 	"bin/node/cli",
 	"bin/node/executor",

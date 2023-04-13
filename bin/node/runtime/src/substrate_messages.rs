@@ -23,7 +23,7 @@ use bp_messages::{
 	target_chain::{ProvedMessages, SourceHeaderChain},
 	InboundLaneData, LaneId, Message, MessageNonce, Parameter as MessagesParameter,
 };
-use bp_runtime::{Chain, ChainId, MILLAU_CHAIN_ID, RIALTO_CHAIN_ID};
+use bp_runtime::{Chain, ChainId, PEER_CHAIN_ID, SUBSTRATE_CHAIN_ID};
 use bridge_runtime_common::messages::{self, MessageBridge, MessageTransaction};
 use codec::{Decode, Encode};
 use frame_support::{
@@ -36,86 +36,86 @@ use sp_runtime::{traits::Saturating, FixedPointNumber, FixedU128};
 use sp_std::{convert::TryFrom, ops::RangeInclusive};
 
 /// Initial value of `RialtoToMillauConversionRate` parameter.
-pub const INITIAL_RIALTO_TO_MILLAU_CONVERSION_RATE: FixedU128 =
+pub const INITIAL_SUBSTRATE_TO_PEER_CONVERSION_RATE: FixedU128 =
 	FixedU128::from_inner(FixedU128::DIV);
 /// Initial value of `RialtoFeeMultiplier` parameter.
-pub const INITIAL_RIALTO_FEE_MULTIPLIER: FixedU128 = FixedU128::from_inner(FixedU128::DIV);
+pub const INITIAL_SUBSTRATE_FEE_MULTIPLIER: FixedU128 = FixedU128::from_inner(FixedU128::DIV);
 
 parameter_types! {
-	/// Rialto to Millau conversion rate. Initially we treat both tokens as equal.
-	pub storage RialtoToMillauConversionRate: FixedU128 = INITIAL_RIALTO_TO_MILLAU_CONVERSION_RATE;
-	/// Fee multiplier value at Rialto chain.
-	pub storage RialtoFeeMultiplier: FixedU128 = INITIAL_RIALTO_FEE_MULTIPLIER;
+	/// Substrate to Millau conversion rate. Initially we treat both tokens as equal.
+	pub storage SubstrateToPeerConversionRate: FixedU128 = INITIAL_SUBSTRATE_TO_PEER_CONVERSION_RATE;
+	/// Fee multiplier value at Substrate chain.
+	pub storage SubstrateFeeMultiplier: FixedU128 = INITIAL_SUBSTRATE_FEE_MULTIPLIER;
 }
 
-/// Message payload for Millau -> Rialto messages.
-pub type ToRialtoMessagePayload =
-	messages::source::FromThisChainMessagePayload<WithRialtoMessageBridge>;
+/// Message payload for Millau -> Substrate messages.
+pub type ToSubstrateMessagePayload =
+	messages::source::FromThisChainMessagePayload<WithSubstrateMessageBridge>;
 
-/// Message verifier for Millau -> Rialto messages.
-pub type ToRialtoMessageVerifier =
-	messages::source::FromThisChainMessageVerifier<WithRialtoMessageBridge>;
+/// Message verifier for Millau -> Substrate messages.
+pub type ToSubstrateMessageVerifier =
+	messages::source::FromThisChainMessageVerifier<WithSubstrateMessageBridge>;
 
-/// Message payload for Rialto -> Millau messages.
-pub type FromRialtoMessagePayload =
-	messages::target::FromBridgedChainMessagePayload<WithRialtoMessageBridge>;
+/// Message payload for Substrate -> Millau messages.
+pub type FromSubstrateMessagePayload =
+	messages::target::FromBridgedChainMessagePayload<WithSubstrateMessageBridge>;
 
-/// Encoded Millau Call as it comes from Rialto.
-pub type FromRialtoEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::RuntimeCall>;
+/// Encoded Millau Call as it comes from Substrate.
+pub type FromSubstrateEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::RuntimeCall>;
 
-/// Messages proof for Rialto -> Millau messages.
-pub type FromRialtoMessagesProof = messages::target::FromBridgedChainMessagesProof<bp_rialto::Hash>;
+/// Messages proof for Substrate -> Millau messages.
+pub type FromSubstrateMessagesProof = messages::target::FromBridgedChainMessagesProof<substrate::Hash>;
 
-/// Messages delivery proof for Millau -> Rialto messages.
-pub type ToRialtoMessagesDeliveryProof =
-	messages::source::FromBridgedChainMessagesDeliveryProof<bp_rialto::Hash>;
+/// Messages delivery proof for Millau -> Substrate messages.
+pub type ToSubstrateMessagesDeliveryProof =
+	messages::source::FromBridgedChainMessagesDeliveryProof<substrate::Hash>;
 
-/// Call-dispatch based message dispatch for Rialto -> Millau messages.
-pub type FromRialtoMessageDispatch = messages::target::FromBridgedChainMessageDispatch<
-	WithRialtoMessageBridge,
+/// Call-dispatch based message dispatch for Substrate -> Millau messages.
+pub type FromSubstrateMessageDispatch = messages::target::FromBridgedChainMessageDispatch<
+	WithSubstrateMessageBridge,
 	crate::Runtime,
 	pallet_balances::Pallet<Runtime>,
 	(),
 >;
 
-/// Millau <-> Rialto message bridge.
+/// Peer <-> Substrate message bridge.
 #[derive(RuntimeDebug, Clone, Copy)]
-pub struct WithRialtoMessageBridge;
+pub struct WithSubstrateMessageBridge;
 
-impl MessageBridge for WithRialtoMessageBridge {
+impl MessageBridge for WithSubstrateMessageBridge {
 	const RELAYER_FEE_PERCENT: u32 = 10;
-	const THIS_CHAIN_ID: ChainId = MILLAU_CHAIN_ID;
-	const BRIDGED_CHAIN_ID: ChainId = RIALTO_CHAIN_ID;
-	const BRIDGED_MESSAGES_PALLET_NAME: &'static str = bp_millau::WITH_MILLAU_MESSAGES_PALLET_NAME;
+	const THIS_CHAIN_ID: ChainId = PEER_CHAIN_ID;
+	const BRIDGED_CHAIN_ID: ChainId = SUBSTRATE_CHAIN_ID;
+	const BRIDGED_MESSAGES_PALLET_NAME: &'static str = peer::WITH_PEER_MESSAGES_PALLET_NAME;
 
-	type ThisChain = Millau;
-	type BridgedChain = Rialto;
+	type ThisChain = Peer;
+	type BridgedChain = Substrate;
 
 	fn bridged_balance_to_this_balance(
-		bridged_balance: bp_rialto::Balance,
+		bridged_balance: substrate::Balance,
 		bridged_to_this_conversion_rate_override: Option<FixedU128>,
-	) -> bp_millau::Balance {
+	) -> peer::Balance {
 		let conversion_rate = bridged_to_this_conversion_rate_override
-			.unwrap_or_else(|| RialtoToMillauConversionRate::get());
-		bp_millau::Balance::try_from(conversion_rate.saturating_mul_int(bridged_balance))
-			.unwrap_or(bp_millau::Balance::MAX)
+			.unwrap_or_else(|| SubstrateToPeerConversionRate::get());
+		peer::Balance::try_from(conversion_rate.saturating_mul_int(bridged_balance))
+			.unwrap_or(peer::Balance::MAX)
 	}
 }
 
 /// Millau chain from message lane point of view.
 #[derive(RuntimeDebug, Clone, Copy)]
-pub struct Millau;
+pub struct Peer;
 
-impl messages::ChainWithMessages for Millau {
-	type Hash = bp_millau::Hash;
-	type AccountId = bp_millau::AccountId;
-	type Signer = bp_millau::AccountSigner;
-	type Signature = bp_millau::Signature;
+impl messages::ChainWithMessages for Peer {
+	type Hash = peer::Hash;
+	type AccountId = peer::AccountId;
+	type Signer = peer::AccountSigner;
+	type Signature = peer::Signature;
 	type Weight = Weight;
-	type Balance = bp_millau::Balance;
+	type Balance = peer::Balance;
 }
 
-impl messages::ThisChainWithMessages for Millau {
+impl messages::ThisChainWithMessages for Peer {
 	type RuntimeOrigin = crate::RuntimeOrigin;
 	type Call = crate::RuntimeCall;
 
@@ -127,7 +127,7 @@ impl messages::ThisChainWithMessages for Millau {
 			[0, 0, 0, 0] | [0, 0, 0, 1] => send_origin.linked_account().is_some(),
 			_ if *lane == token_swap_dedicated_lane => matches!(
 				send_origin.caller,
-				crate::OriginCaller::BridgeRialtoTokenSwap(
+				crate::OriginCaller::BridgeSubstrateTokenSwap(
 					pallet_bridge_token_swap::RawOrigin::TokenSwap { .. }
 				)
 			),
@@ -140,29 +140,29 @@ impl messages::ThisChainWithMessages for Millau {
 	}
 
 	fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight> {
-		let inbound_data_size = InboundLaneData::<bp_millau::AccountId>::encoded_size_hint(
-			bp_millau::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
+		let inbound_data_size = InboundLaneData::<peer::AccountId>::encoded_size_hint(
+			peer::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
 			1,
 			1,
 		)
 		.unwrap_or(u32::MAX);
 
 		MessageTransaction {
-			dispatch_weight: bp_millau::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
+			dispatch_weight: peer::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
 			size: inbound_data_size
-				.saturating_add(bp_rialto::EXTRA_STORAGE_PROOF_SIZE)
-				.saturating_add(bp_millau::TX_EXTRA_BYTES),
+				.saturating_add(substrate::EXTRA_STORAGE_PROOF_SIZE)
+				.saturating_add(peer::TX_EXTRA_BYTES),
 		}
 	}
 
-	fn transaction_payment(transaction: MessageTransaction<Weight>) -> bp_millau::Balance {
+	fn transaction_payment(transaction: MessageTransaction<Weight>) -> peer::Balance {
 		// `transaction` may represent transaction from the future, when multiplier value will
 		// be larger, so let's use slightly increased value
 		let multiplier = FixedU128::saturating_from_rational(110, 100)
 			.saturating_mul(pallet_transaction_payment::Pallet::<Runtime>::next_fee_multiplier());
 		// in our testnets, both per-byte fee and weight-to-fee are 1:1
 		messages::transaction_payment(
-			bp_millau::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
+			peer::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
 			1,
 			multiplier,
 			|weight| weight.ref_time() as _,
@@ -171,31 +171,31 @@ impl messages::ThisChainWithMessages for Millau {
 	}
 }
 
-/// Rialto chain from message lane point of view.
+/// Substrate chain from message lane point of view.
 #[derive(RuntimeDebug, Clone, Copy)]
-pub struct Rialto;
+pub struct Substrate;
 
-impl messages::ChainWithMessages for Rialto {
-	type Hash = bp_rialto::Hash;
-	type AccountId = bp_rialto::AccountId;
-	type Signer = bp_rialto::AccountSigner;
-	type Signature = bp_rialto::Signature;
+impl messages::ChainWithMessages for Substrate {
+	type Hash = substrate::Hash;
+	type AccountId = substrate::AccountId;
+	type Signer = substrate::AccountSigner;
+	type Signature = substrate::Signature;
 	type Weight = Weight;
-	type Balance = bp_rialto::Balance;
+	type Balance = substrate::Balance;
 }
 
-impl messages::BridgedChainWithMessages for Rialto {
+impl messages::BridgedChainWithMessages for Substrate {
 	fn maximal_extrinsic_size() -> u32 {
-		bp_rialto::Rialto::max_extrinsic_size()
+		substrate::Substrate::max_extrinsic_size()
 	}
 
 	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
 		// we don't want to relay too large messages + keep reserve for future upgrades
 		let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
-			bp_rialto::Rialto::max_extrinsic_weight(),
+			substrate::Substrate::max_extrinsic_weight(),
 		);
 
-		// we're charging for payload bytes in `WithRialtoMessageBridge::transaction_payment`
+		// we're charging for payload bytes in `WithSubstrateMessageBridge::transaction_payment`
 		// function
 		//
 		// this bridge may be used to deliver all kind of messages, so we're not making any
@@ -214,28 +214,28 @@ impl messages::BridgedChainWithMessages for Rialto {
 			.saturating_sub(pallet_bridge_messages::EXPECTED_DEFAULT_MESSAGE_LENGTH);
 
 		MessageTransaction {
-			dispatch_weight: bp_rialto::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT
+			dispatch_weight: substrate::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT
 			.saturating_mul(extra_bytes_in_payload as u64)
-				.saturating_add(bp_rialto::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT)
+				.saturating_add(substrate::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT)
 				.saturating_sub(if include_pay_dispatch_fee_cost {
 					Weight::from_ref_time(0)
 				} else {
-					bp_rialto::PAY_INBOUND_DISPATCH_FEE_WEIGHT
+					substrate::PAY_INBOUND_DISPATCH_FEE_WEIGHT
 				})
 				.saturating_add(message_dispatch_weight),
 			size: message_payload_len
-				.saturating_add(bp_millau::EXTRA_STORAGE_PROOF_SIZE)
-				.saturating_add(bp_rialto::TX_EXTRA_BYTES),
+				.saturating_add(peer::EXTRA_STORAGE_PROOF_SIZE)
+				.saturating_add(substrate::TX_EXTRA_BYTES),
 		}
 	}
 
-	fn transaction_payment(transaction: MessageTransaction<Weight>) -> bp_rialto::Balance {
-		// we don't have a direct access to the value of multiplier at Rialto chain
+	fn transaction_payment(transaction: MessageTransaction<Weight>) -> substrate::Balance {
+		// we don't have a direct access to the value of multiplier at Substrate chain
 		// => it is a messages module parameter
-		let multiplier = RialtoFeeMultiplier::get();
+		let multiplier = SubstrateFeeMultiplier::get();
 		// in our testnets, both per-byte fee and weight-to-fee are 1:1
 		messages::transaction_payment(
-			bp_rialto::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
+			substrate::BlockWeights::get().get(DispatchClass::Normal).base_extrinsic,
 			1,
 			multiplier,
 			|weight| weight.ref_time() as _,
@@ -244,46 +244,46 @@ impl messages::BridgedChainWithMessages for Rialto {
 	}
 }
 
-impl TargetHeaderChain<ToRialtoMessagePayload, bp_rialto::AccountId> for Rialto {
+impl TargetHeaderChain<ToSubstrateMessagePayload, substrate::AccountId> for Substrate {
 	type Error = &'static str;
 	// The proof is:
 	// - hash of the header this proof has been created with;
 	// - the storage proof or one or several keys;
 	// - id of the lane we prove state of.
-	type MessagesDeliveryProof = ToRialtoMessagesDeliveryProof;
+	type MessagesDeliveryProof = ToSubstrateMessagesDeliveryProof;
 
-	fn verify_message(payload: &ToRialtoMessagePayload) -> Result<(), Self::Error> {
-		messages::source::verify_chain_message::<WithRialtoMessageBridge>(payload)
+	fn verify_message(payload: &ToSubstrateMessagePayload) -> Result<(), Self::Error> {
+		messages::source::verify_chain_message::<WithSubstrateMessageBridge>(payload)
 	}
 
 	fn verify_messages_delivery_proof(
 		proof: Self::MessagesDeliveryProof,
-	) -> Result<(LaneId, InboundLaneData<bp_millau::AccountId>), Self::Error> {
+	) -> Result<(LaneId, InboundLaneData<peer::AccountId>), Self::Error> {
 		messages::source::verify_messages_delivery_proof::<
-			WithRialtoMessageBridge,
+			WithSubstrateMessageBridge,
 			Runtime,
-			crate::RialtoGrandpaInstance,
+			crate::SubstrateGrandpaInstance,
 		>(proof)
 	}
 }
 
-impl SourceHeaderChain<bp_rialto::Balance> for Rialto {
+impl SourceHeaderChain<substrate::Balance> for Substrate {
 	type Error = &'static str;
 	// The proof is:
 	// - hash of the header this proof has been created with;
 	// - the storage proof or one or several keys;
 	// - id of the lane we prove messages for;
 	// - inclusive range of messages nonces that are proved.
-	type MessagesProof = FromRialtoMessagesProof;
+	type MessagesProof = FromSubstrateMessagesProof;
 
 	fn verify_messages_proof(
 		proof: Self::MessagesProof,
 		messages_count: u32,
-	) -> Result<ProvedMessages<Message<bp_rialto::Balance>>, Self::Error> {
+	) -> Result<ProvedMessages<Message<substrate::Balance>>, Self::Error> {
 		messages::target::verify_messages_proof::<
-			WithRialtoMessageBridge,
+			WithSubstrateMessageBridge,
 			Runtime,
-			crate::RialtoGrandpaInstance,
+			crate::SubstrateGrandpaInstance,
 		>(proof, messages_count)
 	}
 }
@@ -296,7 +296,7 @@ impl SenderOrigin<crate::AccountId> for crate::RuntimeOrigin {
 			crate::OriginCaller::system(frame_system::RawOrigin::Root) |
 			crate::OriginCaller::system(frame_system::RawOrigin::None) =>
 				crate::RootAccountForPayments::get(),
-			crate::OriginCaller::BridgeRialtoTokenSwap(
+			crate::OriginCaller::BridgeSubstrateTokenSwap(
 				pallet_bridge_token_swap::RawOrigin::TokenSwap {
 					ref swap_account_at_this_chain,
 					..
@@ -307,18 +307,19 @@ impl SenderOrigin<crate::AccountId> for crate::RuntimeOrigin {
 	}
 }
 
-/// Millau -> Rialto message lane pallet parameters.
+/// Peer -> Substrate message lane pallet parameters.
 #[derive(RuntimeDebug, Clone, Encode, Decode, PartialEq, Eq, TypeInfo)]
-pub enum MillauToRialtoMessagesParameter {
+
+pub enum PeerToSubstrateMessagesParameter {
 	/// The conversion formula we use is: `MillauTokens = RialtoTokens * conversion_rate`.
-	RialtoToMillauConversionRate(FixedU128),
+	SubstrateToPeerConversionRate(FixedU128),
 }
 
-impl MessagesParameter for MillauToRialtoMessagesParameter {
+impl MessagesParameter for PeerToSubstrateMessagesParameter {
 	fn save(&self) {
 		match *self {
-			MillauToRialtoMessagesParameter::RialtoToMillauConversionRate(ref conversion_rate) =>
-				RialtoToMillauConversionRate::set(conversion_rate),
+			PeerToSubstrateMessagesParameter::SubstrateToPeerConversionRate(ref conversion_rate) =>
+				SubstrateToPeerConversionRate::set(conversion_rate),
 		}
 	}
 }
@@ -343,38 +344,38 @@ mod tests {
 		type Weights = pallet_bridge_messages::weights::MillauWeight<Runtime>;
 
 		pallet_bridge_messages::ensure_weights_are_correct::<Weights>(
-			bp_millau::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT,
-			bp_millau::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT,
-			bp_millau::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
-			bp_millau::PAY_INBOUND_DISPATCH_FEE_WEIGHT,
+			peer::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT,
+			peer::ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT,
+			peer::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
+			peer::PAY_INBOUND_DISPATCH_FEE_WEIGHT,
 			DbWeight::get(),
 		);
 
-		let max_incoming_message_proof_size = bp_rialto::EXTRA_STORAGE_PROOF_SIZE.saturating_add(
-			messages::target::maximal_incoming_message_size(bp_millau::Millau::max_extrinsic_size()),
+		let max_incoming_message_proof_size = substrate::EXTRA_STORAGE_PROOF_SIZE.saturating_add(
+			messages::target::maximal_incoming_message_size(peer::Millau::max_extrinsic_size()),
 		);
 		pallet_bridge_messages::ensure_able_to_receive_message::<Weights>(
-			bp_millau::Millau::max_extrinsic_size(),
-			bp_millau::Millau::max_extrinsic_weight(),
+			peer::Millau::max_extrinsic_size(),
+			peer::Millau::max_extrinsic_weight(),
 			max_incoming_message_proof_size,
 			messages::target::maximal_incoming_message_dispatch_weight(
-				bp_millau::Millau::max_extrinsic_weight(),
+				peer::Millau::max_extrinsic_weight(),
 			),
 		);
 
 		let max_incoming_inbound_lane_data_proof_size =
 			bp_messages::InboundLaneData::<()>::encoded_size_hint(
-				bp_millau::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
-				bp_millau::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX as _,
-				bp_millau::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX as _,
+				peer::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
+				peer::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX as _,
+				peer::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX as _,
 			)
 			.unwrap_or(u32::MAX);
 		pallet_bridge_messages::ensure_able_to_receive_confirmation::<Weights>(
-			bp_millau::Millau::max_extrinsic_size(),
-			bp_millau::Millau::max_extrinsic_weight(),
+			peer::Millau::max_extrinsic_size(),
+			peer::Millau::max_extrinsic_weight(),
 			max_incoming_inbound_lane_data_proof_size,
-			bp_millau::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX,
-			bp_millau::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX,
+			peer::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX,
+			peer::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX,
 			DbWeight::get(),
 		);
 	}
@@ -386,9 +387,9 @@ mod tests {
 			with_bridged_chain_grandpa_instance: RialtoGrandpaInstance,
 			with_bridged_chain_messages_instance: WithRialtoMessagesInstance,
 			bridge: WithRialtoMessageBridge,
-			this_chain: bp_millau::Millau,
-			bridged_chain: bp_rialto::Rialto,
-			this_chain_account_id_converter: bp_millau::AccountIdConverter
+			this_chain: peer::Peer,
+			bridged_chain: substrate::Substrate,
+			this_chain_account_id_converter: peer::AccountIdConverter
 		);
 
 		assert_complete_bridge_constants::<
@@ -396,31 +397,31 @@ mod tests {
 			RialtoGrandpaInstance,
 			WithRialtoMessagesInstance,
 			WithRialtoMessageBridge,
-			bp_millau::Millau,
+			peer::Millau,
 		>(AssertCompleteBridgeConstants {
 			this_chain_constants: AssertChainConstants {
-				block_length: bp_millau::BlockLength::get(),
-				block_weights: bp_millau::BlockWeights::get(),
+				block_length: peer::BlockLength::get(),
+				block_weights: peer::BlockWeights::get(),
 			},
 			messages_pallet_constants: AssertBridgeMessagesPalletConstants {
 				max_unrewarded_relayers_in_bridged_confirmation_tx:
-					bp_rialto::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX,
+					substrate::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX,
 				max_unconfirmed_messages_in_bridged_confirmation_tx:
-					bp_rialto::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX,
+					substrate::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX,
 				bridged_chain_id: bp_runtime::RIALTO_CHAIN_ID,
 			},
 			pallet_names: AssertBridgePalletNames {
-				with_this_chain_messages_pallet_name: bp_millau::WITH_MILLAU_MESSAGES_PALLET_NAME,
-				with_bridged_chain_grandpa_pallet_name: bp_rialto::WITH_RIALTO_GRANDPA_PALLET_NAME,
+				with_this_chain_messages_pallet_name: peer::WITH_MILLAU_MESSAGES_PALLET_NAME,
+				with_bridged_chain_grandpa_pallet_name: substrate::WITH_RIALTO_GRANDPA_PALLET_NAME,
 				with_bridged_chain_messages_pallet_name:
-					bp_rialto::WITH_RIALTO_MESSAGES_PALLET_NAME,
+					substrate::WITH_RIALTO_MESSAGES_PALLET_NAME,
 			},
 		});
 
 		assert_eq!(
 			RialtoToMillauConversionRate::key().to_vec(),
 			bp_runtime::storage_parameter_key(
-				bp_millau::RIALTO_TO_MILLAU_CONVERSION_RATE_PARAMETER_NAME
+				peer::RIALTO_TO_MILLAU_CONVERSION_RATE_PARAMETER_NAME
 			)
 			.0,
 		);

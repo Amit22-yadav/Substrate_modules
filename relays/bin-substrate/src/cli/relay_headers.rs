@@ -48,8 +48,8 @@ pub struct RelayHeaders {
 #[strum(serialize_all = "kebab_case")]
 /// Headers relay bridge.
 pub enum RelayHeadersBridge {
-	MillauToRialto,
-	RialtoToMillau,
+	PeerToSubstrate,
+	SubstrateToPeer,
 	// WestendToMillau,
 	// RococoToWococo,
 	// WococoToRococo,
@@ -60,17 +60,17 @@ pub enum RelayHeadersBridge {
 macro_rules! select_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
-			RelayHeadersBridge::MillauToRialto => {
-				type Source = client_ourchain::Millau;
-				type Target = client_substrate::Rialto;
-				type Finality = crate::chains::millau_headers_to_rialto::MillauFinalityToRialto;
+			RelayHeadersBridge::PeerToSubstrate => {
+				type Source = client_peer::Peer;
+				type Target = client_substrate::Substrate;
+				type Finality = crate::chains::peer_headers_to_substrate::PeerFinalityToSubstrate;
 
 				$generic
 			},
-			RelayHeadersBridge::RialtoToMillau => {
-				type Source = client_substrate::Rialto;
-				type Target = client_ourchain::Millau;
-				type Finality = crate::chains::rialto_headers_to_millau::RialtoFinalityToMillau;
+			RelayHeadersBridge::SubstrateToPeer => {
+				type Source = client_substrate::Substrate;
+				type Target = client_peer::Peer;
+				type Finality = crate::chains::substrate_headers_to_peer::SubstrateFinalityToPeer;
 
 				$generic
 			},

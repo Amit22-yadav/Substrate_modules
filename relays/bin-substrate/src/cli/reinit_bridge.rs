@@ -196,7 +196,7 @@ impl ReinitBridge {
 					// we don't have an access to the Kusama/Polkadot chain runtimes here, so we'll
 					// be using Millau weights. It isn't super-critical, unless real weights are
 					// magnitude higher or so
-					pallet_bridge_grandpa::weights::MillauWeight::<millau_runtime::Runtime>::submit_finality_proof(
+					pallet_bridge_grandpa::weights::PeerWeight::<millau_runtime::Runtime>::submit_finality_proof(
 						proof.commit.precommits.len().try_into().unwrap_or(u32::MAX),
 						proof.votes_ancestries.len().try_into().unwrap_or(u32::MAX),
 					)

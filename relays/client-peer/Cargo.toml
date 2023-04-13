@@ -1,12 +1,11 @@
 [package]
-name = "client-substrate"
+name = "client-peer"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-
 codec = { package = "parity-scale-codec", version = "3.0.0" }
 relay-substrate-client = { path = "../substrate-client" }
 relay-utils = { path = "../utils" }
@@ -14,8 +13,8 @@ relay-utils = { path = "../utils" }
 
 # Supported Chains
 
-substrate = { path = "../../primitives_bridge/substrate" }
-runtime = { path = "../../bin/substrate2/runtime" }
+peer = { path = "../../primitives_bridge/peer" }
+kitchensink-runtime = { path = "../../bin/node/runtime" }
 bp-messages = { path = "../../primitives_bridge/messages" }
 
 

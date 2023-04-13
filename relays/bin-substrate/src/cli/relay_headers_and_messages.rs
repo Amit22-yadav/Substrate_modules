@@ -122,20 +122,20 @@ macro_rules! select_bridge {
 			RelayHeadersAndMessages::MillauRialto(_) => {
 				type Params = MillauRialtoHeadersAndMessages;
 
-				type Left = client_ourchain::Millau;
-				type Right = client_substrate::Rialto;
+				type Left = client_peer::Peer;
+				type Right = client_substrate::Substrate;
 
 				type LeftToRightFinality =
-					crate::chains::millau_headers_to_rialto::MillauFinalityToRialto;
+					crate::chains::peer_headers_to_substrate::PeerFinalityToSubstrate;
 				type RightToLeftFinality =
-					crate::chains::rialto_headers_to_millau::RialtoFinalityToMillau;
+					crate::chains::substrate_headers_to_peer::SubstrateFinalityToPeer;
 
-				type LeftAccountIdConverter = bp_millau::AccountIdConverter;
-				type RightAccountIdConverter = bp_rialto::AccountIdConverter;
+				type LeftAccountIdConverter = peer::AccountIdConverter;
+				type RightAccountIdConverter = substrate::AccountIdConverter;
 
 				use crate::chains::{
-					millau_messages_to_rialto::MillauMessagesToRialto as LeftToRightMessageLane,
-					rialto_messages_to_millau::RialtoMessagesToMillau as RightToLeftMessageLane,
+					peer_messages_to_substrate::PeerMessagesToSubstrate as LeftToRightMessageLane,
+					substrate_messages_to_peer::SubstrateMessagesToPeer as RightToLeftMessageLane,
 				};
 
 				async fn left_create_account(

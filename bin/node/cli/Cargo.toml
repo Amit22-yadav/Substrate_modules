@@ -6,7 +6,7 @@ description = "Generic Substrate node implementation in Rust."
 build = "build.rs"
 edition = "2021"
 license = "GPL-3.0-or-later WITH Classpath-exception-2.0"
-default-run = "substrate"
+default-run = "peer"
 homepage = "https://substrate.io"
 repository = "https://github.com/paritytech/substrate/"
 publish = false
@@ -26,7 +26,7 @@ is-it-maintained-issue-resolution = { repository = "paritytech/substrate" }
 is-it-maintained-open-issues = { repository = "paritytech/substrate" }
 
 [[bin]]
-name = "substrate"
+name = "peer"
 path = "bin/main.rs"
 required-features = ["cli"]
 
@@ -97,7 +97,7 @@ node-primitives = { version = "2.0.0", path = "../primitives" }
 node-executor = { version = "3.0.0-dev", path = "../executor" }
 
 pallet-bridge-messages = { version = "0.1.0", path = "../../../modules/messages" }
-bp-millau = { version = "0.1.0", path = "../../../primitives_bridge/bp-millau" }
+peer = { version = "0.1.0", path = "../../../primitives_bridge/peer" }
 bp-runtime = { version = "0.1.0", path = "../../../primitives_bridge/runtime" }
 
 # CLI-specific dependencies

@@ -117,8 +117,8 @@ pallet-shift-session-manager = { path = "../../../modules/shift-session-manager"
 frame-support2 = { path = "../../../modules/support", default-features = false }
 
 #primitives 
-bp-rialto = {path ="../../../primitives_bridge/chain-substrate",default-features = false}
-bp-millau = {path ="../../../primitives_bridge/bp-millau",default-features = false}
+substrate = {path ="../../../primitives_bridge/substrate",default-features = false}
+peer = {path ="../../../primitives_bridge/peer",default-features = false}
 bp-messages = { path = "../../../primitives_bridge/messages", default-features = false }
 bp-runtime = { path = "../../../primitives_bridge/runtime", default-features = false }
 
@@ -171,7 +171,7 @@ std = [
 	"codec/std",
 	"scale-info/std",
 	"pallet-collective/std",
-	"bp-millau/std",
+	"peer/std",
 	"pallet-contracts/std",
 	"pallet-contracts-primitives/std",
 	"pallet-conviction-voting/std",
@@ -229,7 +229,7 @@ std = [
 	"pallet-ranked-collective/std",
 	"pallet-referenda/std",
 	"pallet-remark/std",
-	"bp-rialto/std",
+	"substrate/std",
 	"pallet-root-testing/std",
 	"pallet-recovery/std",
 	"pallet-uniques/std",

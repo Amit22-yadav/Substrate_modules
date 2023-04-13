@@ -26,8 +26,8 @@ use runtime::{
 	SessionKeys, SocietyConfig, StakerStatus, StakingConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig,
 };
-use bp_rialto::derive_account_from_millau_id;
-use runtime::BridgeMillauMessagesConfig;
+use substrate::derive_account_from_peer_id;
+use runtime::BridgePeerMessagesConfig;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
@@ -262,25 +262,25 @@ pub fn testnet_genesis(
 			get_account_id_from_seed::<sr25519::Public>("MillauMessagesOwner"),
 		get_account_id_from_seed::<sr25519::Public>("WithMillauTokenSwap"),
 		pallet_bridge_messages::relayer_fund_account_id::<
-			bp_rialto::AccountId,
-			bp_rialto::AccountIdConverter,
+			substrate::AccountId,
+			substrate::AccountIdConverter,
 		>(),
-		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_peer_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 		)),
-		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_peer_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Bob"),
 		)),
-		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_peer_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Charlie"),
 		)),
-		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_peer_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Dave"),
 		)),
-		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_peer_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Eve"),
 		)),
-		derive_account_from_millau_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_peer_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Ferdie"),
 		)),
 		]
@@ -391,7 +391,7 @@ pub fn testnet_genesis(
 		},
 		transaction_storage: Default::default(),
 		transaction_payment: Default::default(),
-		bridge_millau_messages: BridgeMillauMessagesConfig {
+		bridge_peer_messages: BridgePeerMessagesConfig {
 			owner: Some(get_account_id_from_seed::<sr25519::Public>("RialtoMessagesOwner")),
 			..Default::default()
 		},
@@ -402,7 +402,7 @@ pub fn testnet_genesis(
 			min_join_bond: 1 * DOLLARS,
 			..Default::default()
 		},
-		bridge_millau_grandpa: Default::default()
+		bridge_peer_grandpa: Default::default()
 	}
 }
 
@@ -418,7 +418,7 @@ fn development_config_genesis() -> GenesisConfig {
 /// Development config (single validator Alice)
 pub fn development_config() -> ChainSpec {
 	ChainSpec::from_genesis(
-		"Development",
+		"Substrate Development",
 		"dev",
 		ChainType::Development,
 		development_config_genesis,

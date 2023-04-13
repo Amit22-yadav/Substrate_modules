@@ -1,0 +1,54 @@
+[package]
+name = "peer"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+
+[dependencies]
+bp-messages = { path = "../messages", default-features = false }
+bp-runtime = { path = "../runtime", default-features = false }
+fixed-hash = { version = "0.8.0", default-features = false }
+impl-codec = { version = "0.6", default-features = false }
+impl-serde = { version = "0.4.0", optional = true }
+hash256-std-hasher = { version = "0.15.2", default-features = false }
+parity-util-mem = { version = "0.12.0", default-features = false, features = ["primitive-types"] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
+serde = { version = "1.0", optional = true, features = ["derive"] }
+# Bridge dependencies
+
+
+# Substrate Dependencies
+
+frame-system =  { version = "4.0.0-dev", path = "../../frame/system", default-features = false }
+frame-support = { version = "4.0.0-dev", path = "../../frame/support", default-features = false }
+pallet-transaction-payment = { version = "4.0.0-dev", path = "../../frame/transaction-payment", default-features = false }
+sp-core ={ version = "7.0.0", default-features = false, path = "../../primitives/core" }
+sp-runtime =  { version = "7.0.0", default-features = false, path = "../../primitives/runtime" }
+sp-api = { version = "4.0.0-dev", default-features = false, path = "../../primitives/api" }
+sp-std = { version = "5.0.0", default-features = false, path = "../../primitives/std" }
+sp-trie = { version = "7.0.0", default-features = false,path = "../../primitives/trie" }
+sp-io = { version = "7.0.0", default-features = false,path = "../../primitives/io" }
+
+[features]
+default = ["std"]
+std = [
+	"bp-messages/std",
+	"bp-runtime/std",
+    "parity-util-mem/std",
+	"fixed-hash/std",
+    "hash256-std-hasher/std",
+	"frame-support/std",
+	"frame-system/std",
+    "impl-codec/std",
+	"impl-serde",
+	"sp-api/std",
+    "scale-info/std",
+    "sp-trie/std",
+	"serde",
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-std/std",
+]
+

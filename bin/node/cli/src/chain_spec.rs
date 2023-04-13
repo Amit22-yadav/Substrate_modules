@@ -26,7 +26,7 @@ use kitchensink_runtime::{
 	SessionKeys, SocietyConfig, StakerStatus, StakingConfig, SudoConfig, SystemConfig,
 	TechnicalCommitteeConfig,
 };
-use kitchensink_runtime::BridgeRialtoMessagesConfig;
+use kitchensink_runtime::BridgeSubstrateMessagesConfig;
 use pallet_im_online::sr25519::AuthorityId as ImOnlineId;
 use sc_chain_spec::ChainSpecExtension;
 use sc_service::ChainType;
@@ -41,7 +41,7 @@ use sp_runtime::{
 };
 
 pub use kitchensink_runtime::GenesisConfig;
-use bp_millau::derive_account_from_rialto_id;
+use peer::derive_account_from_substrate_id;
 pub use node_primitives::{AccountId, Balance, Signature};
 
 type AccountPublic = <Signature as Verify>::Signer;
@@ -262,25 +262,25 @@ pub fn testnet_genesis(
 			get_account_id_from_seed::<sr25519::Public>("RialtoMessagesOwner"),
 		get_account_id_from_seed::<sr25519::Public>("WithRialtoTokenSwap"),
 		pallet_bridge_messages::relayer_fund_account_id::<
-			bp_millau::AccountId,
-			bp_millau::AccountIdConverter,
+			peer::AccountId,
+			peer::AccountIdConverter,
 		>(),
-		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_substrate_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Alice"),
 		)),
-		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_substrate_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Bob"),
 		)),
-		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_substrate_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Charlie"),
 		)),
-		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_substrate_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Dave"),
 		)),
-		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_substrate_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Eve"),
 		)),
-		derive_account_from_rialto_id(bp_runtime::SourceAccount::Account(
+		derive_account_from_substrate_id(bp_runtime::SourceAccount::Account(
 			get_account_id_from_seed::<sr25519::Public>("Ferdie"),
 		)),
 		]
@@ -391,8 +391,8 @@ pub fn testnet_genesis(
 		},
 		transaction_storage: Default::default(),
 		transaction_payment: Default::default(),
-		bridge_rialto_messages: BridgeRialtoMessagesConfig {
-			owner: Some(get_account_id_from_seed::<sr25519::Public>("RialtoMessagesOwner")),
+		bridge_substrate_messages: BridgeSubstrateMessagesConfig {
+			owner: Some(get_account_id_from_seed::<sr25519::Public>("SubstrateMessagesOwner")),
 			..Default::default()
 		},
 		alliance: Default::default(),
@@ -402,7 +402,7 @@ pub fn testnet_genesis(
 			min_join_bond: 1 * DOLLARS,
 			..Default::default()
 		},
-		bridge_rialto_grandpa: Default::default()
+		bridge_substrate_grandpa: Default::default()
 	}
 }
 
@@ -418,7 +418,7 @@ fn development_config_genesis() -> GenesisConfig {
 /// Development config (single validator Alice)
 pub fn development_config() -> ChainSpec {
 	ChainSpec::from_genesis(
-		"Development",
+		"Peer Development",
 		"dev",
 		ChainType::Development,
 		development_config_genesis,

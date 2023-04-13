@@ -17,17 +17,17 @@
 //! Chain-specific relayer configuration.
 
 
-pub mod millau_headers_to_rialto;
-pub mod millau_messages_to_rialto;
+pub mod peer_headers_to_substrate;
+pub mod peer_messages_to_substrate;
 
-pub mod rialto_headers_to_millau;
-pub mod rialto_messages_to_millau;
+pub mod substrate_headers_to_peer;
+pub mod substrate_messages_to_peer;
 
 
 
-mod millau;
+mod peer;
 
-mod rialto;
+mod substrate;
 
 #[cfg(test)]
 mod tests {

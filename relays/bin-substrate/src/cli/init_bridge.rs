@@ -42,8 +42,8 @@ pub struct InitBridge {
 #[strum(serialize_all = "kebab_case")]
 /// Bridge to initialize.
 pub enum InitBridgeName {
-	MillauToRialto,
-	RialtoToMillau,
+	PeerToSubstrate,
+	SubstrateToPeer,
 	// WestendToMillau,
 	// RococoToWococo,
 	// WococoToRococo,
@@ -54,9 +54,9 @@ pub enum InitBridgeName {
 macro_rules! select_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
-			InitBridgeName::MillauToRialto => {
-				type Source = client_ourchain::Millau;
-				type Target = client_substrate::Rialto;
+			InitBridgeName::PeerToSubstrate => {
+				type Source = client_peer::Peer;
+				type Target = client_substrate::Substrate;
 				type Engine = GrandpaFinalityEngine<Source>;
 
 				fn encode_init_bridge(
@@ -64,7 +64,7 @@ macro_rules! select_bridge {
 				) -> <Target as Chain>::Call {
 					runtime::SudoCall::sudo {
 						call: Box::new(
-							runtime::BridgeGrandpaMillauCall::initialize { init_data }
+							runtime::BridgeGrandpaPeerCall::initialize { init_data }
 								.into(),
 						),
 					}
@@ -73,9 +73,9 @@ macro_rules! select_bridge {
 
 				$generic
 			},
-			InitBridgeName::RialtoToMillau => {
-				type Source = client_substrate::Rialto;
-				type Target = client_ourchain::Millau;
+			InitBridgeName::SubstrateToPeer => {
+				type Source = client_substrate::Substrate;
+				type Target = client_peer::Peer;
 				type Engine = GrandpaFinalityEngine<Source>;
 
 				fn encode_init_bridge(
@@ -83,7 +83,7 @@ macro_rules! select_bridge {
 				) -> <Target as Chain>::Call {
 					let initialize_call = kitchensink_runtime::BridgeGrandpaCall::<
 					kitchensink_runtime::Runtime,
-					kitchensink_runtime::RialtoGrandpaInstance,
+					kitchensink_runtime::SubstrateGrandpaInstance,
 					>::initialize {
 						init_data,
 					};

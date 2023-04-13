@@ -14,9 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Types used to connect to the Substrate-Substrate chain.
+//! Types used to connect to the Peer-Substrate chain.
 
 use bp_messages::MessageNonce;
+//use peer::Substrate;
 use codec::{Compact, Decode, Encode};
 use frame_support::weights::Weight;
 use relay_substrate_client::{
@@ -27,92 +28,93 @@ use sp_core::{storage::StorageKey, Pair};
 use sp_runtime::{generic::SignedPayload, traits::IdentifyAccount};
 use std::time::Duration;
 
-/// Substrate header id.
-pub type HeaderId = relay_utils::HeaderId<runtime::Hash, runtime::BlockNumber>;
+/// Peer header id.
+pub type HeaderId = relay_utils::HeaderId<kitchensink_runtime::Hash, kitchensink_runtime::BlockNumber>;
 
-/// Substrate chain definition
+/// Peer chain definition.
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Substrate;
+pub struct Peer;
 
-impl ChainBase for Substrate {
-	type BlockNumber = runtime::BlockNumber;
-	type Hash = runtime::Hash;
-	type Hasher = runtime::Hashing;
-	type Header = runtime::Header;
+impl ChainBase for Peer {
+	type BlockNumber = kitchensink_runtime::BlockNumber;
+	type Hash = kitchensink_runtime::Hash;
+	type Hasher = kitchensink_runtime::Hashing;
+	type Header = kitchensink_runtime::Header;
 
-	type AccountId = runtime::AccountId;
-	type Balance = runtime::Balance;
-	type Index = runtime::Index;
-	type Signature = runtime::Signature;
+	type AccountId = kitchensink_runtime::AccountId;
+	type Balance = kitchensink_runtime::Balance;
+	type Index = kitchensink_runtime::Index;
+	type Signature = kitchensink_runtime::Signature;
 
 	fn max_extrinsic_size() -> u32 {
-		substrate::Substrate::max_extrinsic_size()
+		peer::Peer::max_extrinsic_size()
 	}
 
 	fn max_extrinsic_weight() -> Weight {
-		substrate::Substrate::max_extrinsic_weight()
+		peer::Peer::max_extrinsic_weight()
 	}
 }
 
-impl Chain for Substrate {
-	const NAME: &'static str = "Substrate";
-	// Substrate token has no value, but we associate it with DOT token
-	const TOKEN_ID: Option<&'static str> = Some("polkadot");
-	const BEST_FINALIZED_HEADER_ID_METHOD: &'static str =
-		substrate::BEST_FINALIZED_SUBSTRATE_HEADER_METHOD;
-	const AVERAGE_BLOCK_INTERVAL: Duration = Duration::from_secs(5);
-	const STORAGE_PROOF_OVERHEAD: u32 = substrate::EXTRA_STORAGE_PROOF_SIZE;
-	const MAXIMAL_ENCODED_ACCOUNT_ID_SIZE: u32 = substrate::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE;
-
-	type SignedBlock = runtime::SignedBlock;
-	type Call = runtime::RuntimeCall;
-	type WeightToFee = substrate::WeightToFee;
+impl ChainWithGrandpa for Peer {
+	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = peer::WITH_PEER_GRANDPA_PALLET_NAME;
 }
 
-impl ChainWithGrandpa for Substrate {
-	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str = substrate::WITH_SUBSTRATE_GRANDPA_PALLET_NAME;
-}
-
-impl ChainWithMessages for Substrate {
+impl ChainWithMessages for Peer {
 	const WITH_CHAIN_MESSAGES_PALLET_NAME: &'static str =
-	substrate::WITH_SUBSTRATE_MESSAGES_PALLET_NAME;
+		peer::WITH_PEER_MESSAGES_PALLET_NAME;
 	const TO_CHAIN_MESSAGE_DETAILS_METHOD: &'static str =
-	substrate::TO_SUBSTRATE_MESSAGE_DETAILS_METHOD;
+		peer::TO_PEER_MESSAGE_DETAILS_METHOD;
 	const PAY_INBOUND_DISPATCH_FEE_WEIGHT_AT_CHAIN: Weight =
-	substrate::PAY_INBOUND_DISPATCH_FEE_WEIGHT;
+		peer::PAY_INBOUND_DISPATCH_FEE_WEIGHT;
 	const MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX: MessageNonce =
-		substrate::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		peer::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	const MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX: MessageNonce =
-	substrate::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+		peer::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	type WeightInfo = ();
 }
 
-impl ChainWithBalances for Substrate {
+impl Chain for Peer {
+	const NAME: &'static str = "Peer";
+	// Rialto token has no value, but we associate it with KSM token
+	const TOKEN_ID: Option<&'static str> = Some("kusama");
+	const BEST_FINALIZED_HEADER_ID_METHOD: &'static str =
+		peer::BEST_FINALIZED_PEER_HEADER_METHOD;
+	const AVERAGE_BLOCK_INTERVAL: Duration = Duration::from_secs(5);
+	const STORAGE_PROOF_OVERHEAD: u32 = peer::EXTRA_STORAGE_PROOF_SIZE;
+	const MAXIMAL_ENCODED_ACCOUNT_ID_SIZE: u32 = peer::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE;
+
+	type SignedBlock = kitchensink_runtime::SignedBlock;
+	type Call = kitchensink_runtime::RuntimeCall;
+	type WeightToFee = peer::WeightToFee;
+}
+
+impl ChainWithBalances for Peer {
 	fn account_info_storage_key(account_id: &Self::AccountId) -> StorageKey {
 		use frame_support::storage::generator::StorageMap;
-		StorageKey(frame_system::Account::<runtime::Runtime>::storage_map_final_key(
+		StorageKey(frame_system::Account::<kitchensink_runtime::Runtime>::storage_map_final_key(
 			account_id,
 		))
 	}
 }
 
-impl TransactionSignScheme for Substrate {
-	type Chain = Substrate;
+impl TransactionSignScheme for Peer {
+	type Chain = Peer;
 	type AccountKeyPair = sp_core::sr25519::Pair;
-	type SignedTransaction = runtime::UncheckedExtrinsic;
+	type SignedTransaction = kitchensink_runtime::UncheckedExtrinsic;
 
 	fn sign_transaction(param: SignParam<Self>) -> Result<Self::SignedTransaction, SubstrateError> {
 		let raw_payload = SignedPayload::from_raw(
 			param.unsigned.call.clone(),
 			(
-				frame_system::CheckNonZeroSender::<runtime::Runtime>::new(),
-				frame_system::CheckSpecVersion::<runtime::Runtime>::new(),
-				frame_system::CheckTxVersion::<runtime::Runtime>::new(),
-				frame_system::CheckGenesis::<runtime::Runtime>::new(),
-				frame_system::CheckEra::<runtime::Runtime>::from(param.era.frame_era()),
-				frame_system::CheckNonce::<runtime::Runtime>::from(param.unsigned.nonce),
-				frame_system::CheckWeight::<runtime::Runtime>::new(),
-				pallet_asset_tx_payment::ChargeAssetTxPayment::<runtime::Runtime>::from(param.unsigned.tip,None),
+				frame_system::CheckNonZeroSender::<kitchensink_runtime::Runtime>::new(),
+				frame_system::CheckSpecVersion::<kitchensink_runtime::Runtime>::new(),
+				frame_system::CheckTxVersion::<kitchensink_runtime::Runtime>::new(),
+				frame_system::CheckGenesis::<kitchensink_runtime::Runtime>::new(),
+				frame_system::CheckEra::<kitchensink_runtime::Runtime>::from(param.era.frame_era()),
+				frame_system::CheckNonce::<kitchensink_runtime::Runtime>::from(param.unsigned.nonce),
+				frame_system::CheckWeight::<kitchensink_runtime::Runtime>::new(),
+				pallet_asset_tx_payment::ChargeAssetTxPayment::<kitchensink_runtime::Runtime>::from(param.unsigned.tip, None),
+			//	pallet_transaction_payment::ChargeTransactionPayment::<kitchensink_runtime::Runtime>::from(param.unsigned.tip),
 			),
 			(
 				(),
@@ -130,7 +132,7 @@ impl TransactionSignScheme for Substrate {
 		let signer: sp_runtime::MultiSigner = param.signer.public().into();
 		let (call, extra, _) = raw_payload.deconstruct();
 
-		Ok(runtime::UncheckedExtrinsic::new_signed(
+		Ok(kitchensink_runtime::UncheckedExtrinsic::new_signed(
 			call.into_decoded()?,
 			signer.into_account().into(),
 			signature.into(),
@@ -145,7 +147,7 @@ impl TransactionSignScheme for Substrate {
 	fn is_signed_by(signer: &Self::AccountKeyPair, tx: &Self::SignedTransaction) -> bool {
 		tx.signature
 			.as_ref()
-			.map(|(address, _, _)| *address == runtime::Address::Id(signer.public().into()))
+			.map(|(address, _, _)| *address == kitchensink_runtime::Address::Id(signer.public().into()))
 			.unwrap_or(false)
 	}
 
@@ -161,11 +163,11 @@ impl TransactionSignScheme for Substrate {
 	}
 }
 
-/// Substrate signing params.
+/// Peer signing params.
 pub type SigningParams = sp_core::sr25519::Pair;
 
-/// Substrate header type used in headers sync.
-pub type SyncHeader = relay_substrate_client::SyncHeader<runtime::Header>;
+/// Peer header type used in headers sync.
+pub type SyncHeader = relay_substrate_client::SyncHeader<kitchensink_runtime::Header>;
 
 #[cfg(test)]
 mod tests {
@@ -175,23 +177,23 @@ mod tests {
 	#[test]
 	fn parse_transaction_works() {
 		let unsigned = UnsignedTransaction {
-			call: runtime::Call::System(runtime::SystemCall::remark {
+			call: kitchensink_runtime::Call::System(kitchensink_runtime::SystemCall::remark {
 				remark: b"Hello world!".to_vec(),
 			})
 			.into(),
 			nonce: 777,
 			tip: 888,
 		};
-		let signed_transaction = Substrate::sign_transaction(SignParam {
+		let signed_transaction = Peer::sign_transaction(SignParam {
 			spec_version: 42,
 			transaction_version: 50000,
-			genesis_hash: [42u8; 32].into(),
+			genesis_hash: [42u8; 64].into(),
 			signer: sp_core::sr25519::Pair::from_seed_slice(&[1u8; 32]).unwrap(),
 			era: TransactionEra::immortal(),
 			unsigned: unsigned.clone(),
 		})
 		.unwrap();
-		let parsed_transaction = Substrate::parse_transaction(signed_transaction).unwrap();
+		let parsed_transaction = Peer::parse_transaction(signed_transaction).unwrap();
 		assert_eq!(parsed_transaction, unsigned);
 	}
 }

@@ -90,8 +90,8 @@ macro_rules! select_bridge {
 	($bridge: expr, $generic: tt) => {
 		match $bridge {
 			RelayChain::Substrate => {
-				type Target = client_ourchain::Millau;
-				type TargetSign = client_ourchain::Millau;
+				type Target = client_peer::Peer;
+				type TargetSign = client_peer::Peer;
 
 				$generic
 			},

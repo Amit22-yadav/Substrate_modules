@@ -69,8 +69,8 @@ pub trait WeightInfo {
 /// Weights for `pallet_bridge_messages` that are generated using one of the Bridge testnets.
 ///
 /// Those weights are test only and must never be used in production.
-pub struct MillauWeight<T>(PhantomData<T>);
-impl<T: frame_system::Config> WeightInfo for MillauWeight<T> {
+pub struct PeerWeight<T>(PhantomData<T>);
+impl<T: frame_system::Config> WeightInfo for PeerWeight<T> {
 	fn send_minimal_message_worst_case() -> Weight {
 		Weight::from_ref_time(61_807_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(5 as u64))

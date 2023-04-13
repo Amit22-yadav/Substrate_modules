@@ -39,7 +39,7 @@ sp-runtime = {version = "7.0.0", default-features = false, path = "../../primiti
 sp-finality-grandpa = {version = "4.0.0-dev", default-features = false, path = "../../primitives/finality-grandpa" }
 
 [dev-dependencies]
-bp-millau= { path = "../../primitives_bridge/bp-millau" }
-bp-rialto= { path = "../../primitives_bridge/chain-substrate" }
+peer= { path = "../../primitives_bridge/peer" }
+substrate= { path = "../../primitives_bridge/substrate" }
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, path = "../../frame/transaction-payment" }
 runtime = { path = "../../bin/substrate2/runtime" }

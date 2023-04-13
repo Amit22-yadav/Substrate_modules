@@ -27,8 +27,8 @@ use bridge_runtime_common::messages::MessageBridge;
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
-use crate::our_chain_messages::ToMillauMessagePayload;
-use crate::our_chain_messages::WithMillauMessageBridge;
+use crate::our_chain_messages::ToPeerMessagePayload;
+use crate::our_chain_messages::WithPeerMessageBridge;
 use bridge_runtime_common::messages::source::estimate_message_dispatch_and_delivery_fee;
 use frame_support::{
 	construct_runtime,
@@ -80,7 +80,7 @@ use sp_runtime::{
 	transaction_validity::{TransactionPriority, TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, FixedPointNumber, FixedU128, Perbill, Percent, Permill, Perquintill,
 };
-pub use pallet_bridge_grandpa::Call as BridgeGrandpaMillauCall;
+pub use pallet_bridge_grandpa::Call as BridgeGrandpaPeerCall;
 pub use pallet_bridge_messages::Call as MessagesCall;
 use sp_runtime::MultiSignature;
 use sp_std::prelude::*;
@@ -494,11 +494,11 @@ impl pallet_bridge_dispatch::Config for Runtime {
 	type BridgeMessageId = (bp_messages::LaneId, bp_messages::MessageNonce);
 	type Call = RuntimeCall;
 	type CallFilter = frame_support::traits::Everything;
-	type EncodedCall = crate::our_chain_messages::FromMillauEncodedCall;
-	type SourceChainAccountId = bp_millau::AccountId;
+	type EncodedCall = crate::our_chain_messages::FromPeerEncodedCall;
+	type SourceChainAccountId = peer::AccountId;
 	type TargetChainAccountPublic = MultiSigner;
 	type TargetChainSignature = MultiSignature;
-	type AccountIdConverter = bp_rialto::AccountIdConverter;
+	type AccountIdConverter = substrate::AccountIdConverter;
 }
 
 
@@ -532,14 +532,14 @@ impl_opaque_keys! {
 parameter_types! {
 	pub const MaxMessagesToPruneAtOnce: bp_messages::MessageNonce = 8;
 	pub const MaxUnrewardedRelayerEntriesAtInboundLane: bp_messages::MessageNonce =
-		bp_millau::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
+		peer::MAX_UNREWARDED_RELAYERS_IN_CONFIRMATION_TX;
 	pub const MaxUnconfirmedMessagesAtInboundLane: bp_messages::MessageNonce =
-	bp_millau::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
+	peer::MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX;
 	// `IdentityFee` is used by Rialto => we may use weight directly
 	pub const GetDeliveryConfirmationTransactionFee: Balance =
-		bp_rialto::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
+		substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT .ref_time() as _;
 	pub const RootAccountForPayments: Option<AccountId> = None;
-  pub const BridgedChainId: bp_runtime::ChainId = bp_runtime::MILLAU_CHAIN_ID;
+  pub const BridgedChainId: bp_runtime::ChainId = bp_runtime::PEER_CHAIN_ID;
 }
 
 parameter_types! {
@@ -553,16 +553,16 @@ parameter_types! {
 	///
 	/// Assuming the worst case of every header being finalized, we will keep headers at least for a
 	/// week.
-	pub const HeadersToKeep: u32 = 7 * bp_rialto::DAYS as u32;
+	pub const HeadersToKeep: u32 = 7 * substrate::DAYS as u32;
 }
 
 
-pub type MillauGrandpaInstance = ();
+pub type PeerGrandpaInstance = ();
 impl pallet_bridge_grandpa::Config for Runtime {
-	type BridgedChain = bp_millau::Millau;
+	type BridgedChain = peer::Peer;
 	type MaxRequests = MaxRequests;
 	type HeadersToKeep = HeadersToKeep;
-	type WeightInfo = pallet_bridge_grandpa::weights::MillauWeight<Runtime>;
+	type WeightInfo = pallet_bridge_grandpa::weights::PeerWeight<Runtime>;
 }
 
 
@@ -1544,40 +1544,40 @@ impl pallet_assets::Config for Runtime {
 	type BenchmarkHelper = ();
 }
 
-// Instance of the messages pallet used to relay messages to/from Millau chain.
-pub type WithMillauMessagesInstance = ();
+// Instance of the messages pallet used to relay messages to/from Peer chain.
+pub type WithPeerMessagesInstance = ();
 
-impl pallet_bridge_messages::Config<WithMillauMessagesInstance> for Runtime {
+impl pallet_bridge_messages::Config<WithPeerMessagesInstance> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = pallet_bridge_messages::weights::MillauWeight<Runtime>;
-	type Parameter = our_chain_messages::RialtoToMillauMessagesParameter;
+	type WeightInfo = pallet_bridge_messages::weights::PeerWeight<Runtime>;
+	type Parameter = our_chain_messages::SubstrateToPeerMessagesParameter;
 	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
 	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
 	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
 
-	type OutboundPayload = crate::our_chain_messages::ToMillauMessagePayload;
+	type OutboundPayload = crate::our_chain_messages::ToPeerMessagePayload;
 	type OutboundMessageFee = Balance;
 
-	type InboundPayload = crate::our_chain_messages::FromMillauMessagePayload;
-	type InboundMessageFee = bp_millau::Balance;
-	type InboundRelayer = bp_millau::AccountId;
+	type InboundPayload = crate::our_chain_messages::FromPeerMessagePayload;
+	type InboundMessageFee = peer::Balance;
+	type InboundRelayer = peer::AccountId;
 
-	type AccountIdConverter = bp_rialto::AccountIdConverter;
+	type AccountIdConverter = substrate::AccountIdConverter;
 
-	type TargetHeaderChain = crate::our_chain_messages::Millau;
-	type LaneMessageVerifier = crate::our_chain_messages::ToMillauMessageVerifier;
+	type TargetHeaderChain = crate::our_chain_messages::Peer;
+	type LaneMessageVerifier = crate::our_chain_messages::ToPeerMessageVerifier;
 	type MessageDeliveryAndDispatchPayment =
 		pallet_bridge_messages::instant_payments::InstantCurrencyPayments<
 			Runtime,
-			WithMillauMessagesInstance,
+			WithPeerMessagesInstance,
 			pallet_balances::Pallet<Runtime>,
 			GetDeliveryConfirmationTransactionFee,
 		>;
 	type OnMessageAccepted = ();
 	type OnDeliveryConfirmed = ();
 
-	type SourceHeaderChain = crate::our_chain_messages::Millau;
-	type MessageDispatch = crate::our_chain_messages::FromMillauMessageDispatch;
+	type SourceHeaderChain = crate::our_chain_messages::Peer;
+	type MessageDispatch = crate::our_chain_messages::FromPeerMessageDispatch;
 	type BridgedChainId = BridgedChainId;
 }
 
@@ -1818,8 +1818,8 @@ construct_runtime!(
 		FastUnstake: pallet_fast_unstake,
 		MessageQueue: pallet_message_queue,
 		BridgeDispatch: pallet_bridge_dispatch,
-		BridgeMillauGrandpa: pallet_bridge_grandpa,
-		BridgeMillauMessages: pallet_bridge_messages
+		BridgePeerGrandpa: pallet_bridge_grandpa,
+		BridgePeerMessages: pallet_bridge_messages
 	}
 );
 
@@ -1874,10 +1874,10 @@ type Migrations = (
 	pallet_contracts::Migration<Runtime>,
 );
 
-pub fn rialto_to_millau_account_ownership_digest<Call, AccountId, SpecVersion>(
-	millau_call: &Call,
-	rialto_account_id: AccountId,
-	millau_spec_version: SpecVersion,
+pub fn substrate_to_peer_account_ownership_digest<Call, AccountId, SpecVersion>(
+	peer_call: &Call,
+	substrate_account_id: AccountId,
+	peer_spec_version: SpecVersion,
 ) -> sp_std::vec::Vec<u8>
 where
 	Call: codec::Encode,
@@ -1885,11 +1885,11 @@ where
 	SpecVersion: codec::Encode,
 {
 	pallet_bridge_dispatch::account_ownership_digest(
-		millau_call,
-		rialto_account_id,
-		millau_spec_version,
-		bp_runtime::RIALTO_CHAIN_ID,
-		bp_runtime::MILLAU_CHAIN_ID,
+		peer_call,
+		substrate_account_id,
+		peer_spec_version,
+		bp_runtime::SUBSTRATE_CHAIN_ID,
+		bp_runtime::PEER_CHAIN_ID,
 	)
 }
 
@@ -2017,9 +2017,9 @@ impl_runtime_apis! {
 
 	
 
-	impl bp_millau::MillauFinalityApi<Block> for Runtime {
-		fn best_finalized() -> (bp_millau::BlockNumber, bp_millau::Hash) {
-			let header = BridgeMillauGrandpa::best_finalized();
+	impl peer::PeerFinalityApi<Block> for Runtime {
+		fn best_finalized() -> (peer::BlockNumber, peer::Hash) {
+			let header = BridgePeerGrandpa::best_finalized();
 			(header.number, header.hash())
 		}
 	}
@@ -2372,16 +2372,16 @@ impl_runtime_apis! {
 		}
 	}
 
-	impl bp_millau::ToMillauOutboundLaneApi<Block, Balance, ToMillauMessagePayload> for Runtime {
+	impl peer::ToPeerOutboundLaneApi<Block, Balance, ToPeerMessagePayload> for Runtime {
 		fn estimate_message_delivery_and_dispatch_fee(
 			_lane_id: bp_messages::LaneId,
-			payload: ToMillauMessagePayload,
-			millau_to_this_conversion_rate: Option<FixedU128>,
+			payload: ToPeerMessagePayload,
+			peer_to_this_conversion_rate: Option<FixedU128>,
 		) -> Option<Balance> {
-			estimate_message_dispatch_and_delivery_fee::<WithMillauMessageBridge>(
+			estimate_message_dispatch_and_delivery_fee::<WithPeerMessageBridge>(
 				&payload,
-				WithMillauMessageBridge::RELAYER_FEE_PERCENT,
-				millau_to_this_conversion_rate,
+				WithPeerMessageBridge::RELAYER_FEE_PERCENT,
+				peer_to_this_conversion_rate,
 			).ok()
 		}
 
@@ -2392,8 +2392,8 @@ impl_runtime_apis! {
 		) -> Vec<bp_messages::MessageDetails<Balance>> {
 			bridge_runtime_common::messages_api::outbound_message_details::<
 				Runtime,
-				WithMillauMessagesInstance,
-				WithMillauMessageBridge,
+				WithPeerMessagesInstance,
+				WithPeerMessageBridge,
 			>(lane, begin, end)
 		}
 	}
