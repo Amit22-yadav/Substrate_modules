@@ -54,6 +54,23 @@ impl KeyStore {
 		})
 	}
 
+	fn pair<T: Pair>(&self, key_type: KeyTypeId, public: &T::Public) -> Option<T> {
+		self.keys.read().get(&key_type).and_then(|inner| {
+			inner
+				.get(public.as_slice())
+				.map(|s| T::from_string(s, None).expect("seed slice is valid"))
+		})
+	}
+	fn sign<T: Pair>(
+		&self,
+		key_type: KeyTypeId,
+		public: &T::Public,
+		msg: &[u8],
+	) -> Result<Option<T::Signature>, Error> {
+		let sig = self.pair::<T>(key_type, public).map(|pair| pair.sign(msg));
+		Ok(sig)
+	}
+
 	fn ed25519_key_pair(&self, id: KeyTypeId, pub_key: &ed25519::Public) -> Option<ed25519::Pair> {
 		self.keys.read().get(&id).and_then(|inner| {
 			inner.get(pub_key.as_slice()).map(|s| {
@@ -138,6 +155,8 @@ impl CryptoStore for KeyStore {
 		SyncCryptoStore::sign_with(self, id, key, msg)
 	}
 
+	
+
 	async fn sr25519_vrf_sign(
 		&self,
 		key_type: KeyTypeId,
@@ -171,6 +190,15 @@ impl SyncCryptoStore for KeyStore {
 				}))
 			})
 			.unwrap_or_else(|| Ok(vec![]))
+	}
+
+	fn sr25519_sign(
+		&self,
+		key_type: KeyTypeId,
+		public: &sr25519::Public,
+		msg: &[u8],
+	) -> Result<Option<sr25519::Signature>, Error> {
+		self.sign::<sr25519::Pair>(key_type, public, msg)
 	}
 
 	fn sr25519_public_keys(&self, id: KeyTypeId) -> Vec<sr25519::Public> {

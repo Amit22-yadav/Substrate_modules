@@ -1,0 +1,53 @@
+[package]
+name = "xcm-builder"
+description = "Tools & types for building with XCM and its executor."
+edition = "2021"
+version = "0.9.41"
+
+[dependencies]
+impl-trait-for-tuples = "0.2.1"
+parity-scale-codec = { version = "3.4.0", default-features = false, features = ["derive"] }
+scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
+xcm = { path = "..", default-features = false }
+xcm-executor = { path = "../xcm-executor", default-features = false }
+sp-std = { path="../../primitives/std", default-features = false }
+sp-arithmetic = { path="../../primitives/arithmetic", default-features = false }
+sp-io = { path="../../primitives/io",default-features = false }
+sp-runtime = { path="../../primitives/runtime", default-features = false }
+
+frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.39", default-features = false }
+frame-system = { path="../../frame/system", default-features = false }
+pallet-transaction-payment = { path="../../frame/transaction-payment", default-features = false }
+log = { version = "0.4.17", default-features = false }
+
+# Polkadot dependencies
+polkadot-parachain ={  path="../../parachain",default-features = false }
+
+[dev-dependencies]
+primitive-types = "0.12.1"
+pallet-balances = {  path="../../frame/balances"}
+pallet-xcm = { path = "../pallet-xcm" }
+polkadot-runtime-parachains = {path="../../bin/parachains", default-features = false }
+assert_matches = "1.5.0"
+
+[features]
+default = ["std"]
+runtime-benchmarks = [
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks"
+]
+std = [
+	"log/std",
+	"parity-scale-codec/std",
+	"scale-info/std",
+	"xcm/std",
+	"xcm-executor/std",
+	"sp-std/std",
+	"sp-arithmetic/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"frame-support/std",
+	"frame-system/std",
+	"polkadot-parachain/std",
+	"pallet-transaction-payment/std",
+]

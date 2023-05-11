@@ -21,6 +21,8 @@ use crate::cli::{
 	Balance, ExplicitOrMaximal, HexBytes, HexLaneId, Origins, SourceConnectionParams,
 	SourceSigningParams, TargetConnectionParams, TargetSigningParams,
 };
+use bp_runtime::EncodedOrDecodedCall;
+
 use bp_message_dispatch::{CallOrigin, MessagePayload};
 use bp_runtime::Chain as _;
 use codec::Encode;
@@ -117,6 +119,7 @@ impl SendMessage {
 				bridge,
 				..
 			} = self;
+			
 
 			let source_sign = source_sign.to_keypair::<Source>()?;
 
@@ -124,7 +127,10 @@ impl SendMessage {
 			let target_call = Target::encode_call(message)?;
 			let target_spec_version = self.target.selected_chain_spec_version::<Target>().await?;
 
+			
+
 			let payload = {
+				//let source_call_weight = Target::get_dispatch_info(&target_call)?.weight;
 				let target_call_weight = prepare_call_dispatch_weight(
 					dispatch_weight,
 					|| {
@@ -139,9 +145,13 @@ impl SendMessage {
 
 				message_payload(
 					target_spec_version,
+					
 					target_call_weight,
 					match origin {
-						Origins::Source => CallOrigin::SourceAccount(source_account_id),
+						Origins::Source => { 
+							
+						//	let target_sign = source_sign.to_keypair::<Source>()?;
+							CallOrigin::SourceAccount(source_account_id)},
 						Origins::Target => {
 							let target_sign = target_sign.to_keypair::<Target>()?;
 							let digest = account_ownership_digest(
@@ -189,6 +199,9 @@ impl SendMessage {
 					.await? as _,
 				),
 			};
+
+			
+
 			let dispatch_weight = payload.weight;
 			let payload_len = payload.encode().len();
 			let send_message_call = Source::encode_call(&encode_call::Call::BridgeSendMessage {

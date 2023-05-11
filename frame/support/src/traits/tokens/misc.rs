@@ -114,6 +114,27 @@ pub enum ExistenceRequirement {
 	/// Operation may result in account going out of existence.
 	AllowDeath,
 }
+/// The privilege with which a withdraw operation is conducted.
+#[derive(Copy, Clone, RuntimeDebug, Eq, PartialEq)]
+pub enum Fortitude {
+	/// The operation should execute with regular privilege.
+	Polite,
+	/// The operation should be forced to succeed if possible. This is usually employed for system-
+	/// level security-critical events such as slashing.
+	Force,
+}
+
+/// The precision required of an operation generally involving some aspect of quantitative fund
+/// withdrawal or transfer.
+#[derive(Copy, Clone, RuntimeDebug, Eq, PartialEq)]
+pub enum Precision {
+	/// The operation should must either proceed either exactly according to the amounts involved
+	/// or not at all.
+	Exact,
+	/// The operation may be considered successful even if less than the specified amounts are
+	/// available to be used. In this case a best effort will be made.
+	BestEffort,
+}
 
 /// Status of funds.
 #[derive(

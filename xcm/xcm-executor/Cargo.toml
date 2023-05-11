@@ -1,0 +1,39 @@
+[package]
+name = "xcm-executor"
+description = "An abstract and configurable XCM message executor."
+edition = "2021"
+# repository = "https://github.com/paritytech/polkadot.git"
+version = "0.9.41"
+
+[dependencies]
+impl-trait-for-tuples = "0.2.2"
+environmental = { version = "1.1.4", default-features = false }
+parity-scale-codec = { version = "3.4.0", default-features = false, features = ["derive"] }
+xcm = { path = "..", default-features = false }
+sp-std = { path="../../primitives/std", default-features = false }
+sp-io = { path="../../primitives/io",default-features = false }
+sp-arithmetic = { path="../../primitives/arithmetic", default-features = false }
+sp-core = { path="../../primitives/core",default-features = false }
+sp-runtime =  	{ path="../../primitives/runtime", default-features = false }
+sp-weights =  { path="../../primitives/weights", default-features = false }
+frame-support = {  path="../../frame/support", default-features = false } 
+log = { version = "0.4.17", default-features = false }
+frame-benchmarking = { path="../../frame/benchmarking",  default-features = false, optional = true }
+
+[features]
+default = ["std"]
+runtime-benchmarks = [
+	"frame-benchmarking/runtime-benchmarks",
+]
+std = [
+	"parity-scale-codec/std",
+	"xcm/std",
+	"sp-std/std",
+	"sp-io/std",
+	"sp-arithmetic/std",
+	"sp-core/std",
+	"sp-runtime/std",
+	"sp-weights/std",
+	"frame-support/std",
+	"log/std",
+]
