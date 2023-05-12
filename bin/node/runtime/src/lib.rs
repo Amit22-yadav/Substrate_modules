@@ -116,6 +116,7 @@ use sp_runtime::generic::Era;
 mod voter_bags;
 
 mod xcm_config;
+
 // Make the WASM binary available.
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));

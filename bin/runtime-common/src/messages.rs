@@ -21,6 +21,7 @@
 //! of to elements - message lane id and message nonce.
 
 use bp_message_dispatch::MessageDispatch as _;
+//use crate::messages::source::estimate_message_dispatch_and_delivery_fee;
 use bp_messages::{
 	source_chain::LaneMessageVerifier,
 	target_chain::{DispatchMessage, MessageDispatch, ProvedLaneMessages, ProvedMessages},
@@ -31,12 +32,16 @@ use bp_runtime::{
 	messages::{DispatchFeePayment, MessageDispatchResult},
 	ChainId, Size, StorageProofChecker,
 };
+use crate::messages::source::FromThisChainMessagePayload;
 use codec::{Decode, DecodeLimit, Encode};
 use frame_support::{
 	traits::{Currency, ExistenceRequirement},
 	weights::{Weight, WeightToFeePolynomial},
 	RuntimeDebug,
 };
+use crate::messages::source::estimate_message_dispatch_and_delivery_fee;
+use frame_support::traits::tokens::Balance;
+use xcm::latest::prelude::*;
 use hash_db::Hasher;
 use scale_info::TypeInfo;
 use sp_runtime::{
@@ -156,6 +161,7 @@ pub trait BridgedChainWithMessages: ChainWithMessages {
 		message_dispatch_weight: WeightOf<Self>,
 	) -> MessageTransaction<WeightOf<Self>>;
 
+	fn verify_dispatch_weight(message_payload: &[u8]) -> bool;
 	/// Returns minimal transaction fee that must be paid for given transaction at the Bridged
 	/// chain.
 	fn transaction_payment(transaction: MessageTransaction<WeightOf<Self>>) -> BalanceOf<Self>;
@@ -221,12 +227,14 @@ pub mod source {
 	pub type BridgedChainOpaqueCall = Vec<u8>;
 
 	/// Message payload for This -> Bridged chain messages.
-	pub type FromThisChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
-		AccountIdOf<ThisChain<B>>,
-		SignerOf<BridgedChain<B>>,
-		SignatureOf<BridgedChain<B>>,
-		BridgedChainOpaqueCall,
-	>;
+	// pub type FromThisChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
+	// 	AccountIdOf<ThisChain<B>>,
+	// 	SignerOf<BridgedChain<B>>,	
+	// 	SignatureOf<BridgedChain<B>>,
+	// 	BridgedChainOpaqueCall,
+	// >;
+
+	pub type FromThisChainMessagePayload = Vec<u8>;
 
 	/// Messages delivery proof from bridged chain:
 	///
@@ -291,7 +299,7 @@ pub mod source {
 		LaneMessageVerifier<
 			OriginOf<ThisChain<B>>,
 			AccountIdOf<ThisChain<B>>,
-			FromThisChainMessagePayload<B>,
+			FromThisChainMessagePayload,
 			BalanceOf<ThisChain<B>>,
 		> for FromThisChainMessageVerifier<B>
 	where
@@ -308,7 +316,7 @@ pub mod source {
 			delivery_and_dispatch_fee: &BalanceOf<ThisChain<B>>,
 			lane: &LaneId,
 			lane_outbound_data: &OutboundLaneData,
-			payload: &FromThisChainMessagePayload<B>,
+			payload: &FromThisChainMessagePayload,
 		) -> Result<(), Self::Error> {
 			// reject message if lane is blocked
 			if !ThisChain::<B>::is_message_accepted(submitter, lane) {
@@ -326,21 +334,21 @@ pub mod source {
 
 			// Do the dispatch-specific check. We assume that the target chain uses
 			// `Dispatch`, so we verify the message accordingly.
-			let raw_origin_or_err: Result<
-				frame_system::RawOrigin<AccountIdOf<ThisChain<B>>>,
-				OriginOf<ThisChain<B>>,
-			> = submitter.clone().into();
-			if let Ok(raw_origin) = raw_origin_or_err {
-				pallet_bridge_dispatch::verify_message_origin(&raw_origin, payload)
-					.map(drop)
-					.map_err(|_| BAD_ORIGIN)?;
-			} else {
-				// so what it means that we've failed to convert origin to the
-				// `frame_system::RawOrigin`? now it means that the custom pallet origin has
-				// been used to send the message. Do we need to verify it? The answer is no,
-				// because pallet may craft any origin (e.g. root) && we can't verify whether it
-				// is valid, or not.
-			};
+			// let raw_origin_or_err: Result<
+			// 	frame_system::RawOrigin<AccountIdOf<ThisChain<B>>>,
+			// 	OriginOf<ThisChain<B>>,
+			// > = submitter.clone().into();
+			// if let Ok(raw_origin) = raw_origin_or_err {
+			// 	pallet_bridge_dispatch::verify_message_origin(&raw_origin, payload)
+			// 		.map(drop)
+			// 		.map_err(|_| BAD_ORIGIN)?;
+			// } else {
+			// 	// so what it means that we've failed to convert origin to the
+			// 	// `frame_system::RawOrigin`? now it means that the custom pallet origin has
+			// 	// been used to send the message. Do we need to verify it? The answer is no,
+			// 	// because pallet may craft any origin (e.g. root) && we can't verify whether it
+			// 	// is valid, or not.
+			// };
 
 			let minimal_fee_in_this_tokens = estimate_message_dispatch_and_delivery_fee::<B>(
 				payload,
@@ -348,10 +356,10 @@ pub mod source {
 				None,
 			)?;
 
-			// compare with actual fee paid
-			if *delivery_and_dispatch_fee < minimal_fee_in_this_tokens {
-				return Err(TOO_LOW_FEE)
-			}
+			// // compare with actual fee paid
+			// if *delivery_and_dispatch_fee < minimal_fee_in_this_tokens {
+			// 	return Err(TOO_LOW_FEE)
+			// }
 
 			Ok(())
 		}
@@ -368,9 +376,9 @@ pub mod source {
 	/// may be 'mined' by the target chain. But the lane may have its own checks (e.g. fee
 	/// check) that would reject message (see `FromThisChainMessageVerifier`).
 	pub fn verify_chain_message<B: MessageBridge>(
-		payload: &FromThisChainMessagePayload<B>,
+		payload: &FromThisChainMessagePayload,
 	) -> Result<(),  &'static str> {
-		if payload.call.len() > maximal_message_size::<B>() as usize {
+		if !BridgedChain::<B>::verify_dispatch_weight(payload) {
 			return Err("Incorrect message weight declared".into())
 		}
 
@@ -381,9 +389,9 @@ pub mod source {
 	/// chain.
 	///
 	/// The fee is paid in This chain Balance, but we use Bridged chain balance to avoid additional
-	/// conversions. Returns `None` if overflow has happened.
+	// conversions. Returns `None` if overflow has happened.
 	pub fn estimate_message_dispatch_and_delivery_fee<B: MessageBridge>(
-		payload: &FromThisChainMessagePayload<B>,
+		payload: &FromThisChainMessagePayload,
 		relayer_fee_percent: u32,
 		bridged_to_this_conversion_rate: Option<FixedU128>,
 	) -> Result<BalanceOf<ThisChain<B>>, &'static str> {
@@ -391,13 +399,10 @@ pub mod source {
 		//
 		// if we're going to pay dispatch fee at the target chain, then we don't include weight
 		// of the message dispatch in the delivery transaction cost
-		let pay_dispatch_fee_at_target_chain =
-			payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
-		let delivery_transaction = BridgedChain::<B>::estimate_delivery_transaction(
-			&payload.encode(),
-			pay_dispatch_fee_at_target_chain,
-			if pay_dispatch_fee_at_target_chain { Weight::zero().into() } else { payload.weight.into() },
-		);
+		// let pay_dispatch_fee_at_target_chain =
+		// 	payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
+		let delivery_transaction =
+			BridgedChain::<B>::estimate_delivery_transaction(&payload.encode(), true, Weight::zero().into());
 		let delivery_transaction_fee = BridgedChain::<B>::transaction_payment(delivery_transaction);
 
 		// the fee (in This tokens) of all transactions that are made on This chain
@@ -458,6 +463,112 @@ pub mod source {
 			},
 		)
 		.map_err(<&'static str>::from)?
+	}
+}
+	pub trait XcmBridge {
+	/// Runtime message bridge configuration.
+		type MessageBridge: MessageBridge;
+		/// Runtime message sender adapter.
+	type MessageSender: bp_messages::source_chain::MessagesBridge<
+		OriginOf<ThisChain<Self::MessageBridge>>,
+		AccountIdOf<ThisChain<Self::MessageBridge>>,
+			BalanceOf<ThisChain<Self::MessageBridge>>,
+		FromThisChainMessagePayload,
+	>;
+
+	/// Our location within the Consensus Universe.
+	fn universal_location() -> InteriorMultiLocation;
+	/// Verify that the adapter is responsible for handling given XCM destination.
+	fn verify_destination(dest: &MultiLocation) -> bool;
+	/// Build route from this chain to the XCM destination.
+	fn build_destination() -> MultiLocation;
+	/// Return message lane used to deliver XCM messages.
+	fn xcm_lane() -> LaneId;
+}
+
+/// XCM bridge adapter for `bridge-messages` pallet.
+pub struct XcmBridgeAdapter<T>(PhantomData<T>);
+
+impl<T: XcmBridge> SendXcm for XcmBridgeAdapter<T>
+where
+	BalanceOf<ThisChain<T::MessageBridge>>: Into<Fungibility>,
+	OriginOf<ThisChain<T::MessageBridge>>: From<pallet_xcm::Origin>,
+{
+	type Ticket = (BalanceOf<ThisChain<T::MessageBridge>>, FromThisChainMessagePayload);
+
+	fn validate(
+		dest: &mut Option<MultiLocation>,
+		msg: &mut Option<Xcm<()>>,
+	) -> SendResult<Self::Ticket> {
+		let d = dest.take().ok_or(SendError::MissingArgument)?;
+		if !T::verify_destination(&d) {
+			*dest = Some(d);
+			return Err(SendError::NotApplicable)
+		}
+
+		let route = T::build_destination();
+		let msg = (route, msg.take().ok_or(SendError::MissingArgument)?).encode();
+
+		let fee = estimate_message_dispatch_and_delivery_fee::<T::MessageBridge>(
+			&msg,
+			T::MessageBridge::RELAYER_FEE_PERCENT,
+			None,
+		);
+		let fee = match fee {
+			Ok(fee) => fee,
+			Err(e) => {
+				log::trace!(
+					target: "runtime::bridge",
+					"Failed to comupte fee for XCM message to {:?}: {:?}",
+					T::MessageBridge::BRIDGED_CHAIN_ID,
+					e,
+				);
+				*dest = Some(d);
+				return Err(SendError::Transport(e))
+			},
+		};
+
+		// let's just take fixed (out of thin air) fee per message in our test bridges
+		// (this code won't be used in production anyway)
+		let fee_assets = MultiAssets::from((Here, 1_000_000_u128));
+
+		Ok(((fee, msg), fee_assets))
+	}
+
+	fn deliver(ticket: Self::Ticket) -> Result<XcmHash, SendError> {
+		use bp_messages::source_chain::MessagesBridge;
+
+		let lane = T::xcm_lane();
+		let (fee, msg) = ticket;
+		let result = T::MessageSender::send_message(
+			pallet_xcm::Origin::from(MultiLocation::from(T::universal_location())).into(),
+			lane,
+			msg,
+			fee,
+		);
+		result
+			.map(|artifacts| {
+				let hash = (lane, artifacts.nonce).using_encoded(sp_io::hashing::blake2_256);
+				log::debug!(
+					target: "runtime::bridge",
+					"Sent XCM message {:?}/{} to {:?}: {:?}",
+					lane,
+					artifacts.nonce,
+					T::MessageBridge::BRIDGED_CHAIN_ID,
+					hash,
+				);
+				hash
+			})
+			.map_err(|e| {
+				log::debug!(
+					target: "runtime::bridge",
+					"Failed to send XCM message over lane {:?} to {:?}: {:?}",
+					lane,
+					T::MessageBridge::BRIDGED_CHAIN_ID,
+					e,
+				);
+				SendError::Transport("Bridge has rejected the message")
+			})
 	}
 }
 

@@ -22,7 +22,7 @@ use sp_application_crypto::app_crypto;
 #[cfg(feature = "std")]
 use sp_keystore::{Error as KeystoreError, SyncCryptoStorePtr};
 use sp_std::prelude::Vec;
-
+use sp_application_crypto::AppKey;
 use primitives::RuntimeDebug;
 use runtime_primitives::traits::AppVerify;
 

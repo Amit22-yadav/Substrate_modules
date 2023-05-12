@@ -25,6 +25,7 @@ use sp_std::{
 	slice::{Iter, IterMut},
 	vec::IntoIter,
 };
+use sp_application_crypto::AppKey;
 
 use sp_application_crypto::KeyTypeId;
 use inherents::InherentIdentifier;
@@ -86,7 +87,7 @@ pub type CollatorSignature = collator_app::Signature;
 pub const PARACHAIN_KEY_TYPE_ID: KeyTypeId = KeyTypeId(*b"para");
 
 mod validator_app {
-	use sp_application_crypto::{app_crypto, sr25519};
+	use sp_application_crypto::{app_crypto,sr25519};
 	app_crypto!(sr25519, super::PARACHAIN_KEY_TYPE_ID);
 }
 

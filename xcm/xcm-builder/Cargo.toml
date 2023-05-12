@@ -15,7 +15,7 @@ sp-arithmetic = { path="../../primitives/arithmetic", default-features = false }
 sp-io = { path="../../primitives/io",default-features = false }
 sp-runtime = { path="../../primitives/runtime", default-features = false }
 
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.39", default-features = false }
+frame-support = { path="../../frame/support", default-features = false }
 frame-system = { path="../../frame/system", default-features = false }
 pallet-transaction-payment = { path="../../frame/transaction-payment", default-features = false }
 log = { version = "0.4.17", default-features = false }
