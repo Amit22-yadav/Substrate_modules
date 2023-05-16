@@ -16,12 +16,7 @@
 
 //! Adapters to work with `frame_support::traits::tokens::fungibles` through XCM.
 
-use frame_support::traits::{
-	tokens::{
-		fungibles, Fortitude::Polite, Precision::Exact, Preservation::Preserve, Provenance::Minted,
-	},
-	Contains, Get,
-};
+use frame_support::traits::{tokens::fungibles, Contains, Get};
 use sp_std::{marker::PhantomData, prelude::*, result};
 use xcm::latest::prelude::*;
 use xcm_executor::traits::{Convert, Error as MatchError, MatchesFungibles, TransactAsset};
@@ -31,7 +26,7 @@ pub struct FungiblesTransferAdapter<Assets, Matcher, AccountIdConverter, Account
 	PhantomData<(Assets, Matcher, AccountIdConverter, AccountId)>,
 );
 impl<
-		Assets: fungibles::Mutate<AccountId>,
+		Assets: fungibles::Transfer<AccountId>,
 		Matcher: MatchesFungibles<Assets::AssetId, Assets::Balance>,
 		AccountIdConverter: Convert<MultiLocation, AccountId>,
 		AccountId: Clone, // can't get away without it since is generic over it.
@@ -54,7 +49,7 @@ impl<
 			.map_err(|()| MatchError::AccountIdConversionFailed)?;
 		let dest = AccountIdConverter::convert_ref(to)
 			.map_err(|()| MatchError::AccountIdConversionFailed)?;
-		Assets::transfer(asset_id, &source, &dest, amount, Preserve)
+		Assets::transfer(asset_id, &source, &dest, amount, true)
 			.map_err(|e| XcmError::FailedToTransactAsset(e.into()))?;
 		Ok(what.clone().into())
 	}
@@ -158,14 +153,14 @@ impl<
 {
 	fn can_accrue_checked(asset_id: Assets::AssetId, amount: Assets::Balance) -> XcmResult {
 		let checking_account = CheckingAccount::get();
-		Assets::can_deposit(asset_id, &checking_account, amount, Minted)
+		Assets::can_deposit(asset_id, &checking_account, amount, true)
 			.into_result()
 			.map_err(|_| XcmError::NotDepositable)
 	}
 	fn can_reduce_checked(asset_id: Assets::AssetId, amount: Assets::Balance) -> XcmResult {
 		let checking_account = CheckingAccount::get();
 		Assets::can_withdraw(asset_id, &checking_account, amount)
-			.into_result(false)
+		.into_result()
 			.map_err(|_| XcmError::NotWithdrawable)
 			.map(|_| ())
 	}
@@ -176,7 +171,7 @@ impl<
 	}
 	fn reduce_checked(asset_id: Assets::AssetId, amount: Assets::Balance) {
 		let checking_account = CheckingAccount::get();
-		let ok = Assets::burn_from(asset_id, &checking_account, amount, Exact, Polite).is_ok();
+		let ok = Assets::burn_from(asset_id, &checking_account, amount).is_ok();
 		debug_assert!(ok, "`can_reduce_checked` must have returned `true` immediately prior; qed");
 	}
 }
@@ -303,7 +298,7 @@ impl<
 		let (asset_id, amount) = Matcher::matches_fungibles(what)?;
 		let who = AccountIdConverter::convert_ref(who)
 			.map_err(|()| MatchError::AccountIdConversionFailed)?;
-		Assets::burn_from(asset_id, &who, amount, Exact, Polite)
+		Assets::burn_from(asset_id, &who, amount)
 			.map_err(|e| XcmError::FailedToTransactAsset(e.into()))?;
 		Ok(what.clone().into())
 	}
@@ -318,7 +313,7 @@ pub struct FungiblesAdapter<
 	CheckingAccount,
 >(PhantomData<(Assets, Matcher, AccountIdConverter, AccountId, CheckAsset, CheckingAccount)>);
 impl<
-		Assets: fungibles::Mutate<AccountId>,
+Assets: fungibles::Mutate<AccountId> + fungibles::Transfer<AccountId>,
 		Matcher: MatchesFungibles<Assets::AssetId, Assets::Balance>,
 		AccountIdConverter: Convert<MultiLocation, AccountId>,
 		AccountId: Clone, // can't get away without it since is generic over it.

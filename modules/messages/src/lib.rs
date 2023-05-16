@@ -147,6 +147,9 @@ pub mod pallet {
 		/// these messages are from different lanes.
 		type MaxUnconfirmedMessagesAtInboundLane: Get<MessageNonce>;
 
+		#[pallet::constant]
+		type MaximalOutboundPayloadSize: Get<u32>;
+
 		/// Payload type of outbound messages. This payload is dispatched on the bridged chain.
 		type OutboundPayload: Parameter + Size;
 		/// Message fee type of outbound messages. This fee is paid on this chain.

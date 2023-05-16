@@ -27,7 +27,7 @@ xcm-executor = { path = "../xcm-executor", default-features = false }
 pallet-balances = { path="../../frame/balances" }
 polkadot-runtime-parachains = { path="../../bin/parachains"  }
 polkadot-parachain = { path="../../parachain", default-features = false }
-xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
+xcm-builder = { path="../xcm-builder", default-features = false }
 
 [features]
 default = ["std"]

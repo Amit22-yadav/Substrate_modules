@@ -22,7 +22,7 @@ xcm = { path = "../../" }
 xcm-simulator = { path = "../" }
 xcm-executor = { path = "../../xcm-executor" }
 
-xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
+xcm-builder = { path="../xcm-builder", default-features = false }
 pallet-xcm = { path = "../../pallet-xcm" }
 polkadot-core-primitives = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
 polkadot-runtime-parachains = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }

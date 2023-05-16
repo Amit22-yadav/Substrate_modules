@@ -50,6 +50,8 @@ use frame_support::{
 	},
 	PalletId, RuntimeDebug,
 };
+use bp_runtime::HeaderIdProvider;
+use bp_runtime::HeaderId;
 use bridge_runtime_common::messages::MessageBridge;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -106,6 +108,7 @@ pub mod impls;
 #[cfg(not(feature = "runtime-benchmarks"))]
 use impls::AllianceIdentityVerifier;
 use impls::{AllianceProposalProvider, Author, CreditToBlockAuthor};
+
 
 /// Constant values used within the runtime.
 pub mod constants;
@@ -1557,7 +1560,7 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
 	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
 	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
-
+	type MaximalOutboundPayloadSize = crate::substrate_messages::ToSubstrateMaximalOutboundPayloadSize;
 	type OutboundPayload = crate::substrate_messages::ToSubstrateMessagePayload;
 	type OutboundMessageFee = Balance;
 
@@ -1864,6 +1867,7 @@ construct_runtime!(
 		BridgeDispatch: pallet_bridge_dispatch,
 		BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
 		BridgeSubstrateMessages: pallet_bridge_messages,
+		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin, Config} = 99,
 	}
 );
 

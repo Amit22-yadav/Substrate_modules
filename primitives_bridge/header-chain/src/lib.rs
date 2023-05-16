@@ -27,7 +27,7 @@ use serde::{Deserialize, Serialize};
 use sp_finality_grandpa::{AuthorityList, ConsensusLog, SetId, GRANDPA_ENGINE_ID};
 use sp_runtime::{generic::OpaqueDigestItemId, traits::Header as HeaderT, RuntimeDebug};
 use sp_std::boxed::Box;
-
+ use bp_runtime::Chain;
 pub mod justification;
 pub mod storage_keys;
 
@@ -69,6 +69,48 @@ pub struct InitializationData<H: HeaderT> {
 	/// Should the pallet block transaction immediately after initialization.
 	pub is_halted: bool,
 }
+
+pub trait ChainWithGrandpa: Chain {
+	/// Name of the bridge GRANDPA pallet (used in `construct_runtime` macro call) that is deployed
+	/// at some other chain to bridge with this `ChainWithGrandpa`.
+	///
+	/// We assume that all chains that are bridging with this `ChainWithGrandpa` are using
+	/// the same name.
+	const WITH_CHAIN_GRANDPA_PALLET_NAME: &'static str;
+
+	/// Max number of GRANDPA authorities at the chain.
+	///
+	/// This is a strict constant. If bridged chain will have more authorities than that,
+	/// the GRANDPA bridge pallet may halt.
+	const MAX_AUTHORITIES_COUNT: u32;
+
+	/// Max reasonable number of headers in `votes_ancestries` vector of the GRANDPA justification.
+	///
+	/// This isn't a strict limit. The relay may submit justifications with more headers in its
+	/// ancestry and the pallet will accept such justification. The limit is only used to compute
+	/// maximal refund amount and submitting justifications which exceed the limit, may be costly
+	/// to submitter.
+	const REASONABLE_HEADERS_IN_JUSTIFICATON_ANCESTRY: u32;
+
+	/// Maximal size of the chain header. The header may be the header that enacts new GRANDPA
+	/// authorities set (so it has large digest inside).
+	///
+	/// This isn't a strict limit. The relay may submit larger headers and the pallet will accept
+	/// the call. The limit is only used to compute maximal refund amount and doing calls which
+	/// exceed the limit, may be costly to submitter.
+	const MAX_HEADER_SIZE: u32;
+
+	/// Average size of the chain header from justification ancestry. We don't expect to see there
+	/// headers that change GRANDPA authorities set (GRANDPA will probably be able to finalize at
+	/// least one additional header per session on non test chains), so this is average size of
+	/// headers that aren't changing the set.
+	///
+	/// This isn't a strict limit. The relay may submit justifications with larger headers in its
+	/// ancestry and the pallet will accept the call. The limit is only used to compute maximal
+	/// refund amount and doing calls which exceed the limit, may be costly to submitter.
+	const AVERAGE_HEADER_SIZE_IN_JUSTIFICATION: u32;
+}
+
 
 /// base trait for verifying transaction inclusion proofs.
 pub trait InclusionProofVerifier {

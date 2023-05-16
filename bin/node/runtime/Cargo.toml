@@ -126,10 +126,10 @@ pallet-bridge-messages = { path = "../../../modules/messages", default-features 
 bridge-runtime-common = { path = "../../runtime-common", default-features = false }
 
 
-pallet-xcm ={ git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
-xcm = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
-xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
-xcm-executor ={ git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
+ pallet-xcm ={ path = "../../../xcm/pallet-xcm", default-features = false }
+xcm = { path = "../../../xcm",default-features = false }
+ xcm-builder = { path = "../../../xcm/xcm-builder", default-features = false }
+xcm-executor ={ path = "../../../xcm/xcm-executor", default-features = false }
 
 
 
@@ -152,6 +152,7 @@ std = [
 	"pallet-asset-tx-payment/std",
 	"frame-system-benchmarking?/std",
 	"frame-support2/std",
+	 "pallet-xcm/std",
 	"pallet-bridge-messages/std",
 		"bridge-runtime-common/std",
 	"frame-election-provider-support/std",
@@ -240,9 +241,9 @@ std = [
 	"sp-io/std",
 	"pallet-child-bounties/std",
 	"pallet-alliance/std",
-	"xcm/std",
-	"xcm-builder/std",
-	"xcm-executor/std",
+	 "xcm/std",
+	 "xcm-builder/std",
+	 "xcm-executor/std",
 	#"pallet-bridge-token-swap"
 ]
 runtime-benchmarks = [
@@ -267,9 +268,9 @@ runtime-benchmarks = [
 	"pallet-election-provider-support-benchmarking/runtime-benchmarks",
 	"pallet-elections-phragmen/runtime-benchmarks",
 	"pallet-fast-unstake/runtime-benchmarks",
-	"xcm-builder/runtime-benchmarks",
+	 "xcm-builder/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",
-	"pallet-xcm/std",
+	# "pallet-xcm/std",
 	"pallet-nis/runtime-benchmarks",
 	"pallet-grandpa/runtime-benchmarks",
 	"pallet-identity/runtime-benchmarks",

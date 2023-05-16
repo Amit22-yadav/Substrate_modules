@@ -225,3 +225,4 @@ impl<Header: HeaderT> AncestryChain<Header> {
 		Ok(self)
 	}
 }
+

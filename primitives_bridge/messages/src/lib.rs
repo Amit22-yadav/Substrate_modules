@@ -274,6 +274,7 @@ pub struct UnrewardedRelayersState {
 	pub messages_in_oldest_entry: MessageNonce,
 	/// Total number of messages in the relayers vector.
 	pub total_messages: MessageNonce,
+	pub last_delivered_nonce: MessageNonce
 }
 
 /// Outbound lane data.

@@ -22,14 +22,17 @@ use codec::Encode;
 use codec::Decode;
 use sp_runtime::traits::BadOrigin;
 use core::fmt::Debug;
+use num_traits::{CheckedSub, One};
 use codec::MaxEncodedLen;
 use frame_support::StorageValue;
 use frame_support::pallet_prelude::DispatchResult;
 use scale_info::TypeInfo;
 use codec::FullCodec;
+use sp_runtime::transaction_validity::TransactionValidity;
 use frame_support::PalletError;
 use frame_support::{RuntimeDebug, StorageHasher};
 use sp_core::{hash::H256, storage::StorageKey};
+use sp_runtime::traits::{ Header as HeaderT};
 use frame_support::pallet_prelude::Weight;
 use sp_io::hashing::blake2_256;
 use sp_std::{convert::TryFrom, vec, vec::Vec};
@@ -113,6 +116,12 @@ impl OperatingMode for BasicOperatingMode {
 	}
 }
 
+/// A trait for querying whether a runtime call is valid.
+pub trait FilterCall<Call> {
+	/// Checks if a runtime call is valid.
+	fn validate(call: &Call) -> TransactionValidity;
+}
+
 /// Bridge module that has owner and operating mode
 pub trait OwnedBridgeModule<T: frame_system::Config> {
 	/// The target that will be used when publishing logs related to this module.
@@ -193,8 +202,29 @@ impl WeightExtraOps for Weight {
 }
 
 /// Generic header Id.
-#[derive(RuntimeDebug, Default, Clone, Copy, Eq, Hash, PartialEq)]
+#[derive(RuntimeDebug, Default, Clone, Encode, Decode, Copy, Eq, Hash, PartialEq, PartialOrd, Ord,)]
 pub struct HeaderId<Hash, Number>(pub Number, pub Hash);
+
+/// Generic header id provider.
+pub trait HeaderIdProvider<Header: HeaderT> {
+	// Get the header id.
+	fn id(&self) -> HeaderId<Header::Hash, Header::Number>;
+
+	// Get the header id for the parent block.
+	fn parent_id(&self) -> Option<HeaderId<Header::Hash, Header::Number>>;
+}
+
+impl<Header: HeaderT> HeaderIdProvider<Header> for Header {
+	fn id(&self) -> HeaderId<Header::Hash, Header::Number> {
+		HeaderId(*self.number(), self.hash())
+	}
+
+	fn parent_id(&self) -> Option<HeaderId<Header::Hash, Header::Number>> {
+		self.number()
+			.checked_sub(&One::one())
+			.map(|parent_number| HeaderId(parent_number, *self.parent_hash()))
+	}
+}
 
 /// Unique identifier of the chain.
 ///
@@ -268,6 +298,12 @@ impl Size for &[u8] {
 impl Size for () {
 	fn size_hint(&self) -> u32 {
 		0
+	}
+}
+
+impl Size for Vec<u8> {
+	fn size_hint(&self) -> u32 {
+		self.len() as _
 	}
 }
 

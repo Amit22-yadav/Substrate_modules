@@ -27,7 +27,7 @@ pallet-bridge-messages = { path = "../../modules/messages", default-features = f
 frame-support = { version = "4.0.0-dev", default-features = false, path = "../../frame/support" }
 frame-support2 = { version = "4.0.0-dev", default-features = false, path = "../../modules/support" }
 frame-system = { version = "4.0.0-dev", default-features = false, path = "../../frame/system" }
-pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../../frame/balances", optional = true }
+pallet-balances = { version = "4.0.0-dev", default-features = false, path = "../../frame/balances"}
 pallet-transaction-payment = { version = "4.0.0-dev", default-features = false, path = "../../frame/transaction-payment" }
 sp-api = { version = "4.0.0-dev", default-features = false, path = "../../primitives/api"}
 sp-core = { version = "7.0.0", default-features = false, path = "../../primitives/core" }
@@ -40,7 +40,7 @@ sp-version = {version = "5.0.0", default-features = false, path = "../../primiti
 
 pallet-xcm = { path="../../xcm/pallet-xcm", default-features = false}
 xcm = { path="../../xcm", default-features = false}
-xcm-builder = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.38", default-features = false }
+xcm-builder = { path="../../xcm/xcm-builder", default-features = false }
 xcm-executor = { path="../../xcm/xcm-executor", default-features = false}
 
 
@@ -68,6 +68,7 @@ std = [
 	"pallet-xcm/std",
 	"xcm/std",
 	"xcm-builder/std",
+	"pallet-balances/std",
 	"xcm-executor/std",
 	"sp-std/std",
 	"sp-io/std",
@@ -75,7 +76,7 @@ std = [
 ]
 runtime-benchmarks = [
 	"ed25519-dalek/u64_backend",
-	"pallet-balances",
+	# "pallet-balances",
 	"pallet-bridge-grandpa/runtime-benchmarks",
 	"pallet-bridge-messages/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",

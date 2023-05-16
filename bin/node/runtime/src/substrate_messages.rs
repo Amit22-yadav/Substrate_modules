@@ -35,6 +35,8 @@ use scale_info::TypeInfo;
 use sp_runtime::{traits::Saturating, FixedPointNumber, FixedU128};
 use sp_std::{convert::TryFrom, ops::RangeInclusive};
 
+pub const XCM_LANE: LaneId = [0, 0, 0, 0];
+
 /// Initial value of `RialtoToMillauConversionRate` parameter.
 pub const INITIAL_SUBSTRATE_TO_PEER_CONVERSION_RATE: FixedU128 =
 	FixedU128::from_inner(FixedU128::DIV);
@@ -51,6 +53,9 @@ parameter_types! {
 /// Message payload for Millau -> Substrate messages.
 pub type ToSubstrateMessagePayload =
 	messages::source::FromThisChainMessagePayload<WithSubstrateMessageBridge>;
+
+	pub type ToSubstrateMaximalOutboundPayloadSize =
+	messages::source::FromThisChainMaximalOutboundPayloadSize<WithSubstrateMessageBridge>;
 
 /// Message verifier for Millau -> Substrate messages.
 pub type ToSubstrateMessageVerifier =
@@ -77,6 +82,8 @@ pub type FromSubstrateMessageDispatch = messages::target::FromBridgedChainMessag
 	pallet_balances::Pallet<Runtime>,
 	(),
 >;
+
+
 
 /// Peer <-> Substrate message bridge.
 #[derive(RuntimeDebug, Clone, Copy)]
@@ -187,6 +194,10 @@ impl messages::ChainWithMessages for Substrate {
 impl messages::BridgedChainWithMessages for Substrate {
 	fn maximal_extrinsic_size() -> u32 {
 		substrate::Substrate::max_extrinsic_size()
+	}
+
+	fn verify_dispatch_weight(_message_payload: &[u8]) -> bool {
+		true
 	}
 
 	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
