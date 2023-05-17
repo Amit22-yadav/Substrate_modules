@@ -118,10 +118,12 @@ frame-support2 = { path = "../../../modules/support", default-features = false }
 substrate= {path ="../../../primitives_bridge/substrate",default-features = false}
 peer = {path ="../../../primitives_bridge/peer",default-features = false}
 bp-messages = { path = "../../../primitives_bridge/messages", default-features = false }
+bp-message-dispatch = { path = "../../../primitives_bridge/message-dispatch", default-features = false }
 bp-runtime = { path = "../../../primitives_bridge/runtime", default-features = false }
 
 #modules
 pallet-bridge-dispatch = { path = "../../../modules/dispatch", default-features = false }
+pallet-bridge-relayers = { path = "../../../modules/relayers", default-features = false }
 pallet-bridge-messages = { path = "../../../modules/messages", default-features = false }
 bridge-runtime-common = { path = "../../runtime-common", default-features = false }
 
@@ -153,6 +155,8 @@ std = [
 	"frame-system-benchmarking?/std",
 	"frame-support2/std",
 	 "pallet-xcm/std",
+	 "bp-message-dispatch/std",
+	 "pallet-bridge-relayers/std",
 	"pallet-bridge-messages/std",
 		"bridge-runtime-common/std",
 	"frame-election-provider-support/std",

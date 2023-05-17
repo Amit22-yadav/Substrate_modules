@@ -205,6 +205,18 @@ impl WeightExtraOps for Weight {
 #[derive(RuntimeDebug, Default, Clone, Encode, Decode, Copy, Eq, Hash, PartialEq, PartialOrd, Ord,)]
 pub struct HeaderId<Hash, Number>(pub Number, pub Hash);
 
+impl<Hash: Copy, Number: Copy> HeaderId<Hash, Number> {
+	/// Return header number.
+	pub fn number(&self) -> Number {
+		self.0
+	}
+
+	/// Return header hash.
+	pub fn hash(&self) -> Hash {
+		self.1
+	}
+}
+
 /// Generic header id provider.
 pub trait HeaderIdProvider<Header: HeaderT> {
 	// Get the header id.

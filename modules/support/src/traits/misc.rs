@@ -16,7 +16,7 @@
 // limitations under the License.
 
 //! Smaller traits used in FRAME which don't need their own file.
-
+use scale_info::prelude::vec;
 use crate::dispatch::Parameter;
 use codec::{CompactLen, Decode, DecodeLimit, Encode, EncodeLike, Input, MaxEncodedLen};
 use scale_info::{build::Fields, meta_type, Path, Type, TypeInfo, TypeParameter};

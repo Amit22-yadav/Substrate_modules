@@ -292,7 +292,7 @@ sp_api::decl_runtime_apis! {
 	/// PEER runtime itself.
 	pub trait PeerFinalityApi {
 		/// Returns number and hash of the best finalized header known to the bridge module.
-		fn best_finalized() -> (BlockNumber, Hash);
+		fn best_finalized() -> Option<bp_runtime::HeaderId<Hash, BlockNumber>>;
 	}
 
 	/// Outbound message lane API for messages that are sent to PEER chain.

@@ -17,7 +17,7 @@
 
 //! Storage map type. Implements StorageDoubleMap, StorageIterableDoubleMap,
 //! StoragePrefixedDoubleMap traits and their methods directly.
-
+use scale_info::prelude::vec;
 use crate::{
 	metadata::{StorageEntryMetadata, StorageEntryType},
 	storage::{

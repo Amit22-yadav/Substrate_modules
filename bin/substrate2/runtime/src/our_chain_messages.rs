@@ -50,7 +50,10 @@ parameter_types! {
 
 /// Message payload for Substrate -> Peer messages.
 pub type ToPeerMessagePayload =
-	messages::source::FromThisChainMessagePayload<WithPeerMessageBridge>;
+	messages::source::FromThisChainMessagePayload;
+
+	pub type ToPeerMaximalOutboundPayloadSize =
+	messages::source::FromThisChainMaximalOutboundPayloadSize<WithPeerMessageBridge>;
 
 /// Message verifier for Substrate -> Peer messages.
 pub type ToPeerMessageVerifier =
@@ -190,6 +193,11 @@ impl messages::BridgedChainWithMessages for Peer {
 		// assumptions about minimal dispatch weight here
 
 		Weight::zero()..=upper_limit
+	}
+
+
+	fn verify_dispatch_weight(_message_payload: &[u8]) -> bool {
+		true
 	}
 
 	fn estimate_delivery_transaction(

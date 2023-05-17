@@ -190,6 +190,9 @@ where
 		id: TargetHeaderIdOf<MessageLaneAdapter<P>>,
 	) -> Result<(TargetHeaderIdOf<MessageLaneAdapter<P>>, UnrewardedRelayersState), SubstrateError>
 	{
+		let inbound_lane_data = self.inbound_lane_data(id).await?;
+		let last_delivered_nonce =
+		inbound_lane_data.as_ref().map(|data| data.last_delivered_nonce()).unwrap_or(0);
 		let relayers = self
 			.inbound_lane_data(id)
 			.await?
@@ -202,6 +205,7 @@ where
 				.map(|entry| 1 + entry.messages.end - entry.messages.begin)
 				.unwrap_or(0),
 			total_messages: total_unrewarded_messages(&relayers).unwrap_or(MessageNonce::MAX),
+			last_delivered_nonce,
 		};
 		Ok((id, unrewarded_relayers_state))
 	}

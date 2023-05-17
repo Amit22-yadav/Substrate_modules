@@ -17,7 +17,7 @@
 //! Everything required to serve Millau <-> Rialto messages.
 
 use crate::Runtime;
-
+use crate::OriginCaller::XcmPallet;
 use bp_messages::{
 	source_chain::{SenderOrigin, TargetHeaderChain},
 	target_chain::{ProvedMessages, SourceHeaderChain},
@@ -52,7 +52,7 @@ parameter_types! {
 
 /// Message payload for Millau -> Substrate messages.
 pub type ToSubstrateMessagePayload =
-	messages::source::FromThisChainMessagePayload<WithSubstrateMessageBridge>;
+	messages::source::FromThisChainMessagePayload;
 
 	pub type ToSubstrateMaximalOutboundPayloadSize =
 	messages::source::FromThisChainMaximalOutboundPayloadSize<WithSubstrateMessageBridge>;
@@ -127,21 +127,24 @@ impl messages::ThisChainWithMessages for Peer {
 	type Call = crate::RuntimeCall;
 
 	fn is_message_accepted(send_origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool {
-		// lanes 0x00000000 && 0x00000001 are accepting any paid messages, while
-		// `TokenSwapMessageLane` only accepts messages from token swap pallet
-		let token_swap_dedicated_lane = crate::TokenSwapMessagesLane::get();
-		match *lane {
-			[0, 0, 0, 0] | [0, 0, 0, 1] => send_origin.linked_account().is_some(),
-			_ if *lane == token_swap_dedicated_lane => matches!(
-				send_origin.caller,
-				crate::OriginCaller::BridgeSubstrateTokenSwap(
-					pallet_bridge_token_swap::RawOrigin::TokenSwap { .. }
-				)
-			),
-			_ => false,
+		let here_location =
+			xcm::v3::MultiLocation::from(crate::xcm_config::UniversalLocation::get());
+		match send_origin.caller {
+			XcmPallet(pallet_xcm::Origin::Xcm(ref location))
+				if *location == here_location =>
+			{
+				log::trace!(target: "runtime::bridge", "Verifying message sent using XCM pallet to Rialto");
+			},
+			_ => {
+				// keep in mind that in this case all messages are free (in term of fees)
+				// => it's just to keep testing bridge on our test deployments until we'll have a
+				// better option
+				log::trace!(target: "runtime::bridge", "Verifying message sent using messages pallet to Rialto");
+			},
 		}
-	}
 
+		*lane == XCM_LANE || *lane == [0, 0, 0, 1]
+	}
 	fn maximal_pending_messages_at_outbound_lane() -> MessageNonce {
 		MessageNonce::MAX
 	}
@@ -307,12 +310,12 @@ impl SenderOrigin<crate::AccountId> for crate::RuntimeOrigin {
 			crate::OriginCaller::system(frame_system::RawOrigin::Root) |
 			crate::OriginCaller::system(frame_system::RawOrigin::None) =>
 				crate::RootAccountForPayments::get(),
-			crate::OriginCaller::BridgeSubstrateTokenSwap(
-				pallet_bridge_token_swap::RawOrigin::TokenSwap {
-					ref swap_account_at_this_chain,
-					..
-				},
-			) => Some(swap_account_at_this_chain.clone()),
+			// crate::OriginCaller::BridgeSubstrateTokenSwap(
+			// 	pallet_bridge_token_swap::RawOrigin::TokenSwap {
+			// 		ref swap_account_at_this_chain,
+			// 		..
+			// 	},) 
+			// => Some(swap_account_at_this_chain.clone()),
 			_ => None,
 		}
 	}

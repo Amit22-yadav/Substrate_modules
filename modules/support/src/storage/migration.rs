@@ -16,7 +16,7 @@
 // limitations under the License.
 
 //! Some utilities for helping access storage with arbitrary key types.
-
+use scale_info::prelude::vec;
 use crate::{
 	hash::ReversibleStorageHasher,
 	storage::{storage_prefix, unhashed},

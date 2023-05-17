@@ -16,7 +16,7 @@
 // limitations under the License.
 
 //! Traits for encoding data related to pallet's storage items.
-
+use scale_info::prelude::vec;
 use sp_std::prelude::*;
 
 /// An instance of a pallet in the storage.

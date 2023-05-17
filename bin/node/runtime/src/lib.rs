@@ -1580,8 +1580,7 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 			GetDeliveryConfirmationTransactionFee,
 		>;
 	type OnMessageAccepted = ();
-	type OnDeliveryConfirmed =
-		pallet_bridge_token_swap::Pallet<Runtime, WithSubstrateTokenSwapInstance>;
+	type DeliveryConfirmationPayments = ();
 
 	type SourceHeaderChain = crate::substrate_messages::Substrate;
 	type MessageDispatch = crate::substrate_messages::FromSubstrateMessageDispatch;
@@ -1594,23 +1593,23 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 
 
 //pub type WithRialtoMessagesInstance = ();
-pub type WithSubstrateTokenSwapInstance = ();
-impl pallet_bridge_token_swap::Config<WithSubstrateTokenSwapInstance> for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type WeightInfo = ();
+// pub type WithSubstrateTokenSwapInstance = ();
+// impl pallet_bridge_token_swap::Config<WithSubstrateTokenSwapInstance> for Runtime {
+// 	type RuntimeEvent = RuntimeEvent;
+// 	type WeightInfo = ();
 
-	type BridgedChainId = SubstrateChainId;
-	type OutboundMessageLaneId = TokenSwapMessagesLane;
-	#[cfg(not(feature = "runtime-benchmarks"))]
-	type MessagesBridge = pallet_bridge_messages::Pallet<Runtime, WithSubstrateMessagesInstance>;
-	#[cfg(feature = "runtime-benchmarks")]
-	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
-	type ThisCurrency = pallet_balances::Pallet<Runtime>;
-	type FromSwapToThisAccountIdConverter = substrate::AccountIdConverter;
+// 	type BridgedChainId = SubstrateChainId;
+// 	type OutboundMessageLaneId = TokenSwapMessagesLane;
+// 	#[cfg(not(feature = "runtime-benchmarks"))]
+// 	type MessagesBridge = pallet_bridge_messages::Pallet<Runtime, WithSubstrateMessagesInstance>;
+// 	#[cfg(feature = "runtime-benchmarks")]
+// 	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
+// 	type ThisCurrency = pallet_balances::Pallet<Runtime>;
+// 	type FromSwapToThisAccountIdConverter = substrate::AccountIdConverter;
 
-	type BridgedChain = substrate::Substrate;
-	type FromBridgedToThisAccountIdConverter = peer::AccountIdConverter;
-}
+// 	type BridgedChain = substrate::Substrate;
+// 	type FromBridgedToThisAccountIdConverter = peer::AccountIdConverter;
+// }
 
 parameter_types! {
 	pub const TokenSwapMessagesLane: bp_messages::LaneId = *b"swap";
@@ -1865,7 +1864,7 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		BridgeSubstrateGrandpa : pallet_bridge_grandpa,
 		BridgeDispatch: pallet_bridge_dispatch,
-		BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
+		// BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
 		BridgeSubstrateMessages: pallet_bridge_messages,
 		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin, Config} = 99,
 	}
@@ -2169,12 +2168,11 @@ impl_runtime_apis! {
 
 
 	impl substrate::SubstrateFinalityApi<Block> for Runtime {
-		fn best_finalized() -> (substrate::BlockNumber, substrate::Hash) {
-			let header = BridgeSubstrateGrandpa::best_finalized();
-			(header.number, header.hash())
+		fn best_finalized() -> Option<HeaderId<substrate::Hash, substrate::BlockNumber>> {
+			BridgeSubstrateGrandpa::best_finalized().map(|header| header.id())
 		}
 	}
-
+	
 		impl substrate::ToSubstrateOutboundLaneApi<Block, Balance, ToSubstrateMessagePayload> for Runtime {
 		fn estimate_message_delivery_and_dispatch_fee(
 			_lane_id: bp_messages::LaneId,
@@ -2401,7 +2399,7 @@ impl_runtime_apis! {
 
 			let mut list = Vec::<BenchmarkList>::new();
 		
-			list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeSubstrateTokenSwap);
+			// list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeSubstrateTokenSwap);
 			list_benchmark!(list, extra, pallet_bridge_messages, MessagesBench::<Runtime, WithSubstrateMessagesInstance>);
 			list_benchmark!(list, extra, pallet_bridge_grandpa, BridgeSubstrateGrandpa);
 
@@ -2515,20 +2513,20 @@ impl_runtime_apis! {
 				}
 			}
 
-			use pallet_bridge_token_swap::benchmarking::Config as TokenSwapConfig;
+			// use pallet_bridge_token_swap::benchmarking::Config as TokenSwapConfig;
 
-			impl TokenSwapConfig<WithRialtoTokenSwapInstance> for Runtime {
-				fn initialize_environment() {
-					let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
-						peer::AccountId,
-						peer::AccountIdConverter,
-					>();
-					pallet_balances::Pallet::<Runtime>::make_free_balance_be(
-						&relayers_fund_account,
-						Balance::MAX / 100,
-					);
-				}
-			}
+			// impl TokenSwapConfig<WithRialtoTokenSwapInstance> for Runtime {
+			// 	fn initialize_environment() {
+			// 		let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
+			// 			peer::AccountId,
+			// 			peer::AccountIdConverter,
+			// 		>();
+			// 		pallet_balances::Pallet::<Runtime>::make_free_balance_be(
+			// 			&relayers_fund_account,
+			// 			Balance::MAX / 100,
+			// 		);
+			// 	}
+			// }
 
 			add_benchmark!(
 				params,
@@ -2537,7 +2535,7 @@ impl_runtime_apis! {
 				MessagesBench::<Runtime, WithRialtoMessagesInstance>
 			);
 			add_benchmark!(params, batches, pallet_bridge_grandpa, BridgeRialtoGrandpa);
-			add_benchmark!(params, batches, pallet_bridge_token_swap, BridgeRialtoTokenSwap);
+			// add_benchmark!(params, batches, pallet_bridge_token_swap, BridgeRialtoTokenSwap);
 
 			Ok(batches)
 		}

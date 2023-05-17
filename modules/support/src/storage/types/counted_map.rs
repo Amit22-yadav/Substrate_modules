@@ -16,7 +16,7 @@
 // limitations under the License.
 
 //! Storage counted map type.
-
+use scale_info::prelude::vec;
 use crate::{
 	metadata::StorageEntryMetadata,
 	storage::{

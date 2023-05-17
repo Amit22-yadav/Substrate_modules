@@ -194,6 +194,37 @@ impl<SenderOrigin, AccountId, Balance, Payload>
 		Ok(SendMessageArtifacts { nonce: 0,weight: Weight::zero() })
 	}
 }
+pub trait DeliveryConfirmationPayments<AccountId> {
+	/// Error type.
+	type Error: Debug + Into<&'static str>;
+
+	/// Pay rewards for delivering messages to the given relayers.
+	///
+	/// The implementation may also choose to pay reward to the `confirmation_relayer`, which is
+	/// a relayer that has submitted delivery confirmation transaction.
+	///
+	/// Returns number of actually rewarded relayers.
+	fn pay_reward(
+		lane_id: LaneId,
+		messages_relayers: VecDeque<UnrewardedRelayer<AccountId>>,
+		confirmation_relayer: &AccountId,
+		received_range: &RangeInclusive<MessageNonce>,
+	) -> MessageNonce;
+}
+
+impl<AccountId> DeliveryConfirmationPayments<AccountId> for () {
+	type Error = &'static str;
+
+	fn pay_reward(
+		_lane_id: LaneId,
+		_messages_relayers: VecDeque<UnrewardedRelayer<AccountId>>,
+		_confirmation_relayer: &AccountId,
+		_received_range: &RangeInclusive<MessageNonce>,
+	) -> MessageNonce {
+		// this implementation is not rewarding relayers at all
+		0
+	}
+}
 
 /// Handler for messages delivery confirmation.
 pub trait OnDeliveryConfirmed {

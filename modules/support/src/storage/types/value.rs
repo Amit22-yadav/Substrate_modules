@@ -16,7 +16,7 @@
 // limitations under the License.
 
 //! Storage value type. Implements StorageValue trait and its method directly.
-
+use scale_info::prelude::vec;
 use crate::{
 	metadata::{StorageEntryMetadata, StorageEntryType},
 	storage::{

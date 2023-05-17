@@ -27,6 +27,7 @@ use bridge_runtime_common::messages::MessageBridge;
 use frame_election_provider_support::{
 	onchain, BalancingConfig, ElectionDataProvider, SequentialPhragmen, VoteWeight,
 };
+use bp_runtime::HeaderId;
 use crate::our_chain_messages::ToPeerMessagePayload;
 use crate::our_chain_messages::WithPeerMessageBridge;
 use bridge_runtime_common::messages::source::estimate_message_dispatch_and_delivery_fee;
@@ -49,6 +50,7 @@ use frame_support::{
 	},
 	PalletId, RuntimeDebug,
 };
+use bp_runtime::HeaderIdProvider;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot, EnsureRootWithSuccess, EnsureSigned, EnsureWithSuccess,
@@ -1554,7 +1556,8 @@ impl pallet_bridge_messages::Config<WithPeerMessagesInstance> for Runtime {
 	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
 	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
 	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
-
+	type MaximalOutboundPayloadSize = crate::our_chain_messages::ToPeerMaximalOutboundPayloadSize;
+type DeliveryConfirmationPayments = ();
 	type OutboundPayload = crate::our_chain_messages::ToPeerMessagePayload;
 	type OutboundMessageFee = Balance;
 
@@ -1574,7 +1577,7 @@ impl pallet_bridge_messages::Config<WithPeerMessagesInstance> for Runtime {
 			GetDeliveryConfirmationTransactionFee,
 		>;
 	type OnMessageAccepted = ();
-	type OnDeliveryConfirmed = ();
+	// type OnDeliveryConfirmed = ();
 
 	type SourceHeaderChain = crate::our_chain_messages::Peer;
 	type MessageDispatch = crate::our_chain_messages::FromPeerMessageDispatch;
@@ -2018,9 +2021,8 @@ impl_runtime_apis! {
 	
 
 	impl peer::PeerFinalityApi<Block> for Runtime {
-		fn best_finalized() -> (peer::BlockNumber, peer::Hash) {
-			let header = BridgePeerGrandpa::best_finalized();
-			(header.number, header.hash())
+		fn best_finalized() -> Option<HeaderId<peer::Hash, peer::BlockNumber>> {
+			BridgePeerGrandpa::best_finalized().map(|header| header.id())
 		}
 	}
 

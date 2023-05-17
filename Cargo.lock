@@ -1058,6 +1058,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "bp-relayers"
+version = "0.1.0"
+dependencies = [
+ "bp-messages",
+ "bp-runtime",
+ "frame-support 4.0.0-dev",
+ "hex",
+ "hex-literal 0.4.1",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime 7.0.0",
+ "sp-std 5.0.0",
+]
+
+[[package]]
 name = "bp-runtime"
 version = "0.1.0"
 dependencies = [
@@ -5103,6 +5118,7 @@ dependencies = [
 name = "kitchensink-runtime"
 version = "3.0.0-dev"
 dependencies = [
+ "bp-message-dispatch",
  "bp-messages",
  "bp-runtime",
  "bridge-runtime-common",
@@ -5129,6 +5145,7 @@ dependencies = [
  "pallet-bridge-dispatch",
  "pallet-bridge-grandpa",
  "pallet-bridge-messages",
+ "pallet-bridge-relayers",
  "pallet-bridge-token-swap",
  "pallet-child-bounties 4.0.0-dev",
  "pallet-collective 4.0.0-dev",
@@ -8048,6 +8065,28 @@ dependencies = [
  "parity-scale-codec",
  "scale-info",
  "serde",
+ "sp-core 7.0.0",
+ "sp-io 7.0.0",
+ "sp-runtime 7.0.0",
+ "sp-std 5.0.0",
+]
+
+[[package]]
+name = "pallet-bridge-relayers"
+version = "0.1.0"
+dependencies = [
+ "bp-messages",
+ "bp-relayers",
+ "bp-runtime",
+ "frame-benchmarking 4.0.0-dev",
+ "frame-support 4.0.0-dev",
+ "frame-system 4.0.0-dev",
+ "log",
+ "pallet-balances 4.0.0-dev",
+ "pallet-bridge-messages",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-arithmetic 6.0.0",
  "sp-core 7.0.0",
  "sp-io 7.0.0",
  "sp-runtime 7.0.0",

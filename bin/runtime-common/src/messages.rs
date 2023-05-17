@@ -230,14 +230,20 @@ pub mod source {
     pub type BridgedChainOpaqueCall = Vec<u8>;
 
     // Message payload for This -> Bridged chain messages.
-    pub type FromThisChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
-        AccountIdOf<ThisChain<B>>,
-        SignerOf<BridgedChain<B>>,  
-        SignatureOf<BridgedChain<B>>,
-        BridgedChainOpaqueCall,
-    >;
+    // pub type FromThisChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
+    //     AccountIdOf<ThisChain<B>>,
+    //     SignerOf<BridgedChain<B>>,  
+    //     SignatureOf<BridgedChain<B>>,
+    //     BridgedChainOpaqueCall,
+    // >;
 
-    // pub type FromThisChainMessagePayload = Vec<u8>;
+    // pub type FromThisChainMessagePayload<B> = Vec<MessagePayload < AccountIdOf<ThisChain<B>>,
+    //    SignerOf<BridgedChain<B>>,  
+    //     SignatureOf<BridgedChain<B>>,
+    //    BridgedChainOpaqueCall,
+    //  >>;
+
+     pub type FromThisChainMessagePayload = Vec<u8>;
 
     pub struct FromThisChainMaximalOutboundPayloadSize<B>(PhantomData<B>);
 
@@ -310,7 +316,7 @@ pub mod source {
         LaneMessageVerifier<
             OriginOf<ThisChain<B>>,
             AccountIdOf<ThisChain<B>>,
-            FromThisChainMessagePayload<B>,
+            FromThisChainMessagePayload,
             BalanceOf<ThisChain<B>>,
         > for FromThisChainMessageVerifier<B>
     where
@@ -327,7 +333,7 @@ pub mod source {
             delivery_and_dispatch_fee: &BalanceOf<ThisChain<B>>,
             lane: &LaneId,
             lane_outbound_data: &OutboundLaneData,
-            payload: &FromThisChainMessagePayload<B>,
+            payload: &FromThisChainMessagePayload,
         ) -> Result<(), Self::Error> {
             // reject message if lane is blocked
             if !ThisChain::<B>::is_message_accepted(submitter, lane) {
@@ -387,9 +393,9 @@ pub mod source {
     /// may be 'mined' by the target chain. But the lane may have its own checks (e.g. fee
     /// check) that would reject message (see `FromThisChainMessageVerifier`).
     pub fn verify_chain_message<B: MessageBridge>(
-        payload: &FromThisChainMessagePayload<B>,
+        payload: &FromThisChainMessagePayload,
     ) -> Result<(),  &'static str> {
-        if payload.call.len() > maximal_message_size::<B>() as usize {
+        if payload.len() > maximal_message_size::<B>() as usize {
             return Err("Incorrect message weight declared".into())
         }
 
@@ -402,7 +408,7 @@ pub mod source {
     /// The fee is paid in This chain Balance, but we use Bridged chain balance to avoid additional
     // conversions. Returns `None` if overflow has happened.
     pub fn estimate_message_dispatch_and_delivery_fee<B: MessageBridge>(
-        payload: &FromThisChainMessagePayload<B>,
+        payload: &FromThisChainMessagePayload,
         relayer_fee_percent: u32,
         bridged_to_this_conversion_rate: Option<FixedU128>,
     ) -> Result<BalanceOf<ThisChain<B>>, &'static str> {
@@ -480,11 +486,11 @@ pub mod source {
     /// Runtime message bridge configuration.
         type MessageBridge: MessageBridge;
         /// Runtime message sender adapter.
-    type MessageSender<T: MessageBridge>: bp_messages::source_chain::MessagesBridge<
+    type MessageSender: bp_messages::source_chain::MessagesBridge<
         OriginOf<ThisChain<Self::MessageBridge>>,
         AccountIdOf<ThisChain<Self::MessageBridge>>,
             BalanceOf<ThisChain<Self::MessageBridge>>,
-        FromThisChainMessagePayload<T>,
+        FromThisChainMessagePayload,
     >;
 
     /// Our location within the Consensus Universe.
@@ -502,12 +508,12 @@ pub mod source {
 /// XCM bridge adapter for `bridge-messages` pallet.
 pub struct XcmBridgeAdapter<T>(PhantomData<T>);
 
-impl<T: XcmBridge + MessageBridge + XcmBridge<MessageBridge = T> > SendXcm for XcmBridgeAdapter<T>
+impl<T: XcmBridge  > SendXcm for XcmBridgeAdapter<T>
 where
     BalanceOf<ThisChain<T::MessageBridge>>: Into<Fungibility>,
     OriginOf<ThisChain<T::MessageBridge>>: From<pallet_xcm::Origin>,
 {
-    type Ticket = (BalanceOf<ThisChain<T::MessageBridge>>, FromThisChainMessagePayload<T>);
+    type Ticket = (BalanceOf<ThisChain<T::MessageBridge>>, FromThisChainMessagePayload);
 
 
     fn validate(
@@ -522,10 +528,10 @@ where
 
         let route = T::build_destination();
         let msg = (route, msg.take().ok_or(SendError::MissingArgument)?).encode();
-        let payload = MessagePayload::decode(&mut &msg[..]).map_err(|_| SendError::MissingArgument)?;
+        // let payload = MessagePayload::decode(&mut &msg[..]).map_err(|_| SendError::MissingArgument)?;
 
         let fee = estimate_message_dispatch_and_delivery_fee::<T::MessageBridge>(
-            &payload,
+            &msg,
             T::MessageBridge::RELAYER_FEE_PERCENT,
             None,
         );
@@ -548,12 +554,12 @@ where
         //  T::MessageBridge::RELAYER_FEE_PERCENT,
         //  None,
         // );
-    let encoded_msg = msg;
+    // let encoded_msg = msg;
         // let's just take fixed (out of thin air) fee per message in our test bridges
         // (this code won't be used in production anyway)
         let fee_assets = MultiAssets::from((Here, 1_000_000_u128));
 
-        Ok(((fee, payload), fee_assets))
+        Ok(((fee, msg), fee_assets))
     }
 
     fn deliver(ticket: Self::Ticket) -> Result<XcmHash, SendError> {
@@ -581,12 +587,16 @@ where
                 );
                 hash
             })
-            .map_err(|e: <<T as XcmBridge>::MessageSender<T> as MessagesBridge<<<T as crate::messages::MessageBridge>::ThisChain as crate::messages::ThisChainWithMessages>::RuntimeOrigin,
-				 <<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::AccountId,
-				  <<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::Balance,
-				   bp_message_dispatch::MessagePayload<<<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::AccountId, 
-				   <<T as crate::messages::MessageBridge>::BridgedChain as ChainWithMessages>::Signer, 
-				<<T as crate::messages::MessageBridge>::BridgedChain as ChainWithMessages>::Signature, Vec<u8>>>>::Error| {
+            .map_err(|e
+                // : <<T as XcmBridge>::MessageSender<T> as MessagesBridge<<<T as crate::messages::MessageBridge>::ThisChain as crate::messages::ThisChainWithMessages>::RuntimeOrigin,
+				//  <<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::AccountId,
+				//   <<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::Balance,
+				//    bp_message_dispatch::MessagePayload<<<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::AccountId, 
+				//    <<T as crate::messages::MessageBridge>::BridgedChain as ChainWithMessages>::Signer, 
+				// <<T as crate::messages::MessageBridge>::BridgedChain as ChainWithMessages>::Signature, Vec<u8>>>>::Error
+                | 
+                
+                {
                 log::debug!(
                     target: "runtime::bridge",
                     "Failed to send XCM message over lane {:?} to {:?}: {:?}",
