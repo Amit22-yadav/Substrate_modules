@@ -2,12 +2,12 @@
 name = "pallet-xcm"
 edition = "2021"
 # repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"
+version = "0.9.36"
 
 
 [dependencies]
 bounded-collections = { version = "0.1.5", default-features = false }
-codec = { package = "parity-scale-codec", version = "3.4.0", default-features = false, features = ["derive"] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
 scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
 serde = { version = "1.0.137", optional = true, features = ["derive"] }
 log = { version = "0.4.17", default-features = false }

@@ -16,7 +16,7 @@
 
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
-
+use sp_keystore::CryptoStore;
 #[cfg(feature = "std")]
 use sp_application_crypto::app_crypto;
 #[cfg(feature = "std")]
@@ -86,14 +86,14 @@ impl<Payload: EncodeAs<RealPayload>, RealPayload: Encode> Signed<Payload, RealPa
 
 	/// Create a new `Signed` by signing data.
 	#[cfg(feature = "std")]
-	pub fn sign<H: Encode>(
+	pub async fn sign<H: Encode>(
 		keystore: &SyncCryptoStorePtr,
 		payload: Payload,
 		context: &SigningContext<H>,
 		validator_index: ValidatorIndex,
 		key: &ValidatorId,
 	) -> Result<Option<Self>, KeystoreError> {
-		let r = UncheckedSigned::sign(keystore, payload, context, validator_index, key)?;
+		let r = UncheckedSigned::sign(keystore, payload, context, validator_index, key).await?;
 		Ok(r.map(Self))
 	}
 
@@ -244,7 +244,7 @@ impl<Payload: EncodeAs<RealPayload>, RealPayload: Encode> UncheckedSigned<Payloa
 
 	/// Sign this payload with the given context and key, storing the validator index.
 	#[cfg(feature = "std")]
-	fn sign<H: Encode>(
+  async fn sign<H: Encode>(
 		keystore: &SyncCryptoStorePtr,
 		payload: Payload,
 		context: &SigningContext<H>,
@@ -253,13 +253,21 @@ impl<Payload: EncodeAs<RealPayload>, RealPayload: Encode> UncheckedSigned<Payloa
 	) -> Result<Option<Self>, KeystoreError> {
 		let data = Self::payload_data(&payload, context);
 		let signature =
-			keystore.sr25519_sign(ValidatorId::ID, key.as_ref(), &data)?.map(|sig| Self {
-				payload,
-				validator_index,
-				signature: sig.into(),
-				real_payload: std::marker::PhantomData,
-			});
-		Ok(signature)
+		CryptoStore::sign_with(&**keystore, ValidatorId::ID, &key.into(), &data).await?;
+
+
+		let signature = match signature {
+			Some(sig) =>
+				sig.try_into().map_err(|_| KeystoreError::KeyNotSupported(ValidatorId::ID))?,
+			None => return Ok(None),
+		};
+
+		Ok(Some(Self {
+			payload,
+			validator_index,
+			signature,
+			real_payload: std::marker::PhantomData,
+		}))
 	}
 
 	/// Validate the payload given the context and public key

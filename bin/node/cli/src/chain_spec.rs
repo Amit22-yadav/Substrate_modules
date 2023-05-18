@@ -396,6 +396,7 @@ pub fn testnet_genesis(
 			..Default::default()
 		},
 		alliance: Default::default(),
+		xcm_pallet:Default::default(),
 		alliance_motion: Default::default(),
 		nomination_pools: NominationPoolsConfig {
 			min_create_bond: 10 * DOLLARS,

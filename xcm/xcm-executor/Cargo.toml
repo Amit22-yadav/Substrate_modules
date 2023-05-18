@@ -3,12 +3,12 @@ name = "xcm-executor"
 description = "An abstract and configurable XCM message executor."
 edition = "2021"
 # repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"
+version = "0.9.36"
 
 [dependencies]
 impl-trait-for-tuples = "0.2.2"
 environmental = { version = "1.1.4", default-features = false }
-parity-scale-codec = { version = "3.4.0", default-features = false, features = ["derive"] }
+parity-scale-codec = { version = "3.0.0", default-features = false, features = ["derive"] }
 xcm = { path = "..", default-features = false }
 sp-std = { path="../../primitives/std", default-features = false }
 sp-io = { path="../../primitives/io",default-features = false }

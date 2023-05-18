@@ -1,13 +1,13 @@
 [package]
 name = "pallet-xcm-benchmarks"
 edition = "2021"
-version = "0.9.41"
+version = "0.9.36"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.4.0", default-features = false }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false }
 scale-info = { version = "2.5.0", default-features = false, features = ["derive"] }
 frame-support = { path="../../frame/support", default-features = false }
 frame-system = { path="../../frame/system", default-features = false }

@@ -3,23 +3,25 @@ name = "xcm-executor-integration-tests"
 description = "Integration tests for the XCM Executor"
 edition = "2021"
 repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"
+version = "0.9.36"
 
 [dependencies]
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
-frame-system = { git = "https://github.com/paritytech/substrate", branch = "master" }
+frame-support = {  path="../../../frame/support",default-features = false }
+frame-system = { path="../../../frame/system",default-features = false }
 futures = "0.3.21"
 pallet-xcm = { path = "../../pallet-xcm" }
-polkadot-test-client =  { git = "https://github.com/paritytech/polkadot", branch = "master" }
-polkadot-test-runtime = { git = "https://github.com/paritytech/polkadot", branch = "master" }
-polkadot-test-service = { git = "https://github.com/paritytech/polkadot", branch = "master" }
-sp-consensus = { git = "https://github.com/paritytech/substrate", branch = "master" }
-sp-keyring = { git = "https://github.com/paritytech/substrate", branch = "master" }
-sp-runtime = { git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
-sp-state-machine = { git = "https://github.com/paritytech/substrate", branch = "master" }
+polkadot-test-client =   { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-test-runtime =  { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-test-service = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+sp-consensus = { path="../../../primitives/consensus/common"}
+sp-keyring = { path="../../../primitives/keyring" }
+sp-runtime = { path="../../../primitives/runtime", default-features = false }
+sp-state-machine = { path="../../../primitives/state-machine",default-features = false }
 xcm = { path = "../..", default-features = false }
 xcm-executor = { path = ".." }
-sp-tracing = { git = "https://github.com/paritytech/substrate", branch = "master" }
+sp-tracing = {  path="../../../primitives/tracing",default-features = false  }
+
+
 
 [features]
 default = ["std"]

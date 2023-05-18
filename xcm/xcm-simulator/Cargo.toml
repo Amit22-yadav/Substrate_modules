@@ -3,18 +3,18 @@ name = "xcm-simulator"
 description = "Test kit to simulate cross-chain message passing and XCM execution"
 edition = "2021"
 repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"
+version = "0.9.36"
 
 [dependencies]
-codec = { package = "parity-scale-codec", version = "3.4.0" }
+codec = { package = "parity-scale-codec", version = "3.0.0" }
 paste = "1.0.7"
 
-frame-support = { git = "https://github.com/paritytech/substrate", branch = "master" }
-sp-io = { git = "https://github.com/paritytech/substrate", branch = "master" }
-sp-std = { git = "https://github.com/paritytech/substrate", branch = "master" }
+frame-support = {  path="../../frame/support", default-features = false } 
+sp-io = { path="../../primitives/io", default-features = false}
+sp-std = { path="../../primitives/std", default-features = false}
 
 xcm = { path = "../" }
 xcm-executor = { path = "../xcm-executor" }
-polkadot-core-primitives ={ git = "https://github.com/paritytech/polkadot", branch = "master" }
-polkadot-parachain ={ git = "https://github.com/paritytech/polkadot", branch = "master" }
-polkadot-runtime-parachains = { git = "https://github.com/paritytech/polkadot", branch = "master" }
+polkadot-core-primitives ={ git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-parachain ={ git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }
+polkadot-runtime-parachains = { git = "https://github.com/paritytech/polkadot", branch = "release-v0.9.36" }

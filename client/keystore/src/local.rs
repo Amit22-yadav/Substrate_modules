@@ -67,20 +67,6 @@ impl LocalKeystore {
 	) -> Result<Option<Pair>> {
 		self.0.read().key_pair::<Pair>(public)
 	}
-
-	// fn sign<T: CorePair>(
-	// 	&self,
-	// 	key_type: KeyTypeId,
-	// 	public: &T::Public,
-	// 	msg: &[u8],
-	// ) -> std::result::Result<Option<T::Signature>, TraitError> {
-	// 	let signature = self
-	// 		.0
-	// 		.read()
-	// 		.key_pair_by_type::<T>(public, key_type)?
-	// 		.map(|pair| pair.sign(msg));
-	// 	Ok(signature)
-	// }
 }
 
 #[async_trait]
@@ -186,21 +172,6 @@ impl SyncCryptoStore for LocalKeystore {
 			v.push(CryptoTypePublicPair(ecdsa::CRYPTO_ID, k));
 			v
 		}))
-	}
-
-
-	fn sr25519_sign(
-		&self,
-		key_type: KeyTypeId,
-		public: &sr25519::Public,
-		msg: &[u8],
-	) -> std::result::Result<Option<sr25519::Signature>, TraitError> {
-		let res = self
-			.0
-			.read()
-			.key_pair_by_type::<sr25519::Pair>(public, key_type)?
-			.map(|pair| pair.sign(msg));
-		Ok(res)
 	}
 
 	fn supported_keys(

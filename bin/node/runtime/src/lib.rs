@@ -1592,24 +1592,25 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 
 
 
-//pub type WithRialtoMessagesInstance = ();
-// pub type WithSubstrateTokenSwapInstance = ();
-// impl pallet_bridge_token_swap::Config<WithSubstrateTokenSwapInstance> for Runtime {
-// 	type RuntimeEvent = RuntimeEvent;
-// 	type WeightInfo = ();
+pub type WithRialtoMessagesInstance = ();
+pub type WithSubstrateTokenSwapInstance = ();
+impl pallet_bridge_token_swap::Config<WithSubstrateTokenSwapInstance> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = ();
 
-// 	type BridgedChainId = SubstrateChainId;
-// 	type OutboundMessageLaneId = TokenSwapMessagesLane;
-// 	#[cfg(not(feature = "runtime-benchmarks"))]
-// 	type MessagesBridge = pallet_bridge_messages::Pallet<Runtime, WithSubstrateMessagesInstance>;
-// 	#[cfg(feature = "runtime-benchmarks")]
-// 	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
-// 	type ThisCurrency = pallet_balances::Pallet<Runtime>;
-// 	type FromSwapToThisAccountIdConverter = substrate::AccountIdConverter;
+	type BridgedChainId = SubstrateChainId;
+	type OutboundMessageLaneId = TokenSwapMessagesLane;
+	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
+	// #[cfg(not(feature = "runtime-benchmarks"))]
+	// type MessagesBridge = ();
+	#[cfg(feature = "runtime-benchmarks")]
+	type MessagesBridge = bp_messages::source_chain::NoopMessagesBridge;
+	type ThisCurrency = pallet_balances::Pallet<Runtime>;
+	type FromSwapToThisAccountIdConverter = substrate::AccountIdConverter;
 
-// 	type BridgedChain = substrate::Substrate;
-// 	type FromBridgedToThisAccountIdConverter = peer::AccountIdConverter;
-// }
+	type BridgedChain = substrate::Substrate;
+	type FromBridgedToThisAccountIdConverter = peer::AccountIdConverter;
+}
 
 parameter_types! {
 	pub const TokenSwapMessagesLane: bp_messages::LaneId = *b"swap";
@@ -1864,7 +1865,7 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		BridgeSubstrateGrandpa : pallet_bridge_grandpa,
 		BridgeDispatch: pallet_bridge_dispatch,
-		// BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
+		BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
 		BridgeSubstrateMessages: pallet_bridge_messages,
 		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin, Config} = 99,
 	}

@@ -237,7 +237,7 @@ pub mod source {
     //     BridgedChainOpaqueCall,
     // >;
 
-    // pub type FromThisChainMessagePayload<B> = Vec<MessagePayload < AccountIdOf<ThisChain<B>>,
+    // pub type FromThisChainMessagePayload<B> = Vec<MessagePayload <xAccountIdOf<ThisChain<B>>,
     //    SignerOf<BridgedChain<B>>,  
     //     SignatureOf<BridgedChain<B>>,
     //    BridgedChainOpaqueCall,
