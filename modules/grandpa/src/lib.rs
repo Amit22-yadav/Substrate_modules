@@ -145,17 +145,17 @@ pub mod pallet {
 			let (hash, number) = (finality_target.hash(), finality_target.number());
 			log::trace!(target: "runtime::bridge-grandpa", "Going to try and finalize header {:?}", finality_target);
 
-			let best_finalized = BestFinalized::<T, I>::get();
-			let best_finalized =
-				best_finalized.and_then(|(_, hash)| ImportedHeaders::<T, I>::get(hash));
-			let best_finalized = match best_finalized {
+			let (hash, number) = (finality_target.hash(), finality_target.number());
+			log::trace!(target: "runtime::bridge-grandpa", "Going to try and finalize header {:?}", finality_target);
+
+			let best_finalized = match <ImportedHeaders<T, I>>::get(<BestFinalized<T, I>>::get()) {
 				Some(best_finalized) => best_finalized,
 				None => {
-					// log::error!(
-					// 	target: LOG_TARGET,
-					// 	"Cannot finalize header {:?} because pallet is not yet initialized",
-					// 	finality_target,
-					// );
+					log::error!(
+						target: "runtime::bridge-grandpa",
+						"Cannot finalize header {:?} because pallet is not yet initialized",
+						finality_target,
+					);
 					fail!(<Error<T, I>>::NotInitialized);
 				},
 			};
@@ -278,7 +278,8 @@ pub mod pallet {
 	/// Hash of the best finalized header.
 	#[pallet::storage]
 	pub(super) type BestFinalized<T: Config<I>, I: 'static = ()> =
-		StorageValue<_,(BridgedBlockNumber<T, I>, BridgedBlockHash<T, I>) ,OptionQuery>;
+		StorageValue<_, BridgedBlockHash<T, I>, ValueQuery>;
+
 
 	/// A ring buffer of imported hashes. Ordered by the insertion time.
 	#[pallet::storage]
@@ -463,7 +464,7 @@ pub mod pallet {
 	) {
 		let index = <ImportedHashesPointer<T, I>>::get();
 		let pruning = <ImportedHashes<T, I>>::try_get(index);
-		<BestFinalized<T, I>>::put((*header.number(), hash));
+		<BestFinalized<T, I>>::put(hash);
 		<ImportedHeaders<T, I>>::insert(hash, header);
 		<ImportedHashes<T, I>>::insert(index, hash);
 
@@ -543,11 +544,18 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	/// Returns a dummy header if there is no best header. This can only happen
 	/// if the pallet has not been initialized yet.
 	/// if the pallet has not been initialized yet.
-	pub fn best_finalized() -> Option<BridgedHeader<T, I>> {
-		let (_, hash) = <BestFinalized<T, I>>::get()?;
-		<ImportedHeaders<T, I>>::get(hash)
+	pub fn best_finalized() -> BridgedHeader<T, I> {
+		let hash = <BestFinalized<T, I>>::get();
+		<ImportedHeaders<T, I>>::get(hash).unwrap_or_else(|| {
+			<BridgedHeader<T, I>>::new(
+				Default::default(),
+				Default::default(),
+				Default::default(),
+				Default::default(),
+				Default::default(),
+			)
+		})
 	}
-
 	/// Check if a particular header is known to the bridge pallet.
 	pub fn is_known_header(hash: BridgedBlockHash<T, I>) -> bool {
 		<ImportedHeaders<T, I>>::contains_key(hash)

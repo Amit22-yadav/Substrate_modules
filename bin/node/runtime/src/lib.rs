@@ -2169,8 +2169,9 @@ impl_runtime_apis! {
 
 
 	impl substrate::SubstrateFinalityApi<Block> for Runtime {
-		fn best_finalized() -> Option<HeaderId<substrate::Hash, substrate::BlockNumber>> {
-			BridgeSubstrateGrandpa::best_finalized().map(|header| header.id())
+		fn best_finalized() -> (substrate::BlockNumber, substrate::Hash) {
+			let header = BridgeSubstrateGrandpa::best_finalized();
+			(header.number, header.hash())
 		}
 	}
 	

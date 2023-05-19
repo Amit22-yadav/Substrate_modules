@@ -257,7 +257,7 @@ sp_api::decl_runtime_apis! {
 	/// Millau runtime itself.
 	pub trait SubstrateFinalityApi {
 		/// Returns number and hash of the best finalized header known to the bridge module.
-		fn best_finalized() -> Option<bp_runtime::HeaderId<Hash, BlockNumber>>;
+		fn best_finalized() -> (BlockNumber, Hash);
 	}
 
 	/// Outbound message lane API for messages that are sent to Substrate chain.

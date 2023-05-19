@@ -52,7 +52,7 @@ parameter_types! {
 
 /// Message payload for Millau -> Substrate messages.
 pub type ToSubstrateMessagePayload =
-	messages::source::FromThisChainMessagePayload;
+	messages::source::FromThisChainMessagePayload<WithSubstrateMessageBridge>;
 
 	pub type ToSubstrateMaximalOutboundPayloadSize =
 	messages::source::FromThisChainMaximalOutboundPayloadSize<WithSubstrateMessageBridge>;

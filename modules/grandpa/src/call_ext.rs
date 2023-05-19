@@ -14,77 +14,133 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::{Config, Pallet};
-use bp_runtime::FilterCall;
-use frame_support::{dispatch::CallableCallFor, traits::IsSubType};
-use sp_runtime::{
-	traits::Header,
-	transaction_validity::{InvalidTransaction, TransactionValidity, ValidTransaction},
-};
+/// Declares a runtime-specific `CheckBridgedBlockNumber` signed extension.
+///
+/// ## Example
+///
+/// ```nocompile
+/// pallet_bridge_grandpa::declare_check_bridged_block_number_ext!{
+/// 	Runtime,
+/// 	Call::BridgeRialtoGrandpa => RialtoGrandpaInstance,
+/// 	Call::BridgeWestendGrandpa => WestendGrandpaInstance,
+/// }
+/// ```
+#[macro_export]
+macro_rules! declare_check_bridged_block_number_ext {
+	($runtime:ident, $($call:path => $instance:ty),*) => {
+		/// Transaction-with-obsolete-bridged-header check that will reject transaction if
+		/// it submits obsolete bridged header.
+		#[derive(Clone, codec::Decode, codec::Encode, Eq, PartialEq, frame_support::RuntimeDebug, scale_info::TypeInfo)]
+		pub struct CheckBridgedBlockNumber;
 
-/// Validate Grandpa headers in order to avoid "mining" transactions that provide outdated
-/// bridged chain headers. Without this validation, even honest relayers may lose their funds
-/// if there are multiple relays running and submitting the same information.
-impl<
-		Call: IsSubType<CallableCallFor<Pallet<T, I>, T>>,
-		T: frame_system::Config<RuntimeCall = Call> + Config<I>,
-		I: 'static,
-	> FilterCall<Call> for Pallet<T, I>
-{
-	fn validate(call: &<T as frame_system::Config>::RuntimeCall) -> TransactionValidity {
-		let bundled_block_number = match call.is_sub_type() {
-			Some(crate::Call::<T, I>::submit_finality_proof { ref finality_target, .. }) =>
-				*finality_target.number(),
-			_ => return Ok(ValidTransaction::default()),
-		};
+		impl sp_runtime::traits::SignedExtension for CheckBridgedBlockNumber {
+			const IDENTIFIER: &'static str = "CheckBridgedBlockNumber";
+			type AccountId = <$runtime as frame_system::Config>::AccountId;
+			type Call = <$runtime as frame_system::Config>::Call;
+			type AdditionalSigned = ();
+			type Pre = ();
 
-		let best_finalized = crate::BestFinalized::<T, I>::get();
-		let best_finalized_number = match best_finalized {
-			Some((best_finalized_number, _)) => best_finalized_number,
-			None => return InvalidTransaction::Call.into(),
-		};
+			fn additional_signed(&self) -> sp_std::result::Result<
+				(),
+				sp_runtime::transaction_validity::TransactionValidityError,
+			> {
+				Ok(())
+			}
 
-		if best_finalized_number >= bundled_block_number {
-			// log::trace!(
-			// 	target: crate::LOG_TARGET,
-			// 	"Rejecting obsolete bridged header: bundled {:?}, best {:?}",
-			// 	bundled_block_number,
-			// 	best_finalized_number,
-			// );
+			fn validate(
+				&self,
+				_who: &Self::AccountId,
+				call: &Self::Call,
+				_info: &sp_runtime::traits::DispatchInfoOf<Self::Call>,
+				_len: usize,
+			) -> sp_runtime::transaction_validity::TransactionValidity {
+				match *call {
+					$(
+						$call($crate::Call::<$runtime, $instance>::submit_finality_proof { ref finality_target, ..}) => {
+							use sp_runtime::traits::Header as HeaderT;
 
-			return InvalidTransaction::Stale.into()
+							let bundled_block_number = *finality_target.number();
+
+							let best_finalized_hash = $crate::BestFinalized::<$runtime, $instance>::get();
+							let best_finalized_number = match $crate::ImportedHeaders::<
+								$runtime,
+								$instance,
+							>::get(best_finalized_hash) {
+								Some(best_finalized_header) => *best_finalized_header.number(),
+								None => return sp_runtime::transaction_validity::InvalidTransaction::Call.into(),
+							};
+
+							if best_finalized_number < bundled_block_number {
+								Ok(sp_runtime::transaction_validity::ValidTransaction::default())
+							} else {
+								sp_runtime::transaction_validity::InvalidTransaction::Stale.into()
+							}
+						},
+					)*
+					_ => Ok(sp_runtime::transaction_validity::ValidTransaction::default()),
+				}
+			}
+
+			fn pre_dispatch(
+				self,
+				who: &Self::AccountId,
+				call: &Self::Call,
+				info: &sp_runtime::traits::DispatchInfoOf<Self::Call>,
+				len: usize,
+			) -> Result<Self::Pre, sp_runtime::transaction_validity::TransactionValidityError> {
+				self.validate(who, call, info, len).map(drop)
+			}
+
+			fn post_dispatch(
+				_maybe_pre: Option<Self::Pre>,
+				_info: &sp_runtime::traits::DispatchInfoOf<Self::Call>,
+				_post_info: &sp_runtime::traits::PostDispatchInfoOf<Self::Call>,
+				_len: usize,
+				_result: &sp_runtime::DispatchResult,
+			) -> Result<(), sp_runtime::transaction_validity::TransactionValidityError> {
+				Ok(())
+			}
 		}
-
-		Ok(ValidTransaction::default())
-	}
+	};
 }
 
 #[cfg(test)]
 mod tests {
-	use super::FilterCall;
 	use crate::{
 		mock::{run_test, test_header, Call, TestNumber, TestRuntime},
-		BestFinalized,
+		BestFinalized, ImportedHeaders,
 	};
 	use bp_test_utils::make_default_justification;
+	use frame_support::weights::{DispatchClass, DispatchInfo, Pays};
+	use sp_runtime::traits::SignedExtension;
+
+	declare_check_bridged_block_number_ext! {
+		TestRuntime,
+		Call::Grandpa => ()
+	}
 
 	fn validate_block_submit(num: TestNumber) -> bool {
-		crate::Pallet::<TestRuntime>::validate(&Call::Grandpa(
-			crate::Call::<TestRuntime, ()>::submit_finality_proof {
-				finality_target: Box::new(test_header(num)),
-				justification: make_default_justification(&test_header(num)),
-			},
-		))
-		.is_ok()
+		CheckBridgedBlockNumber
+			.validate(
+				&42,
+				&Call::Grandpa(crate::Call::<TestRuntime, ()>::submit_finality_proof {
+					finality_target: Box::new(test_header(num)),
+					justification: make_default_justification(&test_header(num)),
+				}),
+				&DispatchInfo { weight: 0, class: DispatchClass::Operational, pays_fee: Pays::Yes },
+				0,
+			)
+			.is_ok()
 	}
 
 	fn sync_to_header_10() {
 		let header10_hash = sp_core::H256::default();
-		BestFinalized::<TestRuntime, ()>::put((10, header10_hash));
+		BestFinalized::<TestRuntime, ()>::put(header10_hash);
+		ImportedHeaders::<TestRuntime, ()>::insert(header10_hash, test_header(10));
 	}
 
 	#[test]
-	fn extension_rejects_obsolete_header() {
+	fn check_bridged_block_number_rejects_obsolete_header() {
 		run_test(|| {
 			// when current best finalized is #10 and we're trying to import header#5 => tx is
 			// rejected
@@ -94,7 +150,7 @@ mod tests {
 	}
 
 	#[test]
-	fn extension_rejects_same_header() {
+	fn check_bridged_block_number_rejects_same_header() {
 		run_test(|| {
 			// when current best finalized is #10 and we're trying to import header#10 => tx is
 			// rejected
@@ -104,7 +160,7 @@ mod tests {
 	}
 
 	#[test]
-	fn extension_accepts_new_header() {
+	fn check_bridged_block_number_accepts_new_header() {
 		run_test(|| {
 			// when current best finalized is #10 and we're trying to import header#15 => tx is
 			// accepted

@@ -30,8 +30,8 @@ case "$1" in
 			--lane 00000000 \
 			--origin Target \
 			transfer \
-			--amount 100000000000000 \
-			--recipient 5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y \
+			--amount 1000000000000000 \
+			--recipient 5EjqDsqjxeZCZVbNW2bYGJCnpuxHY78dJcCuRtQdoHKkWe3n \
 		;;
 	*) echo "A message type is require. Supported messages: remark, transfer."; exit 1;;
 esac

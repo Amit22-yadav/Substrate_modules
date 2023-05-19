@@ -2021,10 +2021,12 @@ impl_runtime_apis! {
 	
 
 	impl peer::PeerFinalityApi<Block> for Runtime {
-		fn best_finalized() -> Option<HeaderId<peer::Hash, peer::BlockNumber>> {
-			BridgePeerGrandpa::best_finalized().map(|header| header.id())
+		fn best_finalized() -> (peer::BlockNumber, peer::Hash) {
+			let header = BridgePeerGrandpa::best_finalized();
+			(header.number, header.hash())
 		}
 	}
+
 
 
 	impl fg_primitives::GrandpaApi<Block> for Runtime {

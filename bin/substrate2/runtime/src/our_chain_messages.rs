@@ -50,7 +50,7 @@ parameter_types! {
 
 /// Message payload for Substrate -> Peer messages.
 pub type ToPeerMessagePayload =
-	messages::source::FromThisChainMessagePayload;
+	messages::source::FromThisChainMessagePayload<WithPeerMessageBridge>;
 
 	pub type ToPeerMaximalOutboundPayloadSize =
 	messages::source::FromThisChainMaximalOutboundPayloadSize<WithPeerMessageBridge>;
