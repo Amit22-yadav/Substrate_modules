@@ -2,7 +2,7 @@
 name = "polkadot-core-primitives"
 edition = "2021"
 #  repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"
+version = "0.9.36"
 [dependencies]
 sp-core = { path="../primitives/core",  default-features = false }
 sp-std = { path="../primitives/std", default-features = false }

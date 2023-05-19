@@ -1,6 +1,6 @@
 [package]
 name = "polkadot-runtime-metrics"
-version = "0.9.41"
+version = "0.9.36"
 edition = "2021"
 
 [dependencies]

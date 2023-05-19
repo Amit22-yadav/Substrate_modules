@@ -3,7 +3,7 @@ name = "xcm-simulator-fuzzer"
 description = "Examples of xcm-simulator usage."
 edition = "2021"
 repository = "https://github.com/paritytech/polkadot.git"
-version = "0.9.41"
+version = "0.9.36"
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.4.0" }
 honggfuzz = "0.5.55"

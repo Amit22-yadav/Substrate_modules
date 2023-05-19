@@ -117,6 +117,7 @@ impl RuntimeBlob {
 			Some(import_section) => import_section,
 			None => return Ok(()),
 		};
+		
 
 		let import_entries = import_section.entries_mut();
 		for index in 0..import_entries.len() {

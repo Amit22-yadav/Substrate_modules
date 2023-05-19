@@ -20,6 +20,7 @@ wasmi = "0.13"
 sc-allocator = { version = "4.1.0-dev", path = "../../allocator" }
 sp-maybe-compressed-blob = { version = "4.1.0-dev", path = "../../../primitives/maybe-compressed-blob" }
 sp-wasm-interface = { version = "7.0.0", path = "../../../primitives/wasm-interface" }
+# frame-support = { version = "4.0.0-dev", default-features = false, path = "../../../frame/support" }
 
 [features]
 default = []
