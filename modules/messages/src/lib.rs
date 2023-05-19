@@ -42,12 +42,7 @@ pub use weights_ext::{
 	ensure_able_to_receive_confirmation, ensure_able_to_receive_message,
 	ensure_weights_are_correct, WeightInfoExt, EXPECTED_DEFAULT_MESSAGE_LENGTH,
 };
-use bp_messages::source_chain::RelayersRewards;
-use sp_std::collections::vec_deque::VecDeque;
-use bp_messages::UnrewardedRelayer;
-use sp_std::ops::RangeInclusive;
 
-use bp_messages::source_chain::DeliveryConfirmationPayments;
 use crate::{
 	inbound_lane::{InboundLane, InboundLaneStorage, ReceivalResult},
 	outbound_lane::{OutboundLane, OutboundLaneStorage, ReceivalConfirmationResult},
@@ -152,9 +147,6 @@ pub mod pallet {
 		/// these messages are from different lanes.
 		type MaxUnconfirmedMessagesAtInboundLane: Get<MessageNonce>;
 
-		#[pallet::constant]
-		type MaximalOutboundPayloadSize: Get<u32>;
-
 		/// Payload type of outbound messages. This payload is dispatched on the bridged chain.
 		type OutboundPayload: Parameter + Size;
 		/// Message fee type of outbound messages. This fee is paid on this chain.
@@ -198,9 +190,8 @@ pub mod pallet {
 		>;
 		/// Handler for accepted messages.
 		type OnMessageAccepted: OnMessageAccepted;
-		
 		/// Handler for delivered messages.
-		type DeliveryConfirmationPayments: DeliveryConfirmationPayments<Self::AccountId>;
+		type OnDeliveryConfirmed: OnDeliveryConfirmed;
 
 		// Types that are used by inbound_lane (on target chain).
 
@@ -601,40 +592,40 @@ pub mod pallet {
 
 			if let Some(confirmed_messages) = confirmed_messages {
 			//	handle messages delivery confirmation
-			// let preliminary_callback_overhead =
-			// single_message_callback_overhead.saturating_mul(relayers_state.total_messages);
-			// 	let actual_callback_weight =
-			// 		T::OnDeliveryConfirmed::on_messages_delivered(&lane_id, &confirmed_messages);
-			// 	match preliminary_callback_overhead.checked_sub(&actual_callback_weight) {
-			// 		Some(difference) if difference.is_zero() => (),
-			// 		Some(difference) => {
-			// 			log::trace!(
-			// 				target: "runtime::bridge-messages",
-			// 				"T::OnDeliveryConfirmed callback has spent less weight than expected. Refunding: \
-			// 				{} - {} = {}",
-			// 				preliminary_callback_overhead,
-			// 				actual_callback_weight,
-			// 				difference,
-			// 			);
-			// 			// actual_weight = actual_weight.set_proof_size(
-			// 			// 	actual_weight.proof_size().saturating_sub(difference),
-			// 			// );
-			// 			actual_weight = actual_weight.saturating_sub(difference)
-			// 		},
-			// 		None => {
-			// 			debug_assert!(
-			// 				false,
-			// 				"T::OnDeliveryConfirmed callback consumed too much weight."
-			// 			);
-			// 			log::error!(
-			// 				target: "runtime::bridge-messages",
-			// 				"T::OnDeliveryConfirmed callback has spent more weight that it is allowed to: \
-			// 				{} vs {}",
-			// 				preliminary_callback_overhead,
-			// 				actual_callback_weight,
-			// 			);
-			// 		},
-			// 	}
+			let preliminary_callback_overhead =
+			single_message_callback_overhead.saturating_mul(relayers_state.total_messages);
+				let actual_callback_weight =
+					T::OnDeliveryConfirmed::on_messages_delivered(&lane_id, &confirmed_messages);
+				match preliminary_callback_overhead.checked_sub(&actual_callback_weight) {
+					Some(difference) if difference.is_zero() => (),
+					Some(difference) => {
+						log::trace!(
+							target: "runtime::bridge-messages",
+							"T::OnDeliveryConfirmed callback has spent less weight than expected. Refunding: \
+							{} - {} = {}",
+							preliminary_callback_overhead,
+							actual_callback_weight,
+							difference,
+						);
+						// actual_weight = actual_weight.set_proof_size(
+						// 	actual_weight.proof_size().saturating_sub(difference),
+						// );
+						actual_weight = actual_weight.saturating_sub(difference)
+					},
+					None => {
+						debug_assert!(
+							false,
+							"T::OnDeliveryConfirmed callback consumed too much weight."
+						);
+						log::error!(
+							target: "runtime::bridge-messages",
+							"T::OnDeliveryConfirmed callback has spent more weight that it is allowed to: \
+							{} vs {}",
+							preliminary_callback_overhead,
+							actual_callback_weight,
+						);
+					},
+				}
 
 				// emit 'delivered' event
 				let received_range = confirmed_messages.begin..=confirmed_messages.end;
@@ -935,36 +926,6 @@ fn send_message<T: Config<I>, I: 'static>(
 	Pallet::<T, I>::deposit_event(Event::MessageAccepted(lane_id, nonce));
 
 	Ok(SendMessageArtifacts { nonce, weight: Weight::zero()})
-}
-
-pub fn calc_relayers_rewards<T, I>(
-	lane_id: LaneId,
-	messages_relayers: VecDeque<UnrewardedRelayer<T::AccountId>>,
-	received_range: &RangeInclusive<MessageNonce>,
-) -> RelayersRewards<T::AccountId, T::OutboundMessageFee>
-where
-	T: frame_system::Config + crate::Config<I>,
-	I: 'static,
-{
-	// remember to reward relayers that have delivered messages
-	// this loop is bounded by `T::MaxUnrewardedRelayerEntriesAtInboundLane` on the bridged chain
-	let mut relayers_rewards: RelayersRewards<_, T::OutboundMessageFee> = RelayersRewards::new();
-	for entry in messages_relayers {
-		let nonce_begin = sp_std::cmp::max(entry.messages.begin, *received_range.start());
-		let nonce_end = sp_std::cmp::min(entry.messages.end, *received_range.end());
-
-		// loop won't proceed if current entry is ahead of received range (begin > end).
-		// this loop is bound by `T::MaxUnconfirmedMessagesAtInboundLane` on the bridged chain
-		let mut relayer_reward = relayers_rewards.entry(entry.relayer).or_default();
-		for nonce in nonce_begin..=nonce_end {
-			let key = MessageKey { lane_id, nonce };
-			let message_data = OutboundMessages::<T, I>::get(key)
-				.expect("message was just confirmed; we never prune unconfirmed messages; qed");
-			relayer_reward.reward = relayer_reward.reward.saturating_add(&message_data.fee);
-			relayer_reward.messages += 1;
-		}
-	}
-	relayers_rewards
 }
 
 /// Ensure that the origin is either root, or `PalletOwner`.

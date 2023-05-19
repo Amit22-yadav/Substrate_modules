@@ -1556,11 +1556,11 @@ impl pallet_bridge_messages::Config<WithPeerMessagesInstance> for Runtime {
 	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
 	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
 	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
-	type MaximalOutboundPayloadSize = crate::our_chain_messages::ToPeerMaximalOutboundPayloadSize;
-type DeliveryConfirmationPayments = ();
+	// type MaximalOutboundPayloadSize = crate::our_chain_messages::ToPeerMaximalOutboundPayloadSize;
+// type DeliveryConfirmationPayments = ();
 	type OutboundPayload = crate::our_chain_messages::ToPeerMessagePayload;
 	type OutboundMessageFee = Balance;
-
+	type OnDeliveryConfirmed = ();
 	type InboundPayload = crate::our_chain_messages::FromPeerMessagePayload;
 	type InboundMessageFee = peer::Balance;
 	type InboundRelayer = peer::AccountId;

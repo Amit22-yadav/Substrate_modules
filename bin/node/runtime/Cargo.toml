@@ -123,7 +123,7 @@ bp-runtime = { path = "../../../primitives_bridge/runtime", default-features = f
 
 #modules
 pallet-bridge-dispatch = { path = "../../../modules/dispatch", default-features = false }
-pallet-bridge-relayers = { path = "../../../modules/relayers", default-features = false }
+# pallet-bridge-relayers = { path = "../../../modules/relayers", default-features = false }
 pallet-bridge-messages = { path = "../../../modules/messages", default-features = false }
 bridge-runtime-common = { path = "../../runtime-common", default-features = false }
 
@@ -156,7 +156,7 @@ std = [
 	"frame-support2/std",
 	 "pallet-xcm/std",
 	 "bp-message-dispatch/std",
-	 "pallet-bridge-relayers/std",
+	#  "pallet-bridge-relayers/std",
 	"pallet-bridge-messages/std",
 		"bridge-runtime-common/std",
 	"frame-election-provider-support/std",

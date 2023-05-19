@@ -417,8 +417,8 @@ pub mod source {
         //
         // if we're going to pay dispatch fee at the target chain, then we don't include weight
         // of the message dispatch in the delivery transaction cost
-        // let pay_dispatch_fee_at_target_chain =
-        //  payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
+         let pay_dispatch_fee_at_target_chain =
+          payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
         let delivery_transaction =
             BridgedChain::<B>::estimate_delivery_transaction(&payload.encode(), true, Weight::zero().into());
         let delivery_transaction_fee = BridgedChain::<B>::transaction_payment(delivery_transaction);

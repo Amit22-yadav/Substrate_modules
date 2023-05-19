@@ -23,7 +23,7 @@ members = [
 	"modules/dispatch",
 	"parachain",
 	"modules/messages",
-	"modules/relayers",
+	# "modules/relayers",
 	"modules/support",
 	"primitives_bridge/*",
 	"modules/support2",

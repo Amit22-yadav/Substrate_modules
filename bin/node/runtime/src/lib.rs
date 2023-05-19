@@ -1560,7 +1560,7 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 	type MaxMessagesToPruneAtOnce = MaxMessagesToPruneAtOnce;
 	type MaxUnrewardedRelayerEntriesAtInboundLane = MaxUnrewardedRelayerEntriesAtInboundLane;
 	type MaxUnconfirmedMessagesAtInboundLane = MaxUnconfirmedMessagesAtInboundLane;
-	type MaximalOutboundPayloadSize = crate::substrate_messages::ToSubstrateMaximalOutboundPayloadSize;
+	// type MaximalOutboundPayloadSize = crate::substrate_messages::ToSubstrateMaximalOutboundPayloadSize;
 	type OutboundPayload = crate::substrate_messages::ToSubstrateMessagePayload;
 	type OutboundMessageFee = Balance;
 
@@ -1580,7 +1580,8 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 			GetDeliveryConfirmationTransactionFee,
 		>;
 	type OnMessageAccepted = ();
-	type DeliveryConfirmationPayments = ();
+	type OnDeliveryConfirmed = ();
+	// type DeliveryConfirmationPayments = ();
 
 	type SourceHeaderChain = crate::substrate_messages::Substrate;
 	type MessageDispatch = crate::substrate_messages::FromSubstrateMessageDispatch;
