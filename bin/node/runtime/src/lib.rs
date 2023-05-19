@@ -2402,7 +2402,7 @@ impl_runtime_apis! {
 
 			let mut list = Vec::<BenchmarkList>::new();
 		
-			// list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeSubstrateTokenSwap);
+			 list_benchmark!(list, extra, pallet_bridge_token_swap, BridgeSubstrateTokenSwap);
 			list_benchmark!(list, extra, pallet_bridge_messages, MessagesBench::<Runtime, WithSubstrateMessagesInstance>);
 			list_benchmark!(list, extra, pallet_bridge_grandpa, BridgeSubstrateGrandpa);
 
@@ -2516,29 +2516,29 @@ impl_runtime_apis! {
 				}
 			}
 
-			// use pallet_bridge_token_swap::benchmarking::Config as TokenSwapConfig;
+			use pallet_bridge_token_swap::benchmarking::Config as TokenSwapConfig;
 
-			// impl TokenSwapConfig<WithRialtoTokenSwapInstance> for Runtime {
-			// 	fn initialize_environment() {
-			// 		let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
-			// 			peer::AccountId,
-			// 			peer::AccountIdConverter,
-			// 		>();
-			// 		pallet_balances::Pallet::<Runtime>::make_free_balance_be(
-			// 			&relayers_fund_account,
-			// 			Balance::MAX / 100,
-			// 		);
-			// 	}
-			// }
+			impl TokenSwapConfig<WithSubstrateTokenSwapInstance> for Runtime {
+				fn initialize_environment() {
+					let relayers_fund_account = pallet_bridge_messages::relayer_fund_account_id::<
+						peer::AccountId,
+						peer::AccountIdConverter,
+					>();
+					pallet_balances::Pallet::<Runtime>::make_free_balance_be(
+						&relayers_fund_account,
+						Balance::MAX / 100,
+					);
+				}
+			}
 
 			add_benchmark!(
 				params,
 				batches,
 				pallet_bridge_messages,
-				MessagesBench::<Runtime, WithRialtoMessagesInstance>
+				MessagesBench::<Runtime, WithSubstrateMessagesInstance>
 			);
-			add_benchmark!(params, batches, pallet_bridge_grandpa, BridgeRialtoGrandpa);
-			// add_benchmark!(params, batches, pallet_bridge_token_swap, BridgeRialtoTokenSwap);
+			add_benchmark!(params, batches, pallet_bridge_grandpa, BridgeSubstrateGrandpa);
+			 add_benchmark!(params, batches, pallet_bridge_token_swap, BridgeSubstrateTokenSwap);
 
 			Ok(batches)
 		}

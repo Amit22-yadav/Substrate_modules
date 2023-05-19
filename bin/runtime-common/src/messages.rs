@@ -419,8 +419,11 @@ pub mod source {
         // of the message dispatch in the delivery transaction cost
          let pay_dispatch_fee_at_target_chain =
           payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
-        let delivery_transaction =
-            BridgedChain::<B>::estimate_delivery_transaction(&payload.encode(), true, Weight::zero().into());
+          let delivery_transaction = BridgedChain::<B>::estimate_delivery_transaction(
+			&payload.encode(),
+			pay_dispatch_fee_at_target_chain,
+			if pay_dispatch_fee_at_target_chain { Weight::zero().into() } else { payload.weight.into() },
+		);
         let delivery_transaction_fee = BridgedChain::<B>::transaction_payment(delivery_transaction);
 
         // the fee (in This tokens) of all transactions that are made on This chain

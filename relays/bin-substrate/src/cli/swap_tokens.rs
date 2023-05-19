@@ -21,8 +21,6 @@
 #![allow(dead_code)]
 
 
-use std::vec;
-
 use codec::Encode;
 use num_traits::One;
 use rand::random;
@@ -385,8 +383,6 @@ impl SwapTokens {
 					dispatch_fee_payment: bp_runtime::messages::DispatchFeePayment::AtSourceChain,
 					call: claim_swap_call.encode(),
 				};
-				// let claim_swap_message = vec!
-				// let claim_swap_message = vec![];
 				frame_support::log::info!("************aaya ");
 				let claim_swap_delivery_and_dispatch_fee =
 					crate::cli::estimate_fee::estimate_message_delivery_and_dispatch_fee::<
