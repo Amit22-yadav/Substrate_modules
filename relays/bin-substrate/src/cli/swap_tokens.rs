@@ -374,15 +374,17 @@ impl SwapTokens {
 				// prepare `claim_swap` message that will be sent over the bridge
 				let claim_swap_call: CallOf<Source> =
 					pallet_bridge_token_swap::Call::claim_swap { swap: token_swap }.into();
-				let claim_swap_message = bp_message_dispatch::MessagePayload {
-					spec_version: SOURCE_SPEC_VERSION,
-					weight: claim_swap_call.get_dispatch_info().weight,
-					origin: bp_message_dispatch::CallOrigin::SourceAccount(
-						accounts.target_account_at_bridged_chain.clone(),
-					),
-					dispatch_fee_payment: bp_runtime::messages::DispatchFeePayment::AtSourceChain,
-					call: claim_swap_call.encode(),
-				};
+				// let claim_swap_message = bp_message_dispatch::MessagePayload {
+				// 	spec_version: SOURCE_SPEC_VERSION,
+				// 	weight: claim_swap_call.get_dispatch_info().weight,
+				// 	origin: bp_message_dispatch::CallOrigin::SourceAccount(
+				// 		accounts.target_account_at_bridged_chain.clone(),
+				// 	),
+				// 	dispatch_fee_payment: bp_runtime::messages::DispatchFeePayment::AtSourceChain,
+				// 	call: claim_swap_call.encode(),
+				// };
+
+				let claim_swap_message = vec![];
 				frame_support::log::info!("************aaya ");
 				let claim_swap_delivery_and_dispatch_fee =
 					crate::cli::estimate_fee::estimate_message_delivery_and_dispatch_fee::<

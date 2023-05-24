@@ -1506,6 +1506,12 @@ parameter_types! {
 	pub const MaxCalls: u32 = 10;
 	pub const MaxGenerateRandom: u32 = 10;
 }
+impl pallet_bridge_relayers::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Reward = Balance;
+	type PaymentProcedure = bp_relayers::MintReward<pallet_balances::Pallet<Runtime>, AccountId>;
+	type WeightInfo = ();
+}
 
 impl pallet_lottery::Config for Runtime {
 	type PalletId = LotteryPalletId;
@@ -1573,18 +1579,17 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 	type TargetHeaderChain = crate::substrate_messages::Substrate;
 	type LaneMessageVerifier = crate::substrate_messages::ToSubstrateMessageVerifier;
 	type MessageDeliveryAndDispatchPayment =
-		pallet_bridge_messages::instant_payments::InstantCurrencyPayments<
-			Runtime,
-			WithSubstrateMessagesInstance,
-			pallet_balances::Pallet<Runtime>,
-			GetDeliveryConfirmationTransactionFee,
-		>;
+	pallet_bridge_relayers::MessageDeliveryAndDispatchPaymentAdapter<
+		Runtime,
+		WithSubstrateMessagesInstance,
+		GetDeliveryConfirmationTransactionFee,
+	>;
 	type OnMessageAccepted = ();
 	type OnDeliveryConfirmed = ();
 	// type DeliveryConfirmationPayments = ();
 
 	type SourceHeaderChain = crate::substrate_messages::Substrate;
-	type MessageDispatch = crate::substrate_messages::FromSubstrateMessageDispatch;
+	type MessageDispatch = 	crate::substrate_messages::FromSubstrateMessageDispatch;
 	type BridgedChainId = SubstrateChainId;
 }
 
@@ -1869,6 +1874,7 @@ construct_runtime!(
 		BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
 		BridgeSubstrateMessages: pallet_bridge_messages,
 		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin, Config} = 99,
+		BridgeRelayers: pallet_bridge_relayers::{Pallet, Call, Storage, Event<T>}
 	}
 );
 

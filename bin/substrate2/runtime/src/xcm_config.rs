@@ -14,63 +14,43 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-//! XCM configurations for the Millau runtime.
+//! XCM configurations for the Rialto runtime.
 
 use super::{
-	substrate_messages::{WithSubstrateMessageBridge,XCM_LANE},
-	// rialto_parachain_messages::{
-	// 	WithRialtoParachainMessageBridge, DEFAULT_XCM_LANE_TO_RIALTO_PARACHAIN,
-	// },
-	AccountId, AllPalletsWithSystem, Balances, RuntimeCall, RuntimeEvent, RuntimeOrigin, Runtime,
-	WithSubstrateMessagesInstance,  XcmPallet,
+	our_chain_messages::WithPeerMessageBridge, AccountId, AllPalletsWithSystem, Balances, RuntimeCall,
+	RuntimeEvent, RuntimeOrigin, Runtime, WithPeerMessagesInstance, XcmPallet,
 };
-use codec::Encode;
-use bridge_runtime_common::messages::MessageBridge;
-use bridge_runtime_common::messages::source::estimate_message_dispatch_and_delivery_fee;
-use bridge_runtime_common::messages::source::FromThisChainMessagePayload;
-use core::marker::PhantomData;
-use bp_messages::source_chain::MessagesBridge;
-use codec::Decode;
-use xcm_builder::MintLocation;
-use crate::Balance;
-use crate::BridgeSubstrateMessages;
-use frame_system::EnsureRoot;
-use bp_messages::LaneId;
-use peer::WeightToFee;
-// use bp_rialto_parachain::RIALTO_PARACHAIN_ID;
+use substrate::WeightToFee;
 use bridge_runtime_common::{
-	// messages::{XcmBridge, XcmBridgeAdapter},
+	messages::source::{XcmBridge, XcmBridgeAdapter},
 	CustomNetworkId,
 };
-use bridge_runtime_common::messages::source::XcmBridgeAdapter;
-use bridge_runtime_common::messages::source::XcmBridge;
 use frame_support::{
 	parameter_types,
 	traits::{Everything, Nothing},
 	weights::Weight,
 };
-use xcm::{latest::prelude::*, v3::NetworkId::Polkadot};
+use frame_system::EnsureRoot;
+use xcm::latest::prelude::*;
 use xcm_builder::{
 	AccountId32Aliases, AllowKnownQueryResponses, AllowTopLevelPaidExecutionFrom,
 	CurrencyAdapter as XcmCurrencyAdapter, IsConcrete, SignedAccountId32AsNative,
 	SignedToAccountId32, SovereignSignedViaLocation, TakeWeightCredit, UsingComponents,
 };
-
+use xcm_builder::MintLocation;
 parameter_types! {
-	//The location of the `MLAU` token, from the context of this chain. Since this token is native to this
-	// chain, we make it synonymous with it and thus it is the `Here` location, which means "equivalent to
-	// the context".
+	/// The location of the `MLAU` token, from the context of this chain. Since this token is native to this
+	/// chain, we make it synonymous with it and thus it is the `Here` location, which means "equivalent to
+	/// the context".
 	pub const TokenLocation: MultiLocation = Here.into_location();
-	// The Millau network ID.
-	pub const ThisNetwork: NetworkId = CustomNetworkId::Peer.as_network_id();
 	/// The Rialto network ID.
-	pub const SubstrateNetwork: NetworkId = CustomNetworkId::Substrate.as_network_id();
-	/// The RialtoParachain network ID.
-	// pub const RialtoParachainNetwork: NetworkId = CustomNetworkId::RialtoParachain.as_network_id();
+	pub const ThisNetwork: NetworkId = CustomNetworkId::Substrate.as_network_id();
+	/// The Millau network ID.
+	pub const PeerNetwork: NetworkId = CustomNetworkId::Peer.as_network_id();
 
 	/// Our XCM location ancestry - i.e. our location within the Consensus Universe.
 	///
-	/// Since Kusama is a top-level relay-chain with its own consensus, it's just our network ID.
+	/// Since Polkadot is a top-level relay-chain with its own consensus, it's just our network ID.
 	pub UniversalLocation: InteriorMultiLocation = ThisNetwork::get().into();
 	/// The check account, which holds any native assets that have been teleported out and not back in (yet).
 	pub CheckAccount: (AccountId, MintLocation) = (XcmPallet::check_account(), MintLocation::Local);
@@ -109,27 +89,26 @@ type LocalOriginConverter = (
 );
 
 /// The amount of weight an XCM operation takes. This is a safe overestimate.
-// pub const BASE_XCM_WEIGHT: Weight = 1_000_000_000;
+
 
 parameter_types! {
 	/// The amount of weight an XCM operation takes. This is a safe overestimate.
 	pub const BaseXcmWeight: Weight = Weight::from_parts(1_000_000_000, 64 * 1024);
-	
-	
+	/// Maximum number of instructions in a single XCM fragment. A sanity check against weight
+	/// calculations getting too crazy.
+	pub const MaxInstructions: u32 = 100;
 }
 
 /// The XCM router. When we want to send an XCM message, we use this type. It amalgamates all of our
 /// individual routers.
 pub type XcmRouter = (
-	// Router to send messages to Rialto.
-	// ToSubstrateBridge<BridgeSubstrateMessages>,
-	// Router to send messages to RialtoParachains.
-	XcmBridgeAdapter<ToSubstrateBridge>,
+	// Router to send messages to Millau.
+	XcmBridgeAdapter<ToPeerBridge>,
 );
 
-// parameter_types! {
-// 	pub const MaxAssetsIntoHolding: u32 = 64;
-// }
+parameter_types! {
+	pub const MaxAssetsIntoHolding: u32 = 64;
+}
 
 /// The barriers one of which must be passed for an XCM message to be executed.
 pub type Barrier = (
@@ -141,7 +120,7 @@ pub type Barrier = (
 	AllowKnownQueryResponses<XcmPallet>,
 );
 
-/// XCM weigher type.
+/// Incoming XCM weigher type.
 pub type XcmWeigher = xcm_builder::FixedWeightBounds<BaseXcmWeight, RuntimeCall, MaxInstructions>;
 
 parameter_types! {
@@ -150,14 +129,15 @@ parameter_types! {
 	pub const Substrate: MultiLocation = GlobalConsensus(NetworkId::Polkadot).into_location();
 	pub const OurPeer: (MultiAssetFilter, MultiLocation) = (Roc::get(), Peer::get());
 	pub const OurSubstrate: (MultiAssetFilter, MultiLocation) = (Roc::get(), Substrate::get());
-	pub const MaxInstructions: u32 = 100;
-	pub const MaxAssetsIntoHolding: u32 = 64;
+	// pub const MaxInstructions: u32 = 100;
+	// pub const MaxAssetsIntoHolding: u32 = 64;
 }
 pub type TrustedTeleporters = (
 	
 	xcm_builder::Case<OurPeer>,
 	xcm_builder::Case<OurSubstrate>,
 );
+
 pub struct XcmConfig;
 impl xcm_executor::Config for XcmConfig {
 	type RuntimeCall = RuntimeCall;
@@ -222,32 +202,33 @@ impl pallet_xcm::Config for Runtime {
 	type TrustedLockers = ();
 	type SovereignAccountOf = SovereignAccountOf;
 	type MaxLockers = frame_support::traits::ConstU32<8>;
-	 type AdminOrigin = EnsureRoot<AccountId>;
-	 type WeightInfo = pallet_xcm::TestWeightInfo;
+	type AdminOrigin = EnsureRoot<AccountId>;
+	type WeightInfo = pallet_xcm::TestWeightInfo;
 }
 
-pub struct ToSubstrateBridge;
+/// With-Millau bridge.
+pub struct ToPeerBridge;
 
-impl XcmBridge for ToSubstrateBridge {
-	type MessageBridge = WithSubstrateMessageBridge;
-	type MessageSender = pallet_bridge_messages::Pallet<Runtime, WithSubstrateMessagesInstance>;
+impl XcmBridge for ToPeerBridge {
+	type MessageBridge = WithPeerMessageBridge;
+	type MessageSender = pallet_bridge_messages::Pallet<Runtime, WithPeerMessagesInstance>;
 
 	fn universal_location() -> InteriorMultiLocation {
 		UniversalLocation::get()
 	}
 
 	fn verify_destination(dest: &MultiLocation) -> bool {
-		matches!(*dest, MultiLocation { parents: 1, interior: X1(GlobalConsensus(Polkadot)) } )
+		matches!(*dest, MultiLocation { parents: 1, interior: X1(GlobalConsensus(Kusama)) } )
 	}
 
 	fn build_destination() -> MultiLocation {
-		let dest: InteriorMultiLocation = SubstrateNetwork::get().into();
+		let dest: InteriorMultiLocation = PeerNetwork::get().into();
 		let here = UniversalLocation::get();
 		dest.relative_to(&here)
 	}
 
-	fn xcm_lane() -> LaneId {
-		XCM_LANE
+	fn xcm_lane() -> bp_messages::LaneId {
+		[0, 0, 0, 0]
 	}
 }
 
@@ -269,31 +250,25 @@ mod tests {
 	}
 
 	#[test]
-	fn xcm_messages_are_sent_using_bridge_router() {
+	fn xcm_messages_to_millau_are_sent() {
 		new_test_ext().execute_with(|| {
+			// the encoded message (origin ++ xcm) is 0x010109030419A8
+			let dest = (Parent, X1(GlobalConsensus(MillauNetwork::get())));
 			let xcm: Xcm<()> = vec![Instruction::Trap(42)].into();
-			let expected_fee = MultiAssets::from((Here, 4_259_858_152_u64));
+
+			let send_result = send_xcm::<XcmRouter>(dest.into(), xcm);
+			let expected_fee = MultiAssets::from((Here, 4_345_002_552_u128));
 			let expected_hash =
 				([0u8, 0u8, 0u8, 0u8], 1u64).using_encoded(sp_io::hashing::blake2_256);
-
-			// message 1 to Rialto
-			let dest = (Parent, X1(GlobalConsensus(RialtoNetwork::get())));
-			let send_result = send_xcm::<XcmRouter>(dest.into(), xcm.clone());
-			assert_eq!(send_result, Ok((expected_hash, expected_fee.clone())));
-
-			// message 2 to RialtoParachain (expected hash is the same, since other lane is used)
-			let dest =
-				(Parent, X2(GlobalConsensus(RialtoNetwork::get()), Parachain(RIALTO_PARACHAIN_ID)));
-			let send_result = send_xcm::<XcmRouter>(dest.into(), xcm);
-			assert_eq!(send_result, Ok((expected_hash, expected_fee)));
+			assert_eq!(send_result, Ok((expected_hash, expected_fee)),);
 		})
 	}
 
 	#[test]
-	fn xcm_messages_from_rialto_are_dispatched() {
+	fn xcm_messages_from_millau_are_dispatched() {
 		type XcmExecutor = xcm_executor::XcmExecutor<XcmConfig>;
 		type MessageDispatcher = FromBridgedChainMessageDispatch<
-			WithRialtoMessageBridge,
+			WithMillauMessageBridge,
 			XcmExecutor,
 			XcmWeigher,
 			frame_support::traits::ConstU64<BASE_XCM_WEIGHT>,
@@ -301,7 +276,7 @@ mod tests {
 
 		new_test_ext().execute_with(|| {
 			let location: MultiLocation =
-				(Parent, X1(GlobalConsensus(RialtoNetwork::get()))).into();
+				(Parent, X1(GlobalConsensus(MillauNetwork::get()))).into();
 			let xcm: Xcm<Call> = vec![Instruction::Trap(42)].into();
 
 			let mut incoming_message = DispatchMessage {

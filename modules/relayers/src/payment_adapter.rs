@@ -42,8 +42,8 @@ where
 
 	fn pay_delivery_and_dispatch_fee(
 		_submitter: &T::RuntimeOrigin,
-		_fee: &T::Reward,
-		relayer_fund_account: &T::AccountId,
+		_fee: &T::Reward,	
+
 	) -> Result<(), Self::Error> {
 		// nothing shall happen here, because XCM deals with fee payment (planned to be burnt?
 		// or transferred to the treasury?)
@@ -52,11 +52,9 @@ where
 
 	fn pay_relayers_rewards(
 		lane_id: bp_messages::LaneId,
-
 		messages_relayers: VecDeque<bp_messages::UnrewardedRelayer<T::AccountId>>,
 		confirmation_relayer: &T::AccountId,
 		received_range: &RangeInclusive<bp_messages::MessageNonce>,
-		relayer_fund_account: &T::AccountId,
 	) {
 		let relayers_rewards = pallet_bridge_messages::calc_relayers_rewards::<T, MessagesInstance>(
 			lane_id,
@@ -151,8 +149,8 @@ mod tests {
 		run_test(|| {
 			register_relayers_rewards::<TestRuntime>(&RELAYER_2, relayers_rewards(), 10);
 
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_1), Some(80));
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_2), Some(120));
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_1), Some(80));
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_2), Some(120));
 		});
 	}
 
@@ -161,9 +159,9 @@ mod tests {
 		run_test(|| {
 			register_relayers_rewards::<TestRuntime>(&RELAYER_3, relayers_rewards(), 10);
 
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_1), Some(80));
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_2), Some(70));
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_3), Some(50));
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_1), Some(80));
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_2), Some(70));
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_3), Some(50));
 		});
 	}
 
@@ -172,9 +170,9 @@ mod tests {
 		run_test(|| {
 			register_relayers_rewards::<TestRuntime>(&RELAYER_3, relayers_rewards(), 1000);
 
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_1), None);
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_2), None);
-			assert_eq!(RelayerRewards::<TestRuntime>::get(&RELAYER_3), Some(200));
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_1), None);
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_2), None);
+			assert_eq!(RelayerRewards::<TestRuntime>::get(RELAYER_3), Some(200));
 		});
 	}
 }

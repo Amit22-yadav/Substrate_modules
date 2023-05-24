@@ -42,45 +42,53 @@ pub const INITIAL_SUBSTRATE_TO_PEER_CONVERSION_RATE: FixedU128 =
 	FixedU128::from_inner(FixedU128::DIV);
 /// Initial value of `RialtoFeeMultiplier` parameter.
 pub const INITIAL_SUBSTRATE_FEE_MULTIPLIER: FixedU128 = FixedU128::from_inner(FixedU128::DIV);
+pub const BASE_XCM_WEIGHT_TWICE: Weight = crate::xcm_config::BaseXcmWeight::get().saturating_mul(2);
+
 
 parameter_types! {
-	/// Substrate to Millau conversion rate. Initially we treat both tokens as equal.
+	/// Substrate to Peer conversion rate. Initially we treat both tokens as equal.
 	pub storage SubstrateToPeerConversionRate: FixedU128 = INITIAL_SUBSTRATE_TO_PEER_CONVERSION_RATE;
 	/// Fee multiplier value at Substrate chain.
 	pub storage SubstrateFeeMultiplier: FixedU128 = INITIAL_SUBSTRATE_FEE_MULTIPLIER;
+
+	pub const WeightCredit: Weight = BASE_XCM_WEIGHT_TWICE;
 }
 
 /// Message payload for Millau -> Substrate messages.
 pub type ToSubstrateMessagePayload =
-	messages::source::FromThisChainMessagePayload<WithSubstrateMessageBridge>;
+	messages::source::FromThisChainMessagePayload;
 
 	pub type ToSubstrateMaximalOutboundPayloadSize =
 	messages::source::FromThisChainMaximalOutboundPayloadSize<WithSubstrateMessageBridge>;
 
-/// Message verifier for Millau -> Substrate messages.
+/// Message verifier for Peer -> Substrate messages.
 pub type ToSubstrateMessageVerifier =
 	messages::source::FromThisChainMessageVerifier<WithSubstrateMessageBridge>;
 
-/// Message payload for Substrate -> Millau messages.
+/// Message payload for Substrate -> Peer messages.
 pub type FromSubstrateMessagePayload =
 	messages::target::FromBridgedChainMessagePayload<WithSubstrateMessageBridge>;
 
 /// Encoded Millau Call as it comes from Substrate.
 pub type FromSubstrateEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::RuntimeCall>;
 
-/// Messages proof for Substrate -> Millau messages.
+/// Messages proof for Substrate -> Peer messages.
 pub type FromSubstrateMessagesProof = messages::target::FromBridgedChainMessagesProof<substrate::Hash>;
 
-/// Messages delivery proof for Millau -> Substrate messages.
+/// Messages delivery proof for Peer -> Substrate messages.
 pub type ToSubstrateMessagesDeliveryProof =
 	messages::source::FromBridgedChainMessagesDeliveryProof<substrate::Hash>;
 
-/// Call-dispatch based message dispatch for Substrate -> Millau messages.
+/// Call-dispatch based message dispatch for Substrate -> Peer messages.
 pub type FromSubstrateMessageDispatch = messages::target::FromBridgedChainMessageDispatch<
 	WithSubstrateMessageBridge,
 	crate::Runtime,
 	pallet_balances::Pallet<Runtime>,
 	(),
+	xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
+	crate::xcm_config::XcmWeigher,
+	WeightCredit,
+
 >;
 
 

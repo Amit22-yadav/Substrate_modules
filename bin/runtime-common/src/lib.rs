@@ -125,19 +125,18 @@ macro_rules! generate_bridge_reject_obsolete_headers_and_messages {
 /// synthetic associations between these chains and `NetworkId` chains.
 pub enum CustomNetworkId {
 	/// The Millau network ID, associated with Kusama.
-	Millau,
+	Peer,
 	/// The Rialto network ID, associated with Polkadot.
-	Rialto,
-	/// The RialtoParachain network ID, associated with Westend.
-	RialtoParachain,
+	Substrate,
+	// RialtoParachain,
 }
 
 impl CustomNetworkId {
 	pub const fn as_network_id(&self) -> NetworkId {
 		match *self {
-			CustomNetworkId::Millau => NetworkId::Kusama,
-			CustomNetworkId::Rialto => NetworkId::Polkadot,
-			CustomNetworkId::RialtoParachain => NetworkId::Westend,
+			CustomNetworkId::Peer => NetworkId::Kusama,
+			CustomNetworkId::Substrate => NetworkId::Polkadot,
+			// CustomNetworkId::RialtoParachain => NetworkId::Westend,
 		}
 	}
 }

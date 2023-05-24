@@ -40,17 +40,19 @@ pub const INITIAL_PEER_TO_SUBSTRATE_CONVERSION_RATE: FixedU128 =
 	FixedU128::from_inner(FixedU128::DIV);
 /// Initial value of `PeerFeeMultiplier` parameter.
 pub const INITIAL_PEER_FEE_MULTIPLIER: FixedU128 = FixedU128::from_inner(FixedU128::DIV);
+pub const BASE_XCM_WEIGHT_TWICE: Weight = crate::xcm_config::BaseXcmWeight::get().saturating_mul(2);
 
 parameter_types! {
 	/// Peer to Substrate conversion rate. Initially we treat both tokens as equal.
 	pub storage PeerToSubstrateConversionRate: FixedU128 = INITIAL_PEER_TO_SUBSTRATE_CONVERSION_RATE;
 	/// Fee multiplier value at Peer chain.
 	pub storage PeerFeeMultiplier: FixedU128 = INITIAL_PEER_FEE_MULTIPLIER;
+	pub const WeightCredit: Weight = BASE_XCM_WEIGHT_TWICE;
 }
 
 /// Message payload for Substrate -> Peer messages.
 pub type ToPeerMessagePayload =
-	messages::source::FromThisChainMessagePayload<WithPeerMessageBridge>;
+	messages::source::FromThisChainMessagePayload;
 
 	pub type ToPeerMaximalOutboundPayloadSize =
 	messages::source::FromThisChainMaximalOutboundPayloadSize<WithPeerMessageBridge>;
@@ -72,6 +74,10 @@ pub type FromPeerMessageDispatch = messages::target::FromBridgedChainMessageDisp
 	crate::Runtime,
 	pallet_balances::Pallet<Runtime>,
 	(),
+	xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
+	crate::xcm_config::XcmWeigher,
+	WeightCredit,
+	
 >;
 
 /// Messages proof for Peer -> Substrate messages.

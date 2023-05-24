@@ -55,6 +55,7 @@ use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot, EnsureRootWithSuccess, EnsureSigned, EnsureWithSuccess,
 };
+mod xcm_config;
 use sp_runtime::MultiSigner;
 pub use node_primitives::{AccountId, Signature};
 pub use node_primitives::{AccountIndex, Balance, Hashing,BlockNumber, Hash, Index, Moment};
@@ -1546,6 +1547,15 @@ impl pallet_assets::Config for Runtime {
 	type BenchmarkHelper = ();
 }
 
+
+
+impl pallet_bridge_relayers::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Reward = Balance;
+	type PaymentProcedure = bp_relayers::MintReward<pallet_balances::Pallet<Runtime>, AccountId>;
+	type WeightInfo = ();
+}
+
 // Instance of the messages pallet used to relay messages to/from Peer chain.
 pub type WithPeerMessagesInstance = ();
 
@@ -1570,12 +1580,11 @@ impl pallet_bridge_messages::Config<WithPeerMessagesInstance> for Runtime {
 	type TargetHeaderChain = crate::our_chain_messages::Peer;
 	type LaneMessageVerifier = crate::our_chain_messages::ToPeerMessageVerifier;
 	type MessageDeliveryAndDispatchPayment =
-		pallet_bridge_messages::instant_payments::InstantCurrencyPayments<
-			Runtime,
-			WithPeerMessagesInstance,
-			pallet_balances::Pallet<Runtime>,
-			GetDeliveryConfirmationTransactionFee,
-		>;
+	pallet_bridge_relayers::MessageDeliveryAndDispatchPaymentAdapter<
+		Runtime,
+		WithPeerMessagesInstance,
+		GetDeliveryConfirmationTransactionFee,
+	>;
 	type OnMessageAccepted = ();
 	// type OnDeliveryConfirmed = ();
 
@@ -1822,7 +1831,9 @@ construct_runtime!(
 		MessageQueue: pallet_message_queue,
 		BridgeDispatch: pallet_bridge_dispatch,
 		BridgePeerGrandpa: pallet_bridge_grandpa,
-		BridgePeerMessages: pallet_bridge_messages
+		BridgePeerMessages: pallet_bridge_messages,
+		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin, Config} = 99,
+		BridgeRelayers: pallet_bridge_relayers::{Pallet, Call, Storage, Event<T>}
 	}
 );
 

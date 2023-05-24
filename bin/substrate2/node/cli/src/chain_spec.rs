@@ -402,7 +402,8 @@ pub fn testnet_genesis(
 			min_join_bond: 1 * DOLLARS,
 			..Default::default()
 		},
-		bridge_peer_grandpa: Default::default()
+		bridge_peer_grandpa: Default::default(),
+		xcm_pallet:Default::default(),
 	}
 }
 

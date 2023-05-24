@@ -115,6 +115,9 @@ pub enum NetworkId {
 	Polkadot,
 	/// Kusama.
 	Kusama,
+
+	// Peer,
+	// Substrate
 }
 
 impl TryInto<NetworkId> for Option<NewNetworkId> {
@@ -125,6 +128,10 @@ impl TryInto<NetworkId> for Option<NewNetworkId> {
 			None => NetworkId::Any,
 			Some(Polkadot) => NetworkId::Polkadot,
 			Some(Kusama) => NetworkId::Kusama,
+			// Some(Peer) => NetworkId::Peer,
+			// Some(Substrate) => NetworkId::Substrate,
+			// Peer => Some(NetworkId::Peer),
+			// Substrate => Some(NetworkId::Substrate),
 			_ => return Err(()),
 		})
 	}

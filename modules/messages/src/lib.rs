@@ -62,6 +62,7 @@ use bp_messages::{
 };
 use bp_runtime::{ChainId, Size};
 use codec::{Decode, Encode};
+use bp_messages::UnrewardedRelayer;
 use frame_support::{
 	fail,
 	traits::Get,
@@ -77,12 +78,16 @@ use sp_core::H256;
 use sp_runtime::traits::{BadOrigin, Convert};
 use sp_std::{cell::RefCell, cmp::PartialOrd, marker::PhantomData, prelude::*};
 use frame_support::pallet_prelude::Weight;
+use sp_std::ops::RangeInclusive;
+use bp_messages::source_chain::RelayersRewards;
 
 mod inbound_lane;
 mod outbound_lane;
 mod weights_ext;
 
-pub mod instant_payments;
+use sp_std::collections::vec_deque::VecDeque;
+
+//  pub mod instant_payments;
 pub mod weights;
 
 #[cfg(feature = "runtime-benchmarks")]
@@ -321,7 +326,7 @@ pub mod pallet {
 			T::MessageDeliveryAndDispatchPayment::pay_delivery_and_dispatch_fee(
 				&origin,
 				&additional_fee,
-				&relayer_fund_account_id::<T::AccountId, T::AccountIdConverter>(),
+				// &relayer_fund_account_id::<T::AccountId, T::AccountIdConverter>(),
 			)
 			.map_err(|err| {
 				log::trace!(
@@ -639,7 +644,7 @@ pub mod pallet {
 					lane_data.relayers,
 					&confirmation_relayer,
 					&received_range,
-					&relayer_fund_account,
+					// &relayer_fund_account,
 				);
 			}
 
@@ -855,7 +860,7 @@ fn send_message<T: Config<I>, I: 'static>(
 	T::MessageDeliveryAndDispatchPayment::pay_delivery_and_dispatch_fee(
 		&submitter,
 		&delivery_and_dispatch_fee,
-		&relayer_fund_account_id::<T::AccountId, T::AccountIdConverter>(),
+		// &relayer_fund_account_id::<T::AccountId, T::AccountIdConverter>(),
 	)
 	.map_err(|err| {
 		log::trace!(
@@ -927,7 +932,36 @@ fn send_message<T: Config<I>, I: 'static>(
 
 	Ok(SendMessageArtifacts { nonce, weight: Weight::zero()})
 }
+/// Calculate the relayers rewards
+pub fn calc_relayers_rewards<T, I>(
+	lane_id: LaneId,
+	messages_relayers: VecDeque<UnrewardedRelayer<T::AccountId>>,
+	received_range: &RangeInclusive<MessageNonce>,
+) -> RelayersRewards<T::AccountId, T::OutboundMessageFee>
+where
+	T: frame_system::Config + crate::Config<I>,
+	I: 'static,
+{
+	// remember to reward relayers that have delivered messages
+	// this loop is bounded by `T::MaxUnrewardedRelayerEntriesAtInboundLane` on the bridged chain
+	let mut relayers_rewards: RelayersRewards<_, T::OutboundMessageFee> = RelayersRewards::new();
+	for entry in messages_relayers {
+		let nonce_begin = sp_std::cmp::max(entry.messages.begin, *received_range.start());
+		let nonce_end = sp_std::cmp::min(entry.messages.end, *received_range.end());
 
+		// loop won't proceed if current entry is ahead of received range (begin > end).
+		// this loop is bound by `T::MaxUnconfirmedMessagesAtInboundLane` on the bridged chain
+		let mut relayer_reward = relayers_rewards.entry(entry.relayer).or_default();
+		for nonce in nonce_begin..=nonce_end {
+			let key = MessageKey { lane_id, nonce };
+			let message_data = OutboundMessages::<T, I>::get(key)
+				.expect("message was just confirmed; we never prune unconfirmed messages; qed");
+			relayer_reward.reward = relayer_reward.reward.saturating_add(&message_data.fee);
+			relayer_reward.messages += 1;
+		}
+	}
+	relayers_rewards
+}
 /// Ensure that the origin is either root, or `PalletOwner`.
 fn ensure_owner_or_root<T: Config<I>, I: 'static>(origin: T::RuntimeOrigin) -> Result<(), BadOrigin> {
 	match origin.into() {

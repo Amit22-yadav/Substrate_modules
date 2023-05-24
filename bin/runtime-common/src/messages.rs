@@ -231,12 +231,12 @@ pub mod source {
     pub type BridgedChainOpaqueCall = Vec<u8>;
 
     // Message payload for This -> Bridged chain messages.
-    pub type FromThisChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
-        AccountIdOf<ThisChain<B>>,
-        SignerOf<BridgedChain<B>>,  
-        SignatureOf<BridgedChain<B>>,
-        BridgedChainOpaqueCall,
-    >;
+    // pub type FromThisChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
+    //     AccountIdOf<ThisChain<B>>,
+    //     SignerOf<BridgedChain<B>>,  
+    //     SignatureOf<BridgedChain<B>>,
+    //     BridgedChainOpaqueCall,
+    // >;
 
     // pub type FromThisChainMessagePayload<B> = Vec<MessagePayload <xAccountIdOf<ThisChain<B>>,
     //    SignerOf<BridgedChain<B>>,  
@@ -244,7 +244,7 @@ pub mod source {
     //    BridgedChainOpaqueCall,
     //  >>;
 
-    //  pub type FromThisChainMessagePayload = Vec<u8>;
+     pub type FromThisChainMessagePayload = Vec<u8>;
 
     pub struct FromThisChainMaximalOutboundPayloadSize<B>(PhantomData<B>);
 
@@ -317,7 +317,7 @@ pub mod source {
         LaneMessageVerifier<
             OriginOf<ThisChain<B>>,
             AccountIdOf<ThisChain<B>>,
-            FromThisChainMessagePayload<B>,
+            FromThisChainMessagePayload,
             BalanceOf<ThisChain<B>>,
         > for FromThisChainMessageVerifier<B>
     where
@@ -334,7 +334,7 @@ pub mod source {
             delivery_and_dispatch_fee: &BalanceOf<ThisChain<B>>,
             lane: &LaneId,
             lane_outbound_data: &OutboundLaneData,
-            payload: &FromThisChainMessagePayload<B>,
+            payload: &FromThisChainMessagePayload,
         ) -> Result<(), Self::Error> {
             // reject message if lane is blocked
             if !ThisChain::<B>::is_message_accepted(submitter, lane) {
@@ -394,9 +394,9 @@ pub mod source {
     /// may be 'mined' by the target chain. But the lane may have its own checks (e.g. fee
     /// check) that would reject message (see `FromThisChainMessageVerifier`).
     pub fn verify_chain_message<B: MessageBridge>(
-        payload: &FromThisChainMessagePayload<B>,
+        payload: &FromThisChainMessagePayload,
     ) -> Result<(),  &'static str> {
-        if payload.call.len() > maximal_message_size::<B>() as usize {
+        if payload.len() > maximal_message_size::<B>() as usize {
             return Err("Incorrect message weight declared".into())
         }
 
@@ -409,7 +409,7 @@ pub mod source {
     /// The fee is paid in This chain Balance, but we use Bridged chain balance to avoid additional
     // conversions. Returns `None` if overflow has happened.
     pub fn estimate_message_dispatch_and_delivery_fee<B: MessageBridge>(
-        payload: &FromThisChainMessagePayload<B>,
+        payload: &FromThisChainMessagePayload,
         relayer_fee_percent: u32,
         bridged_to_this_conversion_rate: Option<FixedU128>,
     ) -> Result<BalanceOf<ThisChain<B>>, &'static str> {
@@ -417,14 +417,11 @@ pub mod source {
         //
         // if we're going to pay dispatch fee at the target chain, then we don't include weight
         // of the message dispatch in the delivery transaction cost
-         let pay_dispatch_fee_at_target_chain =
-          payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
-          let delivery_transaction = BridgedChain::<B>::estimate_delivery_transaction(
-			&payload.encode(),
-			pay_dispatch_fee_at_target_chain,
-			if pay_dispatch_fee_at_target_chain { Weight::zero().into() } else { payload.weight.into() },
-		);
-        let delivery_transaction_fee = BridgedChain::<B>::transaction_payment(delivery_transaction);
+        //  let pay_dispatch_fee_at_target_chain =
+        //   payload.dispatch_fee_payment == DispatchFeePayment::AtTargetChain;
+        let delivery_transaction =
+        BridgedChain::<B>::estimate_delivery_transaction(&payload.encode(), true, Weight::zero().into());
+    let delivery_transaction_fee = BridgedChain::<B>::transaction_payment(delivery_transaction);
 
         // the fee (in This tokens) of all transactions that are made on This chain
         let confirmation_transaction = ThisChain::<B>::estimate_delivery_confirmation_transaction();
@@ -494,7 +491,7 @@ pub mod source {
         OriginOf<ThisChain<Self::MessageBridge>>,
         AccountIdOf<ThisChain<Self::MessageBridge>>,
             BalanceOf<ThisChain<Self::MessageBridge>>,
-        FromThisChainMessagePayload<Self::MessageBridge>,
+        FromThisChainMessagePayload,
     >;
 
     /// Our location within the Consensus Universe.
@@ -512,12 +509,12 @@ pub mod source {
 /// XCM bridge adapter for `bridge-messages` pallet.
 pub struct XcmBridgeAdapter<T>(PhantomData<T>);
 
-impl<T: XcmBridge + MessageBridge + XcmBridge<MessageBridge = T> > SendXcm for XcmBridgeAdapter<T>
+impl<T: XcmBridge > SendXcm for XcmBridgeAdapter<T>
 where
     BalanceOf<ThisChain<T::MessageBridge>>: Into<Fungibility>,
     OriginOf<ThisChain<T::MessageBridge>>: From<pallet_xcm::Origin>,
 {
-    type Ticket = (BalanceOf<ThisChain<T::MessageBridge>>, FromThisChainMessagePayload<T>);
+    type Ticket = (BalanceOf<ThisChain<T::MessageBridge>>, FromThisChainMessagePayload);
 
 
     fn validate(
@@ -532,10 +529,10 @@ where
 
         let route = T::build_destination();
         let msg = (route, msg.take().ok_or(SendError::MissingArgument)?).encode();
-        let payload = MessagePayload::decode(&mut &msg[..]).map_err(|_| SendError::MissingArgument)?;
+       // let payload = MessagePayload::decode(&mut &msg[..]).map_err(|_| SendError::MissingArgument)?;
 
         let fee = estimate_message_dispatch_and_delivery_fee::<T::MessageBridge>(
-            &payload,
+            &msg,
             T::MessageBridge::RELAYER_FEE_PERCENT,
             None,
         );
@@ -553,29 +550,26 @@ where
                 return Err(SendError::Transport(e))
             },
         };
-        // let fee = estimate_message_dispatch_and_delivery_fee::<T::MessageBridge>(
-        //  &payload,
-        //  T::MessageBridge::RELAYER_FEE_PERCENT,
-        //  None,
-        // );
+     
     // let encoded_msg = msg;
         // let's just take fixed (out of thin air) fee per message in our test bridges
         // (this code won't be used in production anyway)
-        let fee_assets = MultiAssets::from((Here, 1_000_000_u128));
+        let fee_assets = MultiAssets::from((Here, fee));
 
-        Ok(((fee, payload), fee_assets))
+
+        Ok(((fee, msg), fee_assets))
     }
 
     fn deliver(ticket: Self::Ticket) -> Result<XcmHash, SendError> {
         use bp_messages::source_chain::MessagesBridge;
 
         let lane = T::xcm_lane();
-        let (fee, payload) = ticket;
+        let (fee, msg) = ticket;
         //let fee = ticket;
         let result = T::MessageSender::send_message(
             pallet_xcm::Origin::from(MultiLocation::from(T::universal_location())).into(),
             lane,
-            payload,
+            msg,
             fee,
         );
         result
@@ -592,12 +586,6 @@ where
                 hash
             })
             .map_err(|e
-                // : <<T as XcmBridge>::MessageSender<T> as MessagesBridge<<<T as crate::messages::MessageBridge>::ThisChain as crate::messages::ThisChainWithMessages>::RuntimeOrigin,
-				//  <<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::AccountId,
-				//   <<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::Balance,
-				//    bp_message_dispatch::MessagePayload<<<T as crate::messages::MessageBridge>::ThisChain as ChainWithMessages>::AccountId, 
-				//    <<T as crate::messages::MessageBridge>::BridgedChain as ChainWithMessages>::Signer, 
-				// <<T as crate::messages::MessageBridge>::BridgedChain as ChainWithMessages>::Signature, Vec<u8>>>>::Error
                 | 
                 
                 {
@@ -617,6 +605,16 @@ where
 /// Sub-module that is declaring types required for processing Bridged -> This chain messages.
 pub mod target {
     use super::*;
+
+
+    	/// Decoded Bridged -> This message payload.
+	// #[derive(RuntimeDebug, PartialEq, Eq)]
+	// pub struct FromBridgedChainMessagePayload<Call> {
+	// 	/// Data that is actually sent over the wire.
+	// 	pub xcm: (xcm::v3::MultiLocation, xcm::v3::Xcm<Call>),
+	// 	/// Weight of the message, computed by the weigher. Unknown initially.
+	// 	pub weight: Option<Weight>,
+	// }
 
     /// Call origin for Bridged -> This chain messages.
     pub type FromBridgedChainMessageCallOrigin<B> = bp_message_dispatch::CallOrigin<
@@ -694,13 +692,13 @@ pub mod target {
 
     /// Dispatching Bridged -> This chain messages.
     #[derive(RuntimeDebug, Clone, Copy)]
-    pub struct FromBridgedChainMessageDispatch<B, ThisRuntime, ThisCurrency, ThisDispatchInstance> {
-        _marker: PhantomData<(B, ThisRuntime, ThisCurrency, ThisDispatchInstance)>,
+    pub struct FromBridgedChainMessageDispatch<B, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit> {
+        _marker: PhantomData<(B, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit)>,
     }
 
-    impl<B: MessageBridge, ThisRuntime, ThisCurrency, ThisDispatchInstance>
+    impl<B: MessageBridge, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit>
         MessageDispatch<AccountIdOf<ThisChain<B>>, BalanceOf<BridgedChain<B>>>
-        for FromBridgedChainMessageDispatch<B, ThisRuntime, ThisCurrency, ThisDispatchInstance>
+        for FromBridgedChainMessageDispatch<B, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit>
     where
         BalanceOf<ThisChain<B>>: Saturating + FixedPointOperand,
         ThisDispatchInstance: 'static,
@@ -713,6 +711,9 @@ pub mod target {
                 ThisRuntime,
                 Balance = BalanceOf<ThisChain<B>>,
             >,
+            XcmExecutor: xcm::v3::ExecuteXcm<CallOf<ThisChain<B>>>,
+		XcmWeigher: xcm_executor::traits::WeightBounds<CallOf<ThisChain<B>>>,
+		WeightCredit: Get<Weight>,
         ThisCurrency: Currency<AccountIdOf<ThisChain<B>>, Balance = BalanceOf<ThisChain<B>>>,
         pallet_bridge_dispatch::Pallet<ThisRuntime, ThisDispatchInstance>:
             bp_message_dispatch::MessageDispatch<
