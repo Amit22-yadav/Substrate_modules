@@ -127,6 +127,8 @@ pub trait ThisChainWithMessages: ChainWithMessages {
     /// Call type on the chain.
     type Call: Encode + Decode;
 
+    
+
     /// Do we accept message sent by given origin to given lane?
     fn is_message_accepted(origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool;
 

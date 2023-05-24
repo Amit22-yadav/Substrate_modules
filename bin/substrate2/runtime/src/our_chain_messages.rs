@@ -23,6 +23,7 @@ use bp_messages::{
 	target_chain::{ProvedMessages, SourceHeaderChain},
 	InboundLaneData, LaneId, Message, MessageNonce, Parameter as MessagesParameter,
 };
+use crate::OriginCaller::XcmPallet;
 use bp_runtime::{Chain, ChainId, PEER_CHAIN_ID, SUBSTRATE_CHAIN_ID};
 use bridge_runtime_common::messages::{self, MessageBridge, MessageTransaction};
 use codec::{Decode, Encode};
@@ -127,9 +128,31 @@ impl messages::ChainWithMessages for Substrate {
 impl messages::ThisChainWithMessages for Substrate {
 	type RuntimeOrigin = crate::RuntimeOrigin;
 	type Call = crate::RuntimeCall;
+	// type ConfirmationTransactionEstimation = BasicConfirmationTransactionEstimation<
+	// 	Self::AccountId,
+	// 	{ substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT },
+	// 	{ peer::EXTRA_STORAGE_PROOF_SIZE },
+	// 	{ substrate::TX_EXTRA_BYTES },
+	// >;
 
 	fn is_message_accepted(send_origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool {
-		send_origin.linked_account().is_some() && (*lane == [0, 0, 0, 0] || *lane == [0, 0, 0, 1])
+		let here_location =
+			xcm::v3::MultiLocation::from(crate::xcm_config::UniversalLocation::get());
+		match send_origin.caller {
+			XcmPallet(pallet_xcm::Origin::Xcm(ref location))
+				if *location == here_location =>
+			{
+				log::trace!(target: "runtime::bridge", "Verifying message sent using XCM pallet to Peer");
+			},
+			_ => {
+				// keep in mind that in this case all messages are free (in term of fees)
+				// => it's just to keep testing bridge on our test deployments until we'll have a
+				// better option
+				log::trace!(target: "runtime::bridge", "Verifying message sent using messages pallet to Peer");
+			},
+		}
+
+		*lane == [0, 0, 0, 0] || *lane == [0, 0, 0, 1]
 	}
 
 	fn maximal_pending_messages_at_outbound_lane() -> MessageNonce {
