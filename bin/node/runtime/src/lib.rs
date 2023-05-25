@@ -1589,7 +1589,7 @@ impl pallet_bridge_messages::Config<WithSubstrateMessagesInstance> for Runtime {
 	// type DeliveryConfirmationPayments = ();
 
 	type SourceHeaderChain = crate::substrate_messages::Substrate;
-	type MessageDispatch = 	crate::substrate_messages::FromSubstrateMessageDispatch;
+	type MessageDispatch = crate::substrate_messages::FromSubstrateMessageDispatch;
 	type BridgedChainId = SubstrateChainId;
 }
 
@@ -1872,7 +1872,7 @@ construct_runtime!(
 		BridgeSubstrateGrandpa : pallet_bridge_grandpa,
 		BridgeDispatch: pallet_bridge_dispatch,
 		BridgeSubstrateTokenSwap: pallet_bridge_token_swap::{Pallet, Call, Storage, Event<T>, Origin<T>},
-		BridgeSubstrateMessages: pallet_bridge_messages,
+		BridgeSubstrateMessages: pallet_bridge_messages::{Pallet, Call, Storage, Event<T>, Config<T>},
 		XcmPallet: pallet_xcm::{Pallet, Call, Storage, Event<T>, Origin, Config} = 99,
 		BridgeRelayers: pallet_bridge_relayers::{Pallet, Call, Storage, Event<T>}
 	}
@@ -2203,7 +2203,7 @@ impl_runtime_apis! {
 			bridge_runtime_common::messages_api::outbound_message_details::<
 				Runtime,
 				WithSubstrateMessagesInstance,
-				WithSubstrateMessageBridge,
+				// WithSubstrateMessageBridge,
 			>(lane, begin, end)
 		}
 	}

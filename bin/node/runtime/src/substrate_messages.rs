@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Parity Bridges Common.  If not, see <http://www.gnu.org/licenses/>.
 
-//! Everything required to serve Millau <-> Rialto messages.
+//! Everything required to serve peer <-> Substrate messages.
 
 use crate::Runtime;
 use crate::OriginCaller::XcmPallet;
@@ -67,7 +67,7 @@ pub type ToSubstrateMessageVerifier =
 
 /// Message payload for Substrate -> Peer messages.
 pub type FromSubstrateMessagePayload =
-	messages::target::FromBridgedChainMessagePayload<WithSubstrateMessageBridge>;
+	messages::target::FromBridgedChainMessagePayload<crate::RuntimeCall>;
 
 /// Encoded Millau Call as it comes from Substrate.
 pub type FromSubstrateEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::RuntimeCall>;
@@ -82,19 +82,19 @@ pub type ToSubstrateMessagesDeliveryProof =
 /// Call-dispatch based message dispatch for Substrate -> Peer messages.
 pub type FromSubstrateMessageDispatch = messages::target::FromBridgedChainMessageDispatch<
 	WithSubstrateMessageBridge,
-	crate::Runtime,
-	pallet_balances::Pallet<Runtime>,
-	(),
 	xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
 	crate::xcm_config::XcmWeigher,
 	WeightCredit,
+	crate::Runtime,
+	pallet_balances::Pallet<Runtime>,
+	//  (),
 
 >;
 
 
 
 /// Peer <-> Substrate message bridge.
-#[derive(RuntimeDebug, Clone, Copy)]
+#[derive(RuntimeDebug, Clone,Decode, Copy)]
 pub struct WithSubstrateMessageBridge;
 
 impl MessageBridge for WithSubstrateMessageBridge {

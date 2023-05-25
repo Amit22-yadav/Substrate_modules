@@ -24,7 +24,7 @@ use codec::Decode;
 use sp_std::vec::Vec;
 
 /// Implementation of the `To*OutboundLaneApi::message_details`.
-pub fn outbound_message_details<Runtime, MessagesPalletInstance, BridgeConfig>(
+pub fn outbound_message_details<Runtime, MessagesPalletInstance>(
 	lane: LaneId,
 	begin: MessageNonce,
 	end: MessageNonce,
@@ -32,7 +32,7 @@ pub fn outbound_message_details<Runtime, MessagesPalletInstance, BridgeConfig>(
 where
 	Runtime: pallet_bridge_messages::Config<MessagesPalletInstance>,
 	MessagesPalletInstance: 'static,
-	BridgeConfig: MessageBridge,
+	// BridgeConfig: MessageBridge,
 {
 	(begin..=end)
 		.filter_map(|nonce| {

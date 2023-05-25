@@ -2408,7 +2408,7 @@ impl_runtime_apis! {
 			bridge_runtime_common::messages_api::outbound_message_details::<
 				Runtime,
 				WithPeerMessagesInstance,
-				WithPeerMessageBridge,
+				// WithPeerMessageBridge,
 			>(lane, begin, end)
 		}
 	}

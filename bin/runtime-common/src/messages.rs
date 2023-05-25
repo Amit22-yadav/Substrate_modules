@@ -610,13 +610,35 @@ pub mod target {
 
 
     	/// Decoded Bridged -> This message payload.
-	// #[derive(RuntimeDebug, PartialEq, Eq)]
-	// pub struct FromBridgedChainMessagePayload<Call> {
-	// 	/// Data that is actually sent over the wire.
-	// 	pub xcm: (xcm::v3::MultiLocation, xcm::v3::Xcm<Call>),
-	// 	/// Weight of the message, computed by the weigher. Unknown initially.
-	// 	pub weight: Option<Weight>,
-	// }
+	#[derive(RuntimeDebug, PartialEq, Eq)]
+	pub struct FromBridgedChainMessagePayload<Call> {
+		/// Data that is actually sent over the wire.
+		pub xcm: (xcm::v3::MultiLocation, xcm::v3::Xcm<Call>),
+		/// Weight of the message, computed by the weigher. Unknown initially.
+		pub weight: Option<Weight>,
+	}
+
+    impl<Call: Decode> Decode for FromBridgedChainMessagePayload<Call> {
+		fn decode<I: codec::Input>(input: &mut I) -> Result<Self, codec::Error> {
+			let _: codec::Compact<u32> = Decode::decode(input)?;
+			type XcmPairType<Call> = (xcm::v3::MultiLocation, xcm::v3::Xcm<Call>);
+			Ok(FromBridgedChainMessagePayload {
+				xcm: XcmPairType::<Call>::decode_with_depth_limit(
+					sp_api::MAX_EXTRINSIC_DEPTH,
+					input,
+				)?,
+				weight: None,
+			})
+		}
+	}
+
+	impl<Call> From<(xcm::v3::MultiLocation, xcm::v3::Xcm<Call>)>
+		for FromBridgedChainMessagePayload<Call>
+	{
+		fn from(xcm: (xcm::v3::MultiLocation, xcm::v3::Xcm<Call>)) -> Self {
+			FromBridgedChainMessagePayload { xcm, weight: None }
+		}
+	}
 
     /// Call origin for Bridged -> This chain messages.
     pub type FromBridgedChainMessageCallOrigin<B> = bp_message_dispatch::CallOrigin<
@@ -625,13 +647,13 @@ pub mod target {
         SignatureOf<ThisChain<B>>,
     >;
 
-    /// Decoded Bridged -> This message payload.
-    pub type FromBridgedChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
-        AccountIdOf<BridgedChain<B>>,
-        SignerOf<ThisChain<B>>,
-        SignatureOf<ThisChain<B>>,
-        FromBridgedChainEncodedMessageCall<CallOf<ThisChain<B>>>,
-    >;
+    // Decoded Bridged -> This message payload.
+    // pub type FromBridgedChainMessagePayload<B> = bp_message_dispatch::MessagePayload<
+    //     AccountIdOf<BridgedChain<B>>,
+    //     SignerOf<ThisChain<B>>,
+    //     SignatureOf<ThisChain<B>>,
+    //     FromBridgedChainEncodedMessageCall<CallOf<ThisChain<B>>>,
+    // >;
 
     /// Messages proof from bridged chain:
     ///
@@ -694,18 +716,21 @@ pub mod target {
 
     /// Dispatching Bridged -> This chain messages.
     #[derive(RuntimeDebug, Clone, Copy)]
-    pub struct FromBridgedChainMessageDispatch<B, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit> {
-        _marker: PhantomData<(B, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit)>,
+    pub struct FromBridgedChainMessageDispatch<B, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency> {
+        _marker: PhantomData<(B, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency)>,
     }
 
-    impl<B: MessageBridge, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit>
+    impl<B: MessageBridge, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency>
         MessageDispatch<AccountIdOf<ThisChain<B>>, BalanceOf<BridgedChain<B>>>
-        for FromBridgedChainMessageDispatch<B, ThisRuntime, ThisCurrency, ThisDispatchInstance,XcmExecutor, XcmWeigher, WeightCredit>
+        for FromBridgedChainMessageDispatch<B, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency>
     where
+        XcmExecutor: xcm::v3::ExecuteXcm<CallOf<ThisChain<B>>>,
+        XcmWeigher: xcm_executor::traits::WeightBounds<CallOf<ThisChain<B>>>,
+             WeightCredit: Get<Weight>,
         BalanceOf<ThisChain<B>>: Saturating + FixedPointOperand,
-        ThisDispatchInstance: 'static,
+        // ThisDispatchInstance: 'static,
         ThisRuntime: pallet_bridge_dispatch::Config<
-                ThisDispatchInstance,
+                // ThisDispatchInstance,
                 BridgeMessageId = (LaneId, MessageNonce),
             > + pallet_transaction_payment::Config,
         <ThisRuntime as pallet_transaction_payment::Config>::OnChargeTransaction:
@@ -713,58 +738,87 @@ pub mod target {
                 ThisRuntime,
                 Balance = BalanceOf<ThisChain<B>>,
             >,
-            XcmExecutor: xcm::v3::ExecuteXcm<CallOf<ThisChain<B>>>,
-		XcmWeigher: xcm_executor::traits::WeightBounds<CallOf<ThisChain<B>>>,
-		WeightCredit: Get<Weight>,
         ThisCurrency: Currency<AccountIdOf<ThisChain<B>>, Balance = BalanceOf<ThisChain<B>>>,
-        pallet_bridge_dispatch::Pallet<ThisRuntime, ThisDispatchInstance>:
-            bp_message_dispatch::MessageDispatch<
-                AccountIdOf<ThisChain<B>>,
-                (LaneId, MessageNonce),
-                Message = FromBridgedChainMessagePayload<B>,
-            >,
+        // pallet_bridge_dispatch::Pallet<ThisRuntime, ThisDispatchInstance>:
+            // bp_message_dispatch::MessageDispatch<
+            //     AccountIdOf<ThisChain<B>>,
+            //     (LaneId, MessageNonce),
+            //     Message = FromBridgedChainMessagePayload<B>,
+            // >,
+            
     {
-        type DispatchPayload = FromBridgedChainMessagePayload<B>;
+        type DispatchPayload = FromBridgedChainMessagePayload<CallOf<ThisChain<B>>>;
 
         fn dispatch_weight(
-            message: &DispatchMessage<Self::DispatchPayload, BalanceOf<BridgedChain<B>>>,
+            message: &mut DispatchMessage<Self::DispatchPayload, BalanceOf<BridgedChain<B>>>,
         ) -> frame_support::weights::Weight {
-            message.data.payload.as_ref().map(|payload| payload.weight).unwrap_or(Weight::zero(
-        
-            ))
-        }
+            match message.data.payload {
+				Ok(ref mut payload) => {
+					// I have no idea why this method takes `&mut` reference and there's nothing
+					// about that in documentation. Hope it'll only mutate iff error is returned.
+					let weight = XcmWeigher::weight(&mut payload.xcm.1);
+					let weight = weight.unwrap_or_else(|e| {
+						log::debug!(
+							target: "runtime::bridge-dispatch",
+							"Failed to compute dispatch weight of incoming XCM message {:?}/{}: {:?}",
+							message.key.lane_id,
+							message.key.nonce,
+							e,
+						);
+
+						// we shall return 0 and then the XCM executor will fail to execute XCM
+						// if we'll return something else (e.g. maximal value), the lane may stuck
+						Weight::zero()
+					});
+
+					payload.weight = Some(weight);
+					weight
+				},
+				_ => Weight::zero(),
+			}
+		}
 
         fn dispatch(
-            relayer_account: &AccountIdOf<ThisChain<B>>,
-            message: DispatchMessage<Self::DispatchPayload, BalanceOf<BridgedChain<B>>>,
-        ) -> MessageDispatchResult {
-            let message_id = (message.key.lane_id, message.key.nonce);
-            pallet_bridge_dispatch::Pallet::<ThisRuntime, ThisDispatchInstance>::dispatch(
-                B::BRIDGED_CHAIN_ID,
-                B::THIS_CHAIN_ID,
-                message_id,
-                message.data.payload.map_err(drop),
-                |dispatch_origin, dispatch_weight| {
-                    let unadjusted_weight_fee = ThisRuntime::WeightToFee::weight_to_fee(&dispatch_weight);
-                    let fee_multiplier =
-                        pallet_transaction_payment::Pallet::<ThisRuntime>::next_fee_multiplier();
-                    let adjusted_weight_fee =
-                        fee_multiplier.saturating_mul_int(unadjusted_weight_fee);
-                    if !adjusted_weight_fee.is_zero() {
-                        ThisCurrency::transfer(
-                            dispatch_origin,
-                            relayer_account,
-                            adjusted_weight_fee,
-                            ExistenceRequirement::AllowDeath,
-                        )
-                        .map_err(drop)
-                    } else {
-                        Ok(())
-                    }
-                },
-            )
-        }
-    }
+			_relayer_account: &AccountIdOf<ThisChain<B>>,
+			message: DispatchMessage<Self::DispatchPayload, BalanceOf<BridgedChain<B>>>,
+		) -> MessageDispatchResult {
+			let message_id = (message.key.lane_id, message.key.nonce);
+			let do_dispatch = move || -> sp_std::result::Result<Outcome, codec::Error> {
+                let FromBridgedChainMessagePayload { xcm: (location, xcm), weight: weight_limit } =
+					message.data.payload?;
+				log::trace!(
+					target: "runtime::bridge-dispatch",
+					"Going to execute message {:?} (weight limit: {:?}): {:?} {:?}",
+					message_id,
+					weight_limit,
+					location,
+					xcm,
+				);
+				let hash = message_id.using_encoded(sp_io::hashing::blake2_256);
+
+				// if this cod will end up in production, this most likely needs to be set to zero
+				let weight_credit = WeightCredit::get();
+
+				let xcm_outcome = XcmExecutor::execute_xcm_in_credit(
+					location,
+					xcm,
+					hash,
+					weight_limit.unwrap_or(Weight::zero()),
+					weight_credit,
+				);
+				Ok(xcm_outcome)
+			};
+
+			let xcm_outcome = do_dispatch();
+			log::trace!(target: "runtime::bridge-dispatch", "Incoming message {:?} dispatched with result: {:?}", message_id, xcm_outcome);
+			MessageDispatchResult {
+				dispatch_result: true,
+				unspent_weight: Weight::zero(),
+				dispatch_fee_paid_during_dispatch: false,
+			}
+		}
+	}
+
 
     /// Return maximal dispatch weight of the message we're able to receive.
     pub fn maximal_incoming_message_dispatch_weight(maximal_extrinsic_weight: Weight) -> Weight {

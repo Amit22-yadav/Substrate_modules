@@ -64,20 +64,21 @@ pub type ToPeerMessageVerifier =
 
 /// Message payload for Peer -> Substrate messages.
 pub type FromPeerMessagePayload =
-	messages::target::FromBridgedChainMessagePayload<WithPeerMessageBridge>;
+	messages::target::FromBridgedChainMessagePayload<crate::RuntimeCall>;
 
 /// Encoded Substrate Call as it comes from Peer.
 pub type FromPeerEncodedCall = messages::target::FromBridgedChainEncodedMessageCall<crate::RuntimeCall>;
 
 /// Call-dispatch based message dispatch for Peer -> Substrate messages.
 pub type FromPeerMessageDispatch = messages::target::FromBridgedChainMessageDispatch<
-	WithPeerMessageBridge,
-	crate::Runtime,
-	pallet_balances::Pallet<Runtime>,
-	(),
-	xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
+WithPeerMessageBridge,
+xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
 	crate::xcm_config::XcmWeigher,
 	WeightCredit,
+	crate::Runtime,
+	pallet_balances::Pallet<Runtime>,
+	// (),
+	
 	
 >;
 
