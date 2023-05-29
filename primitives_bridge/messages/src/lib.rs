@@ -29,6 +29,7 @@ use sp_std::{collections::vec_deque::VecDeque, prelude::*};
 
 pub mod source_chain;
 pub mod storage_keys;
+use codec::MaxEncodedLen;
 pub mod target_chain;
 
 // Weight is reexported to avoid additional frame-support dependencies in related crates.
@@ -167,6 +168,14 @@ impl<RelayerId> InboundLaneData<RelayerId> {
 			.and_then(|result| result.checked_add(dispatch_result_size))
 	}
 
+	pub fn encoded_size_hint_u32(relayer_id_encoded_size:u32,relayers_entries: u32, messages_count: u32) -> u32
+	where
+		RelayerId: MaxEncodedLen,
+	{
+		Self::encoded_size_hint(relayer_id_encoded_size,relayers_entries, messages_count)
+			.and_then(|x| u32::try_from(x).ok())
+			.unwrap_or(u32::MAX)
+	}
 	/// Nonce of the last message that has been delivered to this (target) chain.
 	pub fn last_delivered_nonce(&self) -> MessageNonce {
 		self.relayers
@@ -190,7 +199,16 @@ pub struct MessageDetails<OutboundMessageFee> {
 	/// Where the fee for dispatching message is paid?
 	pub dispatch_fee_payment: DispatchFeePayment,
 }
-
+#[derive(Clone, Encode, Decode, RuntimeDebug, PartialEq, Eq)]
+pub struct InboundMessageDetails {
+	/// Computed message dispatch weight.
+	///
+	/// Runtime API guarantees that it will match the value, returned by
+	/// `target_chain::MessageDispatch::dispatch_weight`. This means that if the runtime
+	/// has failed to decode the message, it will be zero - that's because `undecodable`
+	/// message cannot be dispatched.
+	pub dispatch_weight: Weight,
+}
 /// Bit vector of message dispatch results.
 pub type DispatchResultsBitVec = BitVec<u8, Msb0>;
 

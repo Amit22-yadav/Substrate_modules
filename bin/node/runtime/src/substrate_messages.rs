@@ -31,6 +31,7 @@ use frame_support::{
 	weights::{DispatchClass, Weight},
 	RuntimeDebug,
 };
+use bridge_runtime_common::messages::BasicConfirmationTransactionEstimation;
 use scale_info::TypeInfo;
 use sp_runtime::{traits::Saturating, FixedPointNumber, FixedU128};
 use sp_std::{convert::TryFrom, ops::RangeInclusive};
@@ -132,7 +133,13 @@ impl messages::ChainWithMessages for Peer {
 
 impl messages::ThisChainWithMessages for Peer {
 	type RuntimeOrigin = crate::RuntimeOrigin;
-	type Call = crate::RuntimeCall;
+	type RuntimeCall = crate::RuntimeCall;
+	type ConfirmationTransactionEstimation = BasicConfirmationTransactionEstimation<
+		Self::AccountId,
+		{ peer::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT },
+		{ substrate::EXTRA_STORAGE_PROOF_SIZE },
+		{ peer::TX_EXTRA_BYTES },
+	>;
 
 	fn is_message_accepted(send_origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool {
 		let here_location =

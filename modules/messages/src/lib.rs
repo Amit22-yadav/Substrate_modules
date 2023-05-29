@@ -60,6 +60,9 @@ use bp_messages::{
 	MessageNonce, OperatingMode, OutboundLaneData, Parameter as MessagesParameter,
 	UnrewardedRelayersState,
 };
+use bp_messages::MessageDetails;
+use bp_messages::InboundMessageDetails;
+use bp_messages::MessagePayload;
 use bp_runtime::{ChainId, Size};
 use codec::{Decode, Encode};
 use bp_messages::UnrewardedRelayer;
@@ -80,7 +83,7 @@ use sp_std::{cell::RefCell, cmp::PartialOrd, marker::PhantomData, prelude::*};
 use frame_support::pallet_prelude::Weight;
 use sp_std::ops::RangeInclusive;
 use bp_messages::source_chain::RelayersRewards;
-
+//use bp_messages::target_chain::MessageDispatch;
 mod inbound_lane;
 mod outbound_lane;
 mod weights_ext;
@@ -771,6 +774,24 @@ pub mod pallet {
 			nonce: MessageNonce,
 		) -> Option<MessageData<T::OutboundMessageFee>> {
 			OutboundMessages::<T, I>::get(MessageKey { lane_id: lane, nonce })
+		}
+	
+
+	
+		/// Prepare data, related to given inbound message.
+		pub fn inbound_message_data(
+			lane: LaneId,
+			payload: MessagePayload,
+			outbound_details:MessageDetails<T::InboundMessageFee>,
+		) -> InboundMessageDetails {
+			let mut dispatch_message = DispatchMessage {
+				key: MessageKey { lane_id: lane, nonce: outbound_details.nonce },
+				data: MessageData { payload, fee: outbound_details.delivery_and_dispatch_fee }
+					.into(),
+			};
+			InboundMessageDetails {
+				dispatch_weight: T::MessageDispatch::dispatch_weight(&mut dispatch_message),
+			}
 		}
 	}
 }

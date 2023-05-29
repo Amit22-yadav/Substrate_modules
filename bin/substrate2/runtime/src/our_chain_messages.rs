@@ -23,6 +23,9 @@ use bp_messages::{
 	target_chain::{ProvedMessages, SourceHeaderChain},
 	InboundLaneData, LaneId, Message, MessageNonce, Parameter as MessagesParameter,
 };
+use bridge_runtime_common::messages::{
+	 BasicConfirmationTransactionEstimation,
+};
 use crate::OriginCaller::XcmPallet;
 use bp_runtime::{Chain, ChainId, PEER_CHAIN_ID, SUBSTRATE_CHAIN_ID};
 use bridge_runtime_common::messages::{self, MessageBridge, MessageTransaction};
@@ -128,13 +131,13 @@ impl messages::ChainWithMessages for Substrate {
 
 impl messages::ThisChainWithMessages for Substrate {
 	type RuntimeOrigin = crate::RuntimeOrigin;
-	type Call = crate::RuntimeCall;
-	// type ConfirmationTransactionEstimation = BasicConfirmationTransactionEstimation<
-	// 	Self::AccountId,
-	// 	{ substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT },
-	// 	{ peer::EXTRA_STORAGE_PROOF_SIZE },
-	// 	{ substrate::TX_EXTRA_BYTES },
-	// >;
+	type RuntimeCall = crate::RuntimeCall;
+	type ConfirmationTransactionEstimation = BasicConfirmationTransactionEstimation<
+		Self::AccountId,
+		{ substrate::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT },
+		{ peer::EXTRA_STORAGE_PROOF_SIZE },
+		{ substrate::TX_EXTRA_BYTES },
+	>;
 
 	fn is_message_accepted(send_origin: &Self::RuntimeOrigin, lane: &LaneId) -> bool {
 		let here_location =

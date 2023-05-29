@@ -17,7 +17,7 @@
 //! Common types/functions that may be used by runtimes of all bridged chains.
 
 #![cfg_attr(not(feature = "std"), no_std)]
-
+#![feature(adt_const_params)]
 use bp_runtime::FilterCall;
 use sp_runtime::transaction_validity::TransactionValidity;
 use xcm::v3::NetworkId;

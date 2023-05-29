@@ -19,7 +19,7 @@
 //! Messages are assumed to be encoded `Call`s of the target chain. Call-dispatch
 //! pallet is used to dispatch incoming messages. Message identified by a tuple
 //! of to elements - message lane id and message nonce.
-
+#![feature(adt_const_params)]
 use bp_message_dispatch::MessageDispatch as _;
 use sp_core::Get;
 //use crate::messages::source::estimate_message_dispatch_and_delivery_fee;
@@ -34,7 +34,7 @@ use bp_runtime::{
     messages::{DispatchFeePayment, MessageDispatchResult},
     ChainId, Size, StorageProofChecker,
 };
-
+use codec::MaxEncodedLen;
 use crate::messages::source::FromThisChainMessagePayload;
 use codec::{Decode, DecodeLimit, Encode};
 use frame_support::{
@@ -120,13 +120,55 @@ pub struct MessageTransaction<Weight> {
     pub size: u32,
 }
 
+
+/// Helper trait for estimating the size and weight of a single message delivery confirmation
+/// transaction.
+pub trait ConfirmationTransactionEstimation<Weight> {
+	// Estimate size and weight of single message delivery confirmation transaction.
+	fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight>;
+}
+/// Default implementation for `ConfirmationTransactionEstimation`.
+pub struct BasicConfirmationTransactionEstimation<
+	AccountId: MaxEncodedLen,
+	const MAX_CONFIRMATION_TX_WEIGHT:Weight,
+	const EXTRA_STORAGE_PROOF_SIZE: u32,
+	const TX_EXTRA_BYTES: u32,
+>(PhantomData<AccountId>);
+
+impl<
+		AccountId: MaxEncodedLen,
+		const MAX_CONFIRMATION_TX_WEIGHT: Weight,
+		const EXTRA_STORAGE_PROOF_SIZE: u32,
+		const TX_EXTRA_BYTES: u32,
+	> ConfirmationTransactionEstimation<Weight>
+	for BasicConfirmationTransactionEstimation<
+		AccountId,
+		MAX_CONFIRMATION_TX_WEIGHT,
+		EXTRA_STORAGE_PROOF_SIZE,
+		TX_EXTRA_BYTES,
+	>
+{
+	fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight> {
+		let inbound_data_size = InboundLaneData::<AccountId>::encoded_size_hint_u32(1, 1,1);
+		MessageTransaction {
+			dispatch_weight: MAX_CONFIRMATION_TX_WEIGHT,
+			size: inbound_data_size
+				.saturating_add(EXTRA_STORAGE_PROOF_SIZE)
+				.saturating_add(TX_EXTRA_BYTES),
+		}
+	}
+}
+
 /// This chain that has `pallet-bridge-messages` and `dispatch` modules.
 pub trait ThisChainWithMessages: ChainWithMessages {
     /// Call origin on the chain.
     type RuntimeOrigin;
     /// Call type on the chain.
-    type Call: Encode + Decode;
+    type RuntimeCall: Encode + Decode;
 
+    /// Helper for estimating the size and weight of a single message delivery confirmation
+	/// transaction at this chain.
+	type ConfirmationTransactionEstimation: ConfirmationTransactionEstimation<WeightOf<Self>>;
     
 
     /// Do we accept message sent by given origin to given lane?
@@ -192,7 +234,7 @@ pub type BalanceOf<C> = <C as ChainWithMessages>::Balance;
 /// Type of origin that is used on the chain.
 pub type OriginOf<C> = <C as ThisChainWithMessages>::RuntimeOrigin;
 /// Type of call that is used on this chain.
-pub type CallOf<C> = <C as ThisChainWithMessages>::Call;
+pub type CallOf<C> = <C as ThisChainWithMessages>::RuntimeCall;
 
 /// Raw storage proof type (just raw trie nodes).
 pub type RawStorageProof = Vec<Vec<u8>>;
