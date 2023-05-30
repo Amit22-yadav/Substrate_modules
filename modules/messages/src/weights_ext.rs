@@ -266,7 +266,7 @@ pub trait WeightInfoExt: WeightInfo {
 			.saturating_mul(relayers_state.total_messages);
 
 		transaction_overhead
-			.saturating_add(messages_overhead)
+			.saturating_add(messages_overhead)	
 			.saturating_add(relayers_overhead)
 			.saturating_add(proof_size_overhead)
 			.saturating_add(callback_overhead)

@@ -71,21 +71,21 @@ pub const MAX_UNCONFIRMED_MESSAGES_IN_CONFIRMATION_TX: MessageNonce = 1024;
 /// for the case when single message of `pallet_bridge_messages::EXPECTED_DEFAULT_MESSAGE_LENGTH`
 /// bytes is delivered. The message must have dispatch weight set to zero. The result then must be
 /// rounded up to account possible future runtime upgrades.
-pub const DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT: Weight = Weight::from_parts(1_500_000_000,u64::MAX);
+pub const DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT: Weight = Weight::from_parts(1_500_000_000,12000);
 
 /// Increase of delivery transaction weight on Substrate chain with every additional message byte.
 ///
 /// This value is a result of
 /// `pallet_bridge_messages::WeightInfoExt::storage_proof_size_overhead(1)` call. The result then
 /// must be rounded up to account possible future runtime upgrades.
-pub const ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT: Weight = Weight::from_parts(25_000,u64::MAX);
+pub const ADDITIONAL_MESSAGE_BYTE_DELIVERY_WEIGHT: Weight = Weight::from_parts(25_000,12000);
 
 /// Maximal weight of single message delivery confirmation transaction on Substrate chain.
 ///
 /// This value is a result of `pallet_bridge_messages::Pallet::receive_messages_delivery_proof`
 /// weight formula computation for the case when single message is confirmed. The result then must
 /// be rounded up to account possible future runtime upgrades.
-pub const MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT: Weight = Weight::from_parts(2_000_000_000,u64::MAX);
+pub const MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT: Weight = Weight::from_parts(2_000_000_000,12000);
 
 /// Weight of pay-dispatch-fee operation for inbound messages at Substrate chain.
 ///
@@ -94,7 +94,7 @@ pub const MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT: Weight = Weight::f
 /// chain. Don't put too much reserve there, because it is used to **decrease**
 /// `DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT` cost. So putting large reserve would make delivery
 /// transactions cheaper.
-pub const PAY_INBOUND_DISPATCH_FEE_WEIGHT: Weight = Weight::from_parts(700_000_000,u64::MAX);
+pub const PAY_INBOUND_DISPATCH_FEE_WEIGHT: Weight = Weight::from_parts(700_000_000,12000);
 
 /// The target length of a session (how often authorities change) on Substrate measured in of number of
 /// blocks.

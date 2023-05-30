@@ -838,7 +838,7 @@ fn send_message<T: Config<I>, I: 'static>(
 	delivery_and_dispatch_fee: T::OutboundMessageFee,
 ) -> sp_std::result::Result<
 	SendMessageArtifacts,
-	sp_runtime::DispatchErrorWithPostInfo<PostDispatchInfo>,
+	sp_runtime::DispatchErrorWithPostInfo<PostDispatchInfo	>,
 > {
 	ensure_normal_operating_mode::<T, I>()?;
 
@@ -915,7 +915,7 @@ fn send_message<T: Config<I>, I: 'static>(
 				"T::OnMessageAccepted callback has spent less weight than expected. Refunding: \
 				{} - {} = {}",
 				single_message_callback_overhead,
-				actual_callback_weight,
+				actual_callback_weight,	
 				difference,
 			);
 			actual_weight = actual_weight.saturating_sub(difference);
@@ -951,7 +951,7 @@ fn send_message<T: Config<I>, I: 'static>(
 
 	Pallet::<T, I>::deposit_event(Event::MessageAccepted(lane_id, nonce));
 
-	Ok(SendMessageArtifacts { nonce, weight: Weight::zero()})
+	Ok(SendMessageArtifacts { nonce, weight:actual_weight})
 }
 /// Calculate the relayers rewards
 pub fn calc_relayers_rewards<T, I>(
