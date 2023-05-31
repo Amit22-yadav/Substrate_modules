@@ -78,8 +78,8 @@ WithPeerMessageBridge,
 xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
 	crate::xcm_config::XcmWeigher,
 	WeightCredit,
-	crate::Runtime,
-	pallet_balances::Pallet<Runtime>,
+	// crate::Runtime,
+	// pallet_balances::Pallet<Runtime>,
 	// (),
 	
 	
@@ -213,20 +213,20 @@ impl messages::BridgedChainWithMessages for Peer {
 		peer::Peer::max_extrinsic_size()
 	}
 
-	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
-		// we don't want to relay too large messages + keep reserve for future upgrades
-		let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
-			peer::Peer::max_extrinsic_weight(),
-		);
+	// fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
+	// 	// we don't want to relay too large messages + keep reserve for future upgrades
+	// 	let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
+	// 		peer::Peer::max_extrinsic_weight(),
+	// 	);
 
-		// we're charging for payload bytes in `WithPeerMessageBridge::transaction_payment`
-		// function
-		//
-		// this bridge may be used to deliver all kind of messages, so we're not making any
-		// assumptions about minimal dispatch weight here
+	// 	// we're charging for payload bytes in `WithPeerMessageBridge::transaction_payment`
+	// 	// function
+	// 	//
+	// 	// this bridge may be used to deliver all kind of messages, so we're not making any
+	// 	// assumptions about minimal dispatch weight here
 
-		Weight::zero()..=upper_limit
-	}
+	// 	Weight::zero()..=upper_limit
+	// }
 
 
 	fn verify_dispatch_weight(_message_payload: &[u8]) -> bool {

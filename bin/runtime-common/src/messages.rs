@@ -180,7 +180,9 @@ pub trait ThisChainWithMessages: ChainWithMessages {
     fn maximal_pending_messages_at_outbound_lane() -> MessageNonce;
 
     /// Estimate size and weight of single message delivery confirmation transaction at This chain.
-    fn estimate_delivery_confirmation_transaction() -> MessageTransaction<WeightOf<Self>>;
+    fn estimate_delivery_confirmation_transaction() -> MessageTransaction<WeightOf<Self>> {
+		Self::ConfirmationTransactionEstimation::estimate_delivery_confirmation_transaction()
+	}
 
     /// Returns minimal transaction fee that must be paid for given transaction at This chain.
     fn transaction_payment(transaction: MessageTransaction<WeightOf<Self>>) -> BalanceOf<Self>;
@@ -200,7 +202,7 @@ pub trait BridgedChainWithMessages: ChainWithMessages {
     /// (like weight of signature and signed extensions verification), because they're
     /// already accounted by the `weight_of_delivery_transaction`. So this function should
     /// return pure call dispatch weights range.
-    fn message_weight_limits(message_payload: &[u8]) -> RangeInclusive<Self::Weight>;
+    // fn message_weight_limits(message_payload: &[u8]) -> RangeInclusive<Self::Weight>;
 
     /// Estimate size and weight of single message delivery transaction at the Bridged chain.
     fn estimate_delivery_transaction(
@@ -758,29 +760,29 @@ pub mod target {
 
     /// Dispatching Bridged -> This chain messages.
     #[derive(RuntimeDebug, Clone, Copy)]
-    pub struct FromBridgedChainMessageDispatch<B, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency> {
-        _marker: PhantomData<(B, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency)>,
+    pub struct FromBridgedChainMessageDispatch<B, XcmExecutor, XcmWeigher, WeightCredit> {
+        _marker: PhantomData<(B, XcmExecutor, XcmWeigher, WeightCredit,)>,
     }
 
-    impl<B: MessageBridge, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency>
+    impl<B: MessageBridge, XcmExecutor, XcmWeigher, WeightCredit>
         MessageDispatch<AccountIdOf<ThisChain<B>>, BalanceOf<BridgedChain<B>>>
-        for FromBridgedChainMessageDispatch<B, XcmExecutor, XcmWeigher, WeightCredit,ThisRuntime, ThisCurrency>
+        for FromBridgedChainMessageDispatch<B, XcmExecutor, XcmWeigher, WeightCredit,>
     where
         XcmExecutor: xcm::v3::ExecuteXcm<CallOf<ThisChain<B>>>,
         XcmWeigher: xcm_executor::traits::WeightBounds<CallOf<ThisChain<B>>>,
              WeightCredit: Get<Weight>,
-        BalanceOf<ThisChain<B>>: Saturating + FixedPointOperand,
-        // ThisDispatchInstance: 'static,
-        ThisRuntime: pallet_bridge_dispatch::Config<
-                // ThisDispatchInstance,
-                BridgeMessageId = (LaneId, MessageNonce),
-            > + pallet_transaction_payment::Config,
-        <ThisRuntime as pallet_transaction_payment::Config>::OnChargeTransaction:
-            pallet_transaction_payment::OnChargeTransaction<
-                ThisRuntime,
-                Balance = BalanceOf<ThisChain<B>>,
-            >,
-        ThisCurrency: Currency<AccountIdOf<ThisChain<B>>, Balance = BalanceOf<ThisChain<B>>>,
+        // BalanceOf<ThisChain<B>>: Saturating + FixedPointOperand,
+        // // ThisDispatchInstance: 'static,
+        // ThisRuntime: pallet_bridge_dispatch::Config<
+        //         // ThisDispatchInstance,
+        //         BridgeMessageId = (LaneId, MessageNonce),
+        //     > + pallet_transaction_payment::Config,
+        // <ThisRuntime as pallet_transaction_payment::Config>::OnChargeTransaction:
+        //     pallet_transaction_payment::OnChargeTransaction<
+        //         ThisRuntime,
+        //         Balance = BalanceOf<ThisChain<B>>,
+        //     >,
+        // ThisCurrency: Currency<AccountIdOf<ThisChain<B>>, Balance = BalanceOf<ThisChain<B>>>,
         // pallet_bridge_dispatch::Pallet<ThisRuntime, ThisDispatchInstance>:
             // bp_message_dispatch::MessageDispatch<
             //     AccountIdOf<ThisChain<B>>,

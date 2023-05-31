@@ -86,8 +86,8 @@ pub type FromSubstrateMessageDispatch = messages::target::FromBridgedChainMessag
 	xcm_executor::XcmExecutor<crate::xcm_config::XcmConfig>,
 	crate::xcm_config::XcmWeigher,
 	WeightCredit,
-	crate::Runtime,
-	pallet_balances::Pallet<Runtime>,
+	// crate::Runtime,
+	// pallet_balances::Pallet<Runtime>,
 	//  (),
 
 >;
@@ -164,21 +164,21 @@ impl messages::ThisChainWithMessages for Peer {
 		MessageNonce::MAX
 	}
 
-	fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight> {
-		let inbound_data_size = InboundLaneData::<peer::AccountId>::encoded_size_hint(
-			peer::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
-			1,
-			1,
-		)
-		.unwrap_or(u32::MAX);
+	// fn estimate_delivery_confirmation_transaction() -> MessageTransaction<Weight> {
+	// 	let inbound_data_size = InboundLaneData::<peer::AccountId>::encoded_size_hint(
+	// 		peer::MAXIMAL_ENCODED_ACCOUNT_ID_SIZE,
+	// 		1,
+	// 		1,
+	// 	)
+	// 	.unwrap_or(u32::MAX);
 
-		MessageTransaction {
-			dispatch_weight: peer::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
-			size: inbound_data_size
-				.saturating_add(substrate::EXTRA_STORAGE_PROOF_SIZE)
-				.saturating_add(peer::TX_EXTRA_BYTES),
-		}
-	}
+	// 	MessageTransaction {
+	// 		dispatch_weight: peer::MAX_SINGLE_MESSAGE_DELIVERY_CONFIRMATION_TX_WEIGHT,
+	// 		size: inbound_data_size
+	// 			.saturating_add(substrate::EXTRA_STORAGE_PROOF_SIZE)
+	// 			.saturating_add(peer::TX_EXTRA_BYTES),
+	// 	}
+	// }
 
 	fn transaction_payment(transaction: MessageTransaction<Weight>) -> peer::Balance {
 		// `transaction` may represent transaction from the future, when multiplier value will
@@ -218,20 +218,20 @@ impl messages::BridgedChainWithMessages for Substrate {
 		true
 	}
 
-	fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
-		// we don't want to relay too large messages + keep reserve for future upgrades
-		let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
-			substrate::Substrate::max_extrinsic_weight(),
-		);
+	// fn message_weight_limits(_message_payload: &[u8]) -> RangeInclusive<Weight> {
+	// 	// we don't want to relay too large messages + keep reserve for future upgrades
+	// 	let upper_limit = messages::target::maximal_incoming_message_dispatch_weight(
+	// 		substrate::Substrate::max_extrinsic_weight(),
+	// 	);
 
-		// we're charging for payload bytes in `WithSubstrateMessageBridge::transaction_payment`
-		// function
-		//
-		// this bridge may be used to deliver all kind of messages, so we're not making any
-		// assumptions about minimal dispatch weight here
+	// 	// we're charging for payload bytes in `WithSubstrateMessageBridge::transaction_payment`
+	// 	// function
+	// 	//
+	// 	// this bridge may be used to deliver all kind of messages, so we're not making any
+	// 	// assumptions about minimal dispatch weight here
 
-		Weight::zero()..=upper_limit
-	}
+	// 	Weight::zero()..=upper_limit
+	// }
 
 	fn estimate_delivery_transaction(
 		message_payload: &[u8],
@@ -247,7 +247,7 @@ impl messages::BridgedChainWithMessages for Substrate {
 			.saturating_mul(extra_bytes_in_payload as u64)
 				.saturating_add(substrate::DEFAULT_MESSAGE_DELIVERY_TX_WEIGHT)
 				.saturating_sub(if include_pay_dispatch_fee_cost {
-					Weight::from_ref_time(0)
+					Weight::zero()
 				} else {
 					substrate::PAY_INBOUND_DISPATCH_FEE_WEIGHT
 				})

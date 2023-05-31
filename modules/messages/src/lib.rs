@@ -440,6 +440,7 @@ pub mod pallet {
 
 				for mut message in lane_data.messages {
 					debug_assert_eq!(message.key.lane_id, lane_id);
+					total_messages += 1;
 
 					// ensure that relayer has declared enough weight for dispatching next message
 					// on this lane. We can't dispatch lane messages out-of-order, so if declared
@@ -609,7 +610,7 @@ pub mod pallet {
 					Some(difference) => {
 						log::trace!(
 							target: "runtime::bridge-messages",
-							"T::OnDeliveryConfirmed callback has spent less weight than expected. Refunding: \
+							"T::OnDeliveryConfirmed callback has spent less weight than expected2222. Refunding: \
 							{} - {} = {}",
 							preliminary_callback_overhead,
 							actual_callback_weight,

@@ -47,17 +47,19 @@ pub fn ensure_weights_are_correct<W: WeightInfoExt>(
 	assert_ne!(W::send_message_size_overhead(0), Weight::zero());
 
 	// verify `receive_messages_proof` weight components
-	assert_ne!(W::receive_messages_proof_overhead(), Weight::zero());
-	assert_ne!(W::receive_messages_proof_messages_overhead(1), Weight::zero());
-	assert_ne!(W::receive_messages_proof_outbound_lane_state_overhead(), Weight::zero());
-	assert_ne!(W::storage_proof_size_overhead(1), Weight::zero());
+	assert_ne!(W::receive_messages_proof_overhead().ref_time(), 0);
+	assert_ne!(W::receive_messages_proof_overhead().proof_size(), 0);
+	assert_eq!(W::receive_messages_proof_messages_overhead(1).proof_size(), 0);
+	assert_eq!(W::receive_messages_proof_outbound_lane_state_overhead().proof_size(), 0);
+	assert_ne!(W::storage_proof_size_overhead(1).ref_time(), 0);
+	assert_eq!(W::storage_proof_size_overhead(1).proof_size(), 0);
 
-	// verify that the hardcoded value covers `receive_messages_proof` weight
+	// verify that the hardcoded `value covers `receive_messages_proof` weight
 	let actual_single_regular_message_delivery_tx_weight = W::receive_messages_proof_weight(
 		&PreComputedSize(
 			(EXPECTED_DEFAULT_MESSAGE_LENGTH + W::expected_extra_storage_proof_size()) as usize,
 		),
-		1,
+		10,
 		Weight::zero(),
 	);
 	assert!(
@@ -78,8 +80,14 @@ pub fn ensure_weights_are_correct<W: WeightInfoExt>(
 	);
 
 	// verify `receive_messages_delivery_proof` weight components
-	assert_ne!(W::receive_messages_delivery_proof_overhead(), Weight::zero());
-	assert_ne!(W::storage_proof_size_overhead(1), Weight::zero());
+	assert_ne!(W::receive_messages_delivery_proof_overhead().ref_time(), 0);
+	assert_ne!(W::receive_messages_delivery_proof_overhead().proof_size(), 0);
+	assert_eq!(W::receive_messages_delivery_proof_messages_overhead(1).proof_size(), 0);
+	assert_ne!(W::receive_messages_delivery_proof_relayers_overhead(1).ref_time(), 0);
+	// W::receive_messages_delivery_proof_relayers_overhead(1).proof_size() is an exception
+	// it may or may not cause additional db reads, so proof size may vary
+	assert_ne!(W::storage_proof_size_overhead(1).ref_time(), 0);
+	assert_eq!(W::storage_proof_size_overhead(1).proof_size(), 0);
 
 	// `receive_messages_delivery_proof_messages_overhead` and
 	// `receive_messages_delivery_proof_relayers_overhead` may return zero if rewards are not paid
@@ -264,12 +272,15 @@ pub trait WeightInfoExt: WeightInfo {
 		// message
 		let callback_overhead = Self::single_message_callback_overhead(db_weight)
 			.saturating_mul(relayers_state.total_messages);
+		// let callback_overhead = relayers_state
+		// .total_messages
+		// .saturating_mul(Self::single_message_callback_overhead(db_weight));
 
 		transaction_overhead
 			.saturating_add(messages_overhead)	
 			.saturating_add(relayers_overhead)
 			.saturating_add(proof_size_overhead)
-			.saturating_add(callback_overhead)
+			// .saturating_add(callback_overhead)
 	}
 
 	// Functions that are used by extrinsics weights formulas.
